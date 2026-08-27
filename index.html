@@ -27,7 +27,6 @@
 
 <main id="top">
 <section class="hero">
-  <img class="hero-img" src="airplane.png" alt="Aviakassa_havo airplane">
   <div class="hero-shade"></div>
   <div class="hero-content">
     <div class="badge" data-i18n="badge">🌍 Душанбе → весь мир</div>
@@ -48,10 +47,10 @@
     </div>
     <form id="ticketForm">
       <div class="trip-switch"><button type="button" class="trip-btn active" data-trip="oneway" data-i18n="oneWay">В одну сторону</button><button type="button" class="trip-btn" data-trip="round" data-i18n="roundTrip">Туда и обратно</button></div>
-      <label><span data-i18n="nameLabel">Ваше имя</span><input id="clientName" placeholder="Имя" autocomplete="name" required></label>
-      <label><span data-i18n="phoneLabel">Телефон / WhatsApp</span><input id="clientPhone" placeholder="+992..." inputmode="tel" autocomplete="tel" required></label>
+      <label><span data-i18n="nameLabel">Ваше имя</span><input id="clientName" placeholder="Имя" data-i18n-placeholder="namePlaceholder" autocomplete="name" required></label>
+      <label><span data-i18n="phoneLabel">Телефон / WhatsApp</span><input id="clientPhone" placeholder="+992..." data-i18n-placeholder="phonePlaceholder" inputmode="tel" autocomplete="tel" required></label>
       <label><span data-i18n="fromLabel">Откуда</span><input id="from" value="Душанбе, Таджикистан" list="cities" required></label>
-      <label><span data-i18n="toLabel">Куда</span><input id="to" placeholder="Москва" list="cities" required>
+      <label><span data-i18n="toLabel">Куда</span><input id="to" placeholder="Москва" data-i18n-placeholder="toPlaceholder" list="cities" required></label>
       <datalist id="cities">
 <option value="Душанбе, Таджикистан" label="Dushanbe, Tajikistan">
 <option value="Москва, Россия" label="Moscow, Russia">
@@ -81,7 +80,8 @@
 <option value="Доха, Катар" label="Doha, Qatar">
 <option value="Анталья, Турция" label="Antalya, Turkey">
 <option value="Тбилиси, Грузия" label="Tbilisi, Georgia">
-</datalist><div id="cityHint" class="city-hint" data-i18n="cityHint">Выберите город — страна добавится автоматически</div></label>
+</datalist>
+      <div id="cityHint" class="city-hint" data-i18n="cityHint">Выберите город — страна добавится автоматически</div>
       <label><span data-i18n="dateLabel">Дата вылета</span><input id="date" type="date" required></label>
       <label id="returnDateWrap" class="hidden-field"><span data-i18n="returnDateLabel">Дата возвращения</span><input id="returnDate" type="date"></label>
       <label><span data-i18n="passengerLabel">Пассажиры</span><select id="passengers"><option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option></select></label>
@@ -95,11 +95,11 @@
 <section class="section hot" id="offers">
   <div class="head"><div><span class="eyebrow" data-i18n="hotEyebrow">ПОПУЛЯРНЫЕ ЗАПРОСЫ</span><h2 data-i18n="hotTitle">Куда часто летают</h2></div><p data-i18n="hotIntro">Выберите направление — заявка откроется в WhatsApp.</p></div>
   <div class="offer-grid">
-    <a class="offer" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20билет%20Душанбе%20%E2%86%92%20Москва." target="_blank"><span>🇹🇯 → 🇷🇺</span><b>Душанбе → Москва</b><small>Узнать варианты →</small></a>
-    <a class="offer" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20билет%20Душанбе%20%E2%86%92%20Казань." target="_blank"><span>🇹🇯 → 🇷🇺</span><b>Душанбе → Казань</b><small>Узнать варианты →</small></a>
-    <a class="offer" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20билет%20Душанбе%20%E2%86%92%20Санкт-Петербург." target="_blank"><span>🇹🇯 → 🇷🇺</span><b>Душанбе → Санкт-Петербург</b><small>Узнать варианты →</small></a>
-    <a class="offer" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20билет%20Душанбе%20%E2%86%92%20Дубай." target="_blank"><span>🇹🇯 → 🇦🇪</span><b>Душанбе → Дубай</b><small>Узнать варианты →</small></a>
-    <a class="offer" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20билет%20Душанбе%20%E2%86%92%20Стамбул." target="_blank"><span>🇹🇯 → 🇹🇷</span><b>Душанбе → Стамбул</b><small>Узнать варианты →</small></a>
+    <a class="offer" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20билет%20Душанбе%20%E2%86%92%20Москва." target="_blank"><span>🇹🇯 → 🇷🇺</span><b data-offer-city="0">Душанбе → Москва</b><small data-offer-action>Узнать варианты →</small></a>
+    <a class="offer" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20билет%20Душанбе%20%E2%86%92%20Казань." target="_blank"><span>🇹🇯 → 🇷🇺</span><b data-offer-city="1">Душанбе → Казань</b><small data-offer-action>Узнать варианты →</small></a>
+    <a class="offer" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20билет%20Душанбе%20%E2%86%92%20Санкт-Петербург." target="_blank"><span>🇹🇯 → 🇷🇺</span><b data-offer-city="2">Душанбе → Санкт-Петербург</b><small data-offer-action>Узнать варианты →</small></a>
+    <a class="offer" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20билет%20Душанбе%20%E2%86%92%20Дубай." target="_blank"><span>🇹🇯 → 🇦🇪</span><b data-offer-city="3">Душанбе → Дубай</b><small data-offer-action>Узнать варианты →</small></a>
+    <a class="offer" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20билет%20Душанбе%20%E2%86%92%20Стамбул." target="_blank"><span>🇹🇯 → 🇹🇷</span><b data-offer-city="4">Душанбе → Стамбул</b><small data-offer-action>Узнать варианты →</small></a>
   </div>
 </section>
 
