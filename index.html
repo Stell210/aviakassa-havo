@@ -48,14 +48,45 @@
     </div>
     <form id="ticketForm">
       <div class="trip-switch"><button type="button" class="trip-btn active" data-trip="oneway" data-i18n="oneWay">В одну сторону</button><button type="button" class="trip-btn" data-trip="round" data-i18n="roundTrip">Туда и обратно</button></div>
-      <label><span data-i18n="fromLabel">Откуда</span><input id="from" value="Душанбе" list="cities" required></label>
+      <label><span data-i18n="nameLabel">Ваше имя</span><input id="clientName" placeholder="Имя" autocomplete="name" required></label>
+      <label><span data-i18n="phoneLabel">Телефон / WhatsApp</span><input id="clientPhone" placeholder="+992..." inputmode="tel" autocomplete="tel" required></label>
+      <label><span data-i18n="fromLabel">Откуда</span><input id="from" value="Душанбе, Таджикистан" list="cities" required></label>
       <label><span data-i18n="toLabel">Куда</span><input id="to" placeholder="Москва" list="cities" required>
-      <datalist id="cities"><option value="Москва"><option value="Казань"><option value="Санкт-Петербург"><option value="Екатеринбург"><option value="Новосибирск"><option value="Дубай"><option value="Стамбул"><option value="Пекин"><option value="Алматы"><option value="Ташкент"></datalist></label>
+      <datalist id="cities">
+<option value="Душанбе, Таджикистан" label="Dushanbe, Tajikistan">
+<option value="Москва, Россия" label="Moscow, Russia">
+<option value="Казань, Россия" label="Kazan, Russia">
+<option value="Санкт-Петербург, Россия" label="Saint Petersburg, Russia">
+<option value="Екатеринбург, Россия" label="Yekaterinburg, Russia">
+<option value="Новосибирск, Россия" label="Novosibirsk, Russia">
+<option value="Самара, Россия" label="Samara, Russia">
+<option value="Уфа, Россия" label="Ufa, Russia">
+<option value="Красноярск, Россия" label="Krasnoyarsk, Russia">
+<option value="Ростов-на-Дону, Россия" label="Rostov-on-Don, Russia">
+<option value="Тюмень, Россия" label="Tyumen, Russia">
+<option value="Сургут, Россия" label="Surgut, Russia">
+<option value="Минеральные Воды, Россия" label="Mineralnye Vody, Russia">
+<option value="Дубай, ОАЭ" label="Dubai, UAE">
+<option value="Стамбул, Турция" label="Istanbul, Turkey">
+<option value="Пекин, Китай" label="Beijing, China">
+<option value="Алматы, Казахстан" label="Almaty, Kazakhstan">
+<option value="Астана, Казахстан" label="Astana, Kazakhstan">
+<option value="Ташкент, Узбекистан" label="Tashkent, Uzbekistan">
+<option value="Самарканд, Узбекистан" label="Samarkand, Uzbekistan">
+<option value="Бишкек, Кыргызстан" label="Bishkek, Kyrgyzstan">
+<option value="Баку, Азербайджан" label="Baku, Azerbaijan">
+<option value="Тегеран, Иран" label="Tehran, Iran">
+<option value="Дели, Индия" label="Delhi, India">
+<option value="Абу-Даби, ОАЭ" label="Abu Dhabi, UAE">
+<option value="Доха, Катар" label="Doha, Qatar">
+<option value="Анталья, Турция" label="Antalya, Turkey">
+<option value="Тбилиси, Грузия" label="Tbilisi, Georgia">
+</datalist><div id="cityHint" class="city-hint" data-i18n="cityHint">Выберите город — страна добавится автоматически</div></label>
       <label><span data-i18n="dateLabel">Дата вылета</span><input id="date" type="date" required></label>
       <label id="returnDateWrap" class="hidden-field"><span data-i18n="returnDateLabel">Дата возвращения</span><input id="returnDate" type="date"></label>
       <label><span data-i18n="passengerLabel">Пассажиры</span><select id="passengers"><option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option></select></label>
       <label><span data-i18n="baggageLabel">Багаж</span><select id="baggage"><option data-i18n="bag23">23 кг + 10 кг ручной клади</option><option data-i18n="bagOnlyHand">Только ручная кладь</option><option data-i18n="bagAsk">Уточнить условия</option></select></label>
-      <button class="primary" data-i18n="getOptions" type="submit">Получить варианты</button>
+      <button class="primary" data-i18n="getOptions" type="submit">Получить варианты</button><div id="requestStatus" class="request-status" role="status" aria-live="polite"></div>
     </form>
     <div class="note" data-i18n="priceNote">💙 Цена и наличие мест уточняются индивидуально перед оформлением.</div>
   </div>
@@ -123,7 +154,7 @@
       <h2 data-i18n="socialTitle">Следите за новыми рейсами</h2>
       <p data-i18n="socialText">Актуальные направления, полезные советы и предложения для путешествий.</p>
     </div>
-    <a class="primary" href="https://www.instagram.com/tajik.travel.agency/" target="_blank" rel="noopener" data-i18n="socialButton">Открыть Instagram</a>
+    <a class="primary" href="https://www.instagram.com/aviakassa_havo/" target="_blank" rel="noopener" data-i18n="socialButton">Открыть Instagram</a>
   </div>
 </section>
 

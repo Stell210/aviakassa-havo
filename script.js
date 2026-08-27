@@ -1,4 +1,21 @@
-const translations={
+
+const CITY_COUNTRIES={"Душанбе, Таджикистан": "Душанбе, Таджикистан", "Москва, Россия": "Москва, Россия", "Казань, Россия": "Казань, Россия", "Санкт-Петербург, Россия": "Санкт-Петербург, Россия", "Екатеринбург, Россия": "Екатеринбург, Россия", "Новосибирск, Россия": "Новосибирск, Россия", "Самара, Россия": "Самара, Россия", "Уфа, Россия": "Уфа, Россия", "Красноярск, Россия": "Красноярск, Россия", "Ростов-на-Дону, Россия": "Ростов-на-Дону, Россия", "Тюмень, Россия": "Тюмень, Россия", "Сургут, Россия": "Сургут, Россия", "Минеральные Воды, Россия": "Минеральные Воды, Россия", "Дубай, ОАЭ": "Дубай, ОАЭ", "Стамбул, Турция": "Стамбул, Турция", "Пекин, Китай": "Пекин, Китай", "Алматы, Казахстан": "Алматы, Казахстан", "Астана, Казахстан": "Астана, Казахстан", "Ташкент, Узбекистан": "Ташкент, Узбекистан", "Самарканд, Узбекистан": "Самарканд, Узбекистан", "Бишкек, Кыргызстан": "Бишкек, Кыргызстан", "Баку, Азербайджан": "Баку, Азербайджан", "Тегеран, Иран": "Тегеран, Иран", "Дели, Индия": "Дели, Индия", "Абу-Даби, ОАЭ": "Абу-Даби, ОАЭ", "Доха, Катар": "Доха, Катар", "Анталья, Турция": "Анталья, Турция", "Тбилиси, Грузия": "Тбилиси, Грузия"};
+function normalizeCity(id){
+  const el=document.getElementById(id); if(!el) return;
+  const raw=el.value.trim();
+  if(!raw) return;
+  const key=Object.keys(CITY_COUNTRIES).find(k=>k.toLowerCase()===raw.toLowerCase() || k.split(",")[0].trim().toLowerCase()===raw.toLowerCase());
+  if(key) el.value=key;
+}
+["from","to"].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el){
+    el.addEventListener("change",()=>normalizeCity(id));
+    el.addEventListener("blur",()=>normalizeCity(id));
+  }
+});
+
+function saveLocalRequest(data){try{const k="aviakassa_requests_v1";const a=JSON.parse(localStorage.getItem(k)||"[]");a.unshift(data);localStorage.setItem(k,JSON.stringify(a.slice(0,100)));return true}catch(e){return false}}\nconst translations={
 ru:{oneWay:"В одну сторону",roundTrip:"Туда и обратно",returnDateLabel:"Дата возвращения",baggageLabel:"Багаж",bag23:"23 кг + 10 кг ручной клади",bagOnlyHand:"Только ручная кладь",bagAsk:"Уточнить условия",hotEyebrow:"ПОПУЛЯРНЫЕ ЗАПРОСЫ",hotTitle:"Куда часто летают",hotIntro:"Выберите направление — заявка откроется в WhatsApp.",bagEyebrow:"БАГАЖ",bagTitle:"Что взять с собой?",bagText:"Условия багажа зависят от выбранного тарифа. Мы поможем уточнить условия перед оформлением.",checkedBag:"багаж",handBag:"ручная кладь",
 navSearch:"Найти билет",navRoutes:"Направления",navHow:"Как это работает",navFaq:"FAQ",navOffers:"Популярные",badge:"🌍 Душанбе → весь мир",
 heroTitle:"Летите туда,<br><span>куда мечтаете.</span>",heroText:"Подберём удобный авиарейс, объясним условия и поможем оформить билет.",
@@ -66,13 +83,22 @@ document.querySelectorAll(".trip-btn").forEach(b=>b.classList.remove("active"));
 document.getElementById("returnDateWrap").classList.toggle("hidden-field",btn.dataset.trip!=="round");
 document.getElementById("returnDate").required=btn.dataset.trip==="round";
 }));
-document.getElementById("ticketForm").addEventListener("submit",e=>{
+document.getElementById("ticketForm").addEventListener("submit",async e=>{
 e.preventDefault();
-const from=document.getElementById("from").value.trim(),to=document.getElementById("to").value.trim(),date=document.getElementById("date").value,ret=document.getElementById("returnDate").value,passengers=document.getElementById("passengers").value,baggage=document.getElementById("baggage").value;
-const round=document.querySelector(".trip-btn.active")?.dataset.trip==="round";
-let msg=`Здравствуйте! Хочу подобрать авиабилет.%0A%0AОткуда: ${encodeURIComponent(from)}%0AКуда: ${encodeURIComponent(to)}%0AДата вылета: ${encodeURIComponent(date)}%0A`;
-if(round) msg+=`Дата возвращения: ${encodeURIComponent(ret)}%0A`;
-msg+=`Пассажиры: ${encodeURIComponent(passengers)}%0AБагаж: ${encodeURIComponent(baggage)}`;
+const name=document.getElementById("clientName").value.trim(),phone=document.getElementById("clientPhone").value.trim(),from=document.getElementById("from").value.trim(),to=document.getElementById("to").value.trim(),date=document.getElementById("date").value,ret=document.getElementById("returnDate").value,passengers=document.getElementById("passengers").value,baggage=document.getElementById("baggage").value,round=document.querySelector(".trip-btn.active")?.dataset.trip==="round";
+const status=document.getElementById("requestStatus"); if(status) status.textContent="Сохраняем заявку…";
+const payload={name,phone,from,to,date,returnDate:round?ret:"",passengers,baggage};
+let code="REQ-"+Date.now().toString(36).toUpperCase();
+try{
+ const r=await fetch("/api/bookings",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+ const data=await r.json();
+ if(r.ok&&data.ok) code=data.requestCode;
+ else throw new Error(data.error||"API_ERROR");
+}catch(err){saveLocalRequest({...payload,id:code,createdAt:new Date().toISOString(),status:"new"});}
+if(status) status.textContent="Заявка принята. Открываем WhatsApp…";
+let msg=`Здравствуйте! Хочу подобрать авиабилет.%0A%0AИмя: ${encodeURIComponent(name)}%0AТелефон: ${encodeURIComponent(phone)}%0AОткуда: ${encodeURIComponent(from)}%0AКуда: ${encodeURIComponent(to)}%0AДата вылета: ${encodeURIComponent(date)}%0A`;
+if(round)msg+=`Дата возвращения: ${encodeURIComponent(ret)}%0A`;
+msg+=`Пассажиры: ${encodeURIComponent(passengers)}%0AБагаж: ${encodeURIComponent(baggage)}%0AНомер заявки: ${encodeURIComponent(code)}`;
 window.open(`https://wa.me/992753582002?text=${msg}`,"_blank");
 });
 document.getElementById("year").textContent=new Date().getFullYear();

@@ -1,0 +1,11 @@
+{
+  "name": "aviakassa-havo",
+  "version": "10.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "pg": "^8.16.3"
+  }
+}

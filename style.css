@@ -47,3 +47,7 @@ input:focus,select:focus{outline:3px solid #1687ff22;border-color:#1687ff}
  .offer{min-height:120px}
  .trip-switch{width:100%}
 }
+
+.request-status{margin-top:10px;color:#58708b;font-size:13px;min-height:18px}
+
+.city-hint{grid-column:1/-1;font-size:12px;color:#718096;margin-top:-6px}.booking-form .city-hint{margin-bottom:4px}
