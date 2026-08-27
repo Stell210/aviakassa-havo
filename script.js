@@ -39,13 +39,98 @@ function setLang(l){
  document.querySelectorAll("[data-i18n]").forEach(el=>{const k=el.dataset.i18n;if(t[k]!==undefined)el.textContent=t[k]});
  document.querySelectorAll("[data-i18n-html]").forEach(el=>{const k=el.dataset.i18nHtml;if(t[k]!==undefined)el.innerHTML=t[k]});
  document.querySelectorAll("[data-lang]").forEach(b=>b.classList.toggle("active",b.dataset.lang===l));
- document.getElementById("from").value=l==="ru"?"Душанбе":l==="tj"?"Душанбе":"Dushanbe";
- document.getElementById("to").placeholder=l==="ru"?"Москва":l==="tj"?"Москва":"Moscow";
+ document.getElementById("from").value=l==="ru"?"Душанбе, Таджикистан":l==="tj"?"Душанбе, Тоҷикистон":"Dushanbe, Tajikistan";
+ document.getElementById("to").placeholder=l==="ru"?"Москва, Россия":l==="tj"?"Москва, Тоҷикистон":"Moscow, Russia";
  document.querySelectorAll(".route").forEach((r,i)=>{r.querySelector(".city").textContent=t.cities[i];r.querySelector(".routeText").textContent=t.routes[i];});
  const map={Москва:"Moscow", "Санкт-Петербург":"Saint Petersburg", "Дубай":"Dubai", "Стамбул":"Istanbul"};
  document.querySelectorAll(".route").forEach((r,i)=>r.href="https://wa.me/992753582002?text="+encodeURIComponent((l==="en"?"Hello! I’m interested in a flight from Dushanbe to ":"Здравствуйте! Интересует рейс Душанбе → ")+t.cities[i]+"."));
 }
 document.querySelectorAll("[data-lang]").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.lang)));
+
+const cityDatabase=[
+ {city:"Душанбе",country:"Таджикистан",en:"Dushanbe",tj:"Душанбе"},
+ {city:"Москва",country:"Россия",en:"Moscow",tj:"Москва"},
+ {city:"Санкт-Петербург",country:"Россия",en:"Saint Petersburg",tj:"Санкт-Петербург"},
+ {city:"Екатеринбург",country:"Россия",en:"Yekaterinburg",tj:"Екатеринбург"},
+ {city:"Новосибирск",country:"Россия",en:"Novosibirsk",tj:"Новосибирск"},
+ {city:"Казань",country:"Россия",en:"Kazan",tj:"Қазон"},
+ {city:"Минеральные Воды",country:"Россия",en:"Mineralnye Vody",tj:"Минералние Води"},
+ {city:"Сочи",country:"Россия",en:"Sochi",tj:"Сочи"},
+ {city:"Краснодар",country:"Россия",en:"Krasnodar",tj:"Краснодар"},
+ {city:"Ташкент",country:"Узбекистан",en:"Tashkent",tj:"Тошканд"},
+ {city:"Алматы",country:"Казахстан",en:"Almaty",tj:"Алмаато"},
+ {city:"Астана",country:"Казахстан",en:"Astana",tj:"Остона"},
+ {city:"Бишкек",country:"Кыргызстан",en:"Bishkek",tj:"Бишкек"},
+ {city:"Дубай",country:"ОАЭ",en:"Dubai",tj:"Дубай"},
+ {city:"Абу-Даби",country:"ОАЭ",en:"Abu Dhabi",tj:"Абу-Даби"},
+ {city:"Стамбул",country:"Турция",en:"Istanbul",tj:"Истанбул"},
+ {city:"Анкара",country:"Турция",en:"Ankara",tj:"Анқара"},
+ {city:"Тегеран",country:"Иран",en:"Tehran",tj:"Теҳрон"},
+ {city:"Дели",country:"Индия",en:"Delhi",tj:"Деҳлӣ"},
+ {city:"Мумбаи",country:"Индия",en:"Mumbai",tj:"Мумбай"},
+ {city:"Пекин",country:"Китай",en:"Beijing",tj:"Пекин"},
+ {city:"Гуанчжоу",country:"Китай",en:"Guangzhou",tj:"Гуанчжоу"},
+ {city:"Сеул",country:"Южная Корея",en:"Seoul",tj:"Сеул"},
+ {city:"Токио",country:"Япония",en:"Tokyo",tj:"Токио"},
+ {city:"Бангкок",country:"Таиланд",en:"Bangkok",tj:"Бангкок"},
+ {city:"Доха",country:"Катар",en:"Doha",tj:"Доха"},
+ {city:"Эр-Рияд",country:"Саудовская Аравия",en:"Riyadh",tj:"Риёз"},
+ {city:"Лондон",country:"Великобритания",en:"London",tj:"Лондон"},
+ {city:"Париж",country:"Франция",en:"Paris",tj:"Париж"},
+ {city:"Берлин",country:"Германия",en:"Berlin",tj:"Берлин"},
+ {city:"Рим",country:"Италия",en:"Rome",tj:"Рим"},
+ {city:"Мадрид",country:"Испания",en:"Madrid",tj:"Мадрид"},
+ {city:"Прага",country:"Чехия",en:"Prague",tj:"Прага"},
+ {city:"Нью-Йорк",country:"США",en:"New York",tj:"Ню-Йорк"},
+ {city:"Лос-Анджелес",country:"США",en:"Los Angeles",tj:"Лос-Анҷелес"},
+ {city:"Торонто",country:"Канада",en:"Toronto",tj:"Торонто"},
+ {city:"Торонто",country:"Канада",en:"Toronto",tj:"Торонто"},
+ {city:"Стамбул",country:"Турция",en:"Istanbul",tj:"Истанбул"},
+ {city:"Каир",country:"Египет",en:"Cairo",tj:"Қоҳира"},
+ {city:"Мале",country:"Мальдивы",en:"Malé",tj:"Мале"}
+];
+
+function cityLabel(c){
+  if(lang==="en") return `${c.en}, ${c.country==="ОАЭ"?"UAE":c.country}`;
+  if(lang==="tj") return `${c.tj}, ${c.country}`;
+  return `${c.city}, ${c.country}`;
+}
+function cityMatch(c,q){
+  q=q.trim().toLowerCase();
+  if(!q) return true;
+  return [c.city,c.country,c.en,c.tj].some(v=>v.toLowerCase().includes(q));
+}
+function setupCityAutocomplete(inputId,suggestId){
+  const input=document.getElementById(inputId), box=document.getElementById(suggestId);
+  function render(){
+    const q=input.value.split(",")[0].trim();
+    const matches=cityDatabase.filter(c=>cityMatch(c,q)).slice(0,7);
+    box.innerHTML="";
+    if(!q || !matches.length){box.style.display="none";return}
+    matches.forEach(c=>{
+      const b=document.createElement("button");
+      b.type="button"; b.className="city-option";
+      b.innerHTML=`<strong>📍 ${c.city}</strong><span>${c.country}</span>`;
+      b.addEventListener("mousedown",e=>e.preventDefault());
+      b.addEventListener("click",()=>{
+        input.value=cityLabel(c);
+        input.dataset.city=c.city;
+        input.dataset.country=c.country;
+        box.style.display="none";
+      });
+      box.appendChild(b);
+    });
+    box.style.display="block";
+  }
+  input.addEventListener("input",()=>{
+    delete input.dataset.city; delete input.dataset.country; render();
+  });
+  input.addEventListener("focus",render);
+  document.addEventListener("click",e=>{if(!input.contains(e.target)&&!box.contains(e.target))box.style.display="none"});
+}
+setupCityAutocomplete("from","fromSuggestions");
+setupCityAutocomplete("to","toSuggestions");
+
 document.getElementById("ticketForm").addEventListener("submit",e=>{
  e.preventDefault();
  const t=translations[lang],from=document.getElementById("from").value.trim(),to=document.getElementById("to").value.trim(),date=document.getElementById("date").value,pax=document.getElementById("passengers").value;

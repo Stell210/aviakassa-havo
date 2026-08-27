@@ -3,3 +3,10 @@
 .nav-right{display:flex;align-items:center;gap:10px}.langs{display:flex;gap:3px;background:#f1f5f9;padding:3px;border-radius:10px}.langs button{border:0;background:transparent;color:#64748b;font-size:11px;font-weight:900;padding:7px 6px;border-radius:7px;cursor:pointer}.langs button.active{background:#fff;color:#071a35;box-shadow:0 2px 7px #071a3515}@media(max-width:520px){.nav-right{gap:5px}.langs button{padding:6px 5px}.nav-btn{display:none}}
 
 label span{display:block} input,select{min-height:46px} button.primary{font-family:inherit}
+
+.city-field{position:relative}
+.city-suggestions{position:absolute;left:0;right:0;top:calc(100% - 2px);z-index:20;background:#fff;border:1px solid #d9e2ed;border-radius:0 0 14px 14px;box-shadow:0 14px 30px #071a3518;overflow:hidden;display:none}
+.city-option{width:100%;border:0;border-bottom:1px solid #edf1f5;background:#fff;text-align:left;padding:12px 14px;cursor:pointer;display:flex;justify-content:space-between;gap:12px;align-items:center;font:inherit;color:#10233f}
+.city-option:last-child{border-bottom:0}
+.city-option:hover{background:#f4f8fc}
+.city-option strong{font-size:13px}.city-option span{font-size:11px;color:#718096}
