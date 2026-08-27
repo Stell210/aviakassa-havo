@@ -12,8 +12,8 @@
   <a class="brand" href="#top">✈️ <span>Aviakassa_havo</span></a>
   <nav>
     <a data-i18n="navSearch" href="#search">Найти билет</a>
-    <a data-i18n="navRoutes" href="#routes">Направления</a>
-    <a data-i18n="navHow" href="#steps">Как это работает</a>
+    <a data-i18n="navRoutes" href="#routes">Направления</a><a data-i18n="navOffers" href="#offers">Популярные</a>
+    <a data-i18n="navHow" href="#steps">Как это работает</a><a data-i18n="navFaq" href="#faq">FAQ</a>
   </nav>
   <div class="nav-right">
     <div class="langs" aria-label="Language">
@@ -47,21 +47,28 @@
       <p data-i18n="formIntro">Заполните несколько полей — готовый запрос откроется в WhatsApp.</p>
     </div>
     <form id="ticketForm">
-      <label class="city-field">
-        <span data-i18n="fromLabel">Откуда</span>
-        <input id="from" value="Душанбе, Таджикистан" autocomplete="off" required>
-        <div id="fromSuggestions" class="city-suggestions" role="listbox"></div>
-      </label>
-      <label class="city-field">
-        <span data-i18n="toLabel">Куда</span>
-        <input id="to" placeholder="Москва, Россия" autocomplete="off" required>
-        <div id="toSuggestions" class="city-suggestions" role="listbox"></div>
-      </label>
-      <label><span data-i18n="dateLabel">Дата</span><input id="date" type="date" required></label>
+      <div class="trip-switch"><button type="button" class="trip-btn active" data-trip="oneway" data-i18n="oneWay">В одну сторону</button><button type="button" class="trip-btn" data-trip="round" data-i18n="roundTrip">Туда и обратно</button></div>
+      <label><span data-i18n="fromLabel">Откуда</span><input id="from" value="Душанбе" list="cities" required></label>
+      <label><span data-i18n="toLabel">Куда</span><input id="to" placeholder="Москва" list="cities" required>
+      <datalist id="cities"><option value="Москва"><option value="Казань"><option value="Санкт-Петербург"><option value="Екатеринбург"><option value="Новосибирск"><option value="Дубай"><option value="Стамбул"><option value="Пекин"><option value="Алматы"><option value="Ташкент"></datalist></label>
+      <label><span data-i18n="dateLabel">Дата вылета</span><input id="date" type="date" required></label>
+      <label id="returnDateWrap" class="hidden-field"><span data-i18n="returnDateLabel">Дата возвращения</span><input id="returnDate" type="date"></label>
       <label><span data-i18n="passengerLabel">Пассажиры</span><select id="passengers"><option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option></select></label>
+      <label><span data-i18n="baggageLabel">Багаж</span><select id="baggage"><option data-i18n="bag23">23 кг + 10 кг ручной клади</option><option data-i18n="bagOnlyHand">Только ручная кладь</option><option data-i18n="bagAsk">Уточнить условия</option></select></label>
       <button class="primary" data-i18n="getOptions" type="submit">Получить варианты</button>
     </form>
     <div class="note" data-i18n="priceNote">💙 Цена и наличие мест уточняются индивидуально перед оформлением.</div>
+  </div>
+</section>
+
+<section class="section hot" id="offers">
+  <div class="head"><div><span class="eyebrow" data-i18n="hotEyebrow">ПОПУЛЯРНЫЕ ЗАПРОСЫ</span><h2 data-i18n="hotTitle">Куда часто летают</h2></div><p data-i18n="hotIntro">Выберите направление — заявка откроется в WhatsApp.</p></div>
+  <div class="offer-grid">
+    <a class="offer" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20билет%20Душанбе%20%E2%86%92%20Москва." target="_blank"><span>🇹🇯 → 🇷🇺</span><b>Душанбе → Москва</b><small>Узнать варианты →</small></a>
+    <a class="offer" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20билет%20Душанбе%20%E2%86%92%20Казань." target="_blank"><span>🇹🇯 → 🇷🇺</span><b>Душанбе → Казань</b><small>Узнать варианты →</small></a>
+    <a class="offer" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20билет%20Душанбе%20%E2%86%92%20Санкт-Петербург." target="_blank"><span>🇹🇯 → 🇷🇺</span><b>Душанбе → Санкт-Петербург</b><small>Узнать варианты →</small></a>
+    <a class="offer" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20билет%20Душанбе%20%E2%86%92%20Дубай." target="_blank"><span>🇹🇯 → 🇦🇪</span><b>Душанбе → Дубай</b><small>Узнать варианты →</small></a>
+    <a class="offer" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20билет%20Душанбе%20%E2%86%92%20Стамбул." target="_blank"><span>🇹🇯 → 🇹🇷</span><b>Душанбе → Стамбул</b><small>Узнать варианты →</small></a>
   </div>
 </section>
 
@@ -84,6 +91,19 @@
   </div>
 </section>
 
+<section class="section mini-steps">
+  <div class="head"><div><span class="eyebrow" data-i18n="miniEyebrow">ВСЁ ПРОСТО</span><h2 data-i18n="miniTitle">Как получить билет</h2></div></div>
+  <div class="mini-grid">
+    <div><b>1</b><h3 data-i18n="mini1Title">Заполните запрос</h3><p data-i18n="mini1Text">Укажите маршрут, дату и пассажиров.</p></div>
+    <div><b>2</b><h3 data-i18n="mini2Title">Получите варианты</h3><p data-i18n="mini2Text">Нажмите кнопку и отправьте заявку в WhatsApp.</p></div>
+    <div><b>3</b><h3 data-i18n="mini3Title">Выберите рейс</h3><p data-i18n="mini3Text">Менеджер поможет сравнить подходящие варианты.</p></div>
+  </div>
+</section>
+
+<section class="section baggage-info">
+  <div class="info-card"><div><span class="eyebrow" data-i18n="bagEyebrow">БАГАЖ</span><h2 data-i18n="bagTitle">Что взять с собой?</h2><p data-i18n="bagText">Условия багажа зависят от выбранного тарифа. Мы поможем уточнить условия перед оформлением.</p></div><div class="bag-items"><span>🧳 <b>23 кг</b> <small data-i18n="checkedBag">багаж</small></span><span>🎒 <b>10 кг</b> <small data-i18n="handBag">ручная кладь</small></span></div></div>
+</section>
+
 <section class="steps" id="steps">
   <div class="step-inner">
     <span class="eyebrow" data-i18n="threeSteps">3 ПРОСТЫХ ШАГА</span><h2 data-i18n="fromMsg">От сообщения до путешествия</h2>
@@ -92,6 +112,41 @@
       <div><span>02</span><h3 data-i18n="s2t">Выберите вариант</h3><p data-i18n="s2p">Мы поможем сравнить подходящие рейсы.</p></div>
       <div><span>03</span><h3 data-i18n="s3t">Путешествуйте</h3><p data-i18n="s3p">Получите оформленный билет и готовьтесь к поездке.</p></div>
     </div>
+  </div>
+</section>
+
+
+<section class="section social-trust">
+  <div class="social-card">
+    <div>
+      <span class="eyebrow" data-i18n="socialEyebrow">МЫ В INSTAGRAM</span>
+      <h2 data-i18n="socialTitle">Следите за новыми рейсами</h2>
+      <p data-i18n="socialText">Актуальные направления, полезные советы и предложения для путешествий.</p>
+    </div>
+    <a class="primary" href="https://www.instagram.com/tajik.travel.agency/" target="_blank" rel="noopener" data-i18n="socialButton">Открыть Instagram</a>
+  </div>
+</section>
+
+<section class="section faq" id="faq">
+  <div class="head">
+    <div><span class="eyebrow" data-i18n="faqEyebrow">ЧАСТЫЕ ВОПРОСЫ</span><h2 data-i18n="faqTitle">Есть вопросы?</h2></div>
+    <p data-i18n="faqIntro">Здесь собрали самые частые вопросы клиентов.</p>
+  </div>
+  <div class="faq-list">
+    <details><summary data-i18n="faq1q">Как заказать авиабилет?</summary><p data-i18n="faq1a">Заполните маршрут и дату на сайте и нажмите «Получить варианты». Заявка откроется в WhatsApp.</p></details>
+    <details><summary data-i18n="faq2q">Можно ли подобрать билет с багажом?</summary><p data-i18n="faq2a">Да. Напишите менеджеру, какой багаж вам нужен, и мы подберём подходящие варианты.</p></details>
+    <details><summary data-i18n="faq3q">Можно ли купить билет для другого человека?</summary><p data-i18n="faq3a">Да. Менеджер подскажет, какие данные пассажира нужны для оформления.</p></details>
+    <details><summary data-i18n="faq4q">Почему лучше покупать заранее?</summary><p data-i18n="faq4a">Стоимость и наличие мест могут меняться. Поэтому лучше подобрать билет заранее.</p></details>
+  </div>
+</section>
+
+
+<section class="section early">
+  <div class="early-card">
+    <div><span class="eyebrow" data-i18n="earlyEyebrow">СОВЕТ ПУТЕШЕСТВЕННИКУ</span>
+    <h2 data-i18n="earlyTitle">Покупайте билеты заранее</h2>
+    <p data-i18n="earlyText">Чем раньше вы начнёте искать подходящий рейс, тем больше вариантов можно сравнить. Не откладывайте поездку на последний момент.</p></div>
+    <a class="primary" href="https://wa.me/992753582002" target="_blank" data-i18n="earlyButton">Подобрать билет</a>
   </div>
 </section>
 
@@ -104,6 +159,7 @@
     <small data-i18n="motto">💙 Ваше путешествие — наша ответственность.</small>
   </div>
 </section>
+<a class="floating-wa" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20авиабилет." target="_blank" aria-label="WhatsApp">💬 <span>WhatsApp</span></a>
 </main>
 <footer><b>✈️ Aviakassa_havo</b><span data-i18n="footerLoc">Душанбе · Таджикистан</span><span>© <span id="year"></span></span></footer>
 <script src="script.js"></script>

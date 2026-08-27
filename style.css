@@ -4,9 +4,46 @@
 
 label span{display:block} input,select{min-height:46px} button.primary{font-family:inherit}
 
-.city-field{position:relative}
-.city-suggestions{position:absolute;left:0;right:0;top:calc(100% - 2px);z-index:20;background:#fff;border:1px solid #d9e2ed;border-radius:0 0 14px 14px;box-shadow:0 14px 30px #071a3518;overflow:hidden;display:none}
-.city-option{width:100%;border:0;border-bottom:1px solid #edf1f5;background:#fff;text-align:left;padding:12px 14px;cursor:pointer;display:flex;justify-content:space-between;gap:12px;align-items:center;font:inherit;color:#10233f}
-.city-option:last-child{border-bottom:0}
-.city-option:hover{background:#f4f8fc}
-.city-option strong{font-size:13px}.city-option span{font-size:11px;color:#718096}
+/* v6 additions */
+.faq{padding-top:20px}
+.faq-list{display:grid;gap:12px}
+.faq-list details{background:#fff;border:1px solid #e1e8f1;border-radius:16px;padding:0 20px;box-shadow:0 8px 25px #0b2a5208}
+.faq-list summary{cursor:pointer;list-style:none;padding:21px 35px 21px 0;font-weight:900;position:relative}
+.faq-list summary::-webkit-details-marker{display:none}
+.faq-list summary:after{content:"+";position:absolute;right:4px;top:14px;font-size:28px;color:#1687ff}
+.faq-list details[open] summary:after{content:"−"}
+.faq-list p{margin:0 0 20px;color:#718096;line-height:1.6;font-size:14px;max-width:800px}
+.early{padding-top:15px}
+.early-card{background:#071a35;color:#fff;border-radius:24px;padding:34px;display:flex;align-items:center;justify-content:space-between;gap:30px}
+.early-card h2{font-size:34px;margin:7px 0}
+.early-card p{color:#b8c7da;max-width:700px;line-height:1.55}
+@media(max-width:700px){.early-card{display:block}.early-card .primary{margin-top:10px;width:100%}}
+
+/* v7 */
+.trip-switch{grid-column:1/-1;display:flex;gap:8px;margin-bottom:2px}
+.trip-btn{border:1px solid #dce5ef;background:#f6f8fb;color:#506078;padding:11px 15px;border-radius:12px;font-weight:800;cursor:pointer}
+.trip-btn.active{background:#071a35;color:#fff;border-color:#071a35}
+.hidden-field{display:none!important}
+.offer-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.offer{display:flex;flex-direction:column;gap:10px;padding:20px;background:#fff;border:1px solid #e3e9f0;border-radius:18px;color:#071a35;text-decoration:none;box-shadow:0 8px 24px #071a3508}
+.offer span{font-size:26px}.offer b{font-size:18px}.offer small{color:#1687ff;font-weight:800}
+.baggage-info{padding-top:0}.info-card{display:flex;justify-content:space-between;align-items:center;gap:25px;background:#eef5ff;border-radius:24px;padding:30px}.info-card h2{margin:5px 0}.info-card p{color:#607086;max-width:680px}.bag-items{display:flex;gap:12px}.bag-items span{background:#fff;padding:18px;border-radius:16px;display:flex;flex-direction:column;min-width:145px}.bag-items small{color:#738198;margin-top:4px}
+.floating-wa{position:fixed;right:20px;bottom:20px;z-index:20;background:#25d366;color:#fff;text-decoration:none;border-radius:999px;padding:15px 20px;font-weight:900;box-shadow:0 10px 30px #0003}
+@media(max-width:900px){.offer-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.info-card{display:block}.bag-items{margin-top:15px}}
+@media(max-width:600px){.offer-grid{grid-template-columns:1fr}.trip-switch{overflow:auto}.trip-btn{white-space:nowrap}.floating-wa span{display:none}.floating-wa{width:54px;height:54px;padding:0;display:grid;place-items:center}}
+
+/* v8: mobile UX, social CTA, steps, city suggestions */
+.mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.mini-grid>div{background:#fff;border:1px solid #e2e9f2;border-radius:18px;padding:22px;box-shadow:0 8px 24px #071a3508}
+.mini-grid b{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:#071a35;color:#fff}
+.mini-grid h3{margin:14px 0 6px}.mini-grid p{margin:0;color:#738198;line-height:1.5}
+.social-card{display:flex;justify-content:space-between;align-items:center;gap:25px;background:linear-gradient(135deg,#071a35,#123d70);color:#fff;border-radius:24px;padding:32px}
+.social-card h2{margin:6px 0;font-size:32px}.social-card p{color:#c6d5e6;max-width:700px}.social-card .eyebrow{color:#9cc8ff}
+input:focus,select:focus{outline:3px solid #1687ff22;border-color:#1687ff}
+@media(max-width:700px){
+ .mini-grid{grid-template-columns:1fr}
+ .social-card{display:block;padding:25px}
+ .social-card .primary{width:100%;margin-top:12px}
+ .offer{min-height:120px}
+ .trip-switch{width:100%}
+}
