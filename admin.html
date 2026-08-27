@@ -1,157 +1,50 @@
-<!doctype html>
-<html lang="ru">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aviakassa_havo — Админ-панель</title>
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Aviakassa_havo — Админ-панель</title>
 <style>
-:root{--navy:#071a35;--blue:#1683ff;--bg:#f4f7fb;--card:#fff;--line:#e5ebf3;--muted:#708096;--green:#17a673;--yellow:#f3ad1b;--red:#d64545}
-*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--navy)}
-button,input,select,textarea{font:inherit}.app{min-height:100vh}.topbar{height:72px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:5}.brand{font-size:21px;font-weight:800}.brand span{color:var(--blue)}.user{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:14px}.avatar{width:38px;height:38px;border-radius:50%;background:#eaf3ff;display:grid;place-items:center;color:var(--blue);font-weight:800}
-.layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 72px)}.side{background:var(--navy);color:#fff;padding:22px 14px}.nav{display:grid;gap:6px}.nav button{border:0;background:transparent;color:#b9c6d8;text-align:left;padding:13px 14px;border-radius:10px;cursor:pointer;font-weight:700}.nav button.active,.nav button:hover{background:#153157;color:#fff}.nav small{display:block;color:#7386a0;text-transform:uppercase;font-size:10px;margin:20px 14px 6px}.main{padding:28px;max-width:1500px;width:100%;margin:auto}.page-title{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:22px}.page-title h1{margin:0;font-size:30px}.page-title p{margin:7px 0 0;color:var(--muted)}.btn{border:0;border-radius:10px;padding:11px 15px;font-weight:800;cursor:pointer}.btn.primary{background:var(--navy);color:#fff}.btn.light{background:#eef4fb;color:var(--navy)}.btn.danger{background:#fff0f0;color:var(--red)}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}.stat{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:18px}.stat .label{color:var(--muted);font-size:13px}.stat .num{font-size:28px;font-weight:900;margin-top:6px}.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}.tools{display:flex;gap:10px;flex-wrap:wrap;flex:1}.tools input{min-width:260px}.field{border:1px solid #d8e2ed;border-radius:10px;padding:10px 12px;background:#fff;outline:none}.field:focus{border-color:#8bbfff}.table-wrap{overflow:auto;margin-top:14px}table{width:100%;border-collapse:collapse;min-width:1050px}th,td{padding:13px 10px;border-bottom:1px solid #edf1f5;text-align:left;vertical-align:top}th{font-size:12px;color:#748399;text-transform:uppercase;letter-spacing:.03em}td{font-size:14px}.code{font-weight:900}.muted{color:var(--muted);font-size:12px}.route{font-weight:800}.badge{display:inline-flex;border-radius:999px;padding:6px 9px;font-size:11px;font-weight:800;white-space:nowrap}.b-new{background:#eaf3ff;color:#1670d2}.b-work{background:#fff5dc;color:#9a6a00}.b-options{background:#f0eaff;color:#7047bd}.b-booked{background:#e8f8f0;color:#16835e}.b-done{background:#e8f6ed;color:#287b4e}.b-cancel{background:#ffecec;color:#c33737}.actions{display:flex;gap:7px;align-items:center}.wa{color:#16835e;text-decoration:none;font-weight:800}.empty{text-align:center;padding:40px;color:var(--muted)}.notice{margin-top:12px;padding:12px 14px;border-radius:10px;background:#fff8df;color:#755600;font-size:13px}.login{min-height:100vh;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#eef6ff,#f7f9fc)}.login-card{width:min(430px,100%);background:#fff;border:1px solid var(--line);border-radius:20px;padding:28px;box-shadow:0 18px 50px #071a3514}.login-card h1{margin:0 0 8px}.login-card p{color:var(--muted)}.login-card input{width:100%;margin:10px 0 14px}.login-card button{width:100%}.hidden{display:none!important}.toast{position:fixed;right:18px;bottom:18px;background:var(--navy);color:#fff;padding:12px 16px;border-radius:10px;box-shadow:0 10px 30px #0002;z-index:20}
-@media(max-width:900px){.layout{grid-template-columns:1fr}.side{padding:8px;position:sticky;top:72px;z-index:4}.nav{display:flex;overflow:auto}.nav small{display:none}.nav button{white-space:nowrap}.main{padding:16px}.stats{grid-template-columns:repeat(2,1fr)}.topbar{padding:0 16px}}
-@media(max-width:520px){.stats{grid-template-columns:1fr 1fr}.page-title h1{font-size:24px}.user span{display:none}.tools input{min-width:100%;width:100%}}
-</style>
-</head>
-<body>
-<div id="login" class="login">
-  <div class="login-card">
-    <div class="brand">✈️ Aviakassa_<span>havo</span></div>
-    <h1>Админ-панель</h1>
-    <p>Вход для менеджера. Пароль задаётся в Render через <b>ADMIN_PASSWORD</b>.</p>
-    <input id="password" class="field" type="password" placeholder="Пароль">
-    <button id="loginBtn" class="btn primary">Войти</button>
-    <div id="loginMsg" class="notice hidden"></div>
-  </div>
-</div>
-
-<div id="app" class="app hidden">
-  <header class="topbar">
-    <div class="brand">✈️ Aviakassa_<span>havo</span></div>
-    <div class="user"><span>Менеджер</span><div class="avatar">A</div></div>
-  </header>
-  <div class="layout">
-    <aside class="side">
-      <div class="nav">
-        <small>Управление</small>
-        <button class="active" data-tab="bookings">📋 Заявки</button>
-        <button data-tab="flights">✈️ Рейсы</button>
-        <button data-tab="offers">🔥 Акции</button>
-        <button data-tab="cities">🌍 Направления</button>
-        <small>Система</small>
-        <button data-tab="settings">⚙️ Настройки</button>
-      </div>
-    </aside>
-
-    <main class="main">
-      <section id="bookings" class="tab">
-        <div class="page-title">
-          <div><h1>Заявки</h1><p>Все заявки клиентов с сайта</p></div>
-          <button class="btn light" id="refresh">↻ Обновить</button>
-        </div>
-
-        <div class="stats">
-          <div class="stat"><div class="label">Всего заявок</div><div class="num" id="sTotal">0</div></div>
-          <div class="stat"><div class="label">Новые</div><div class="num" id="sNew">0</div></div>
-          <div class="stat"><div class="label">В работе</div><div class="num" id="sWork">0</div></div>
-          <div class="stat"><div class="label">Забронировано</div><div class="num" id="sBooked">0</div></div>
-        </div>
-
-        <div class="panel">
-          <div class="toolbar">
-            <div class="tools">
-              <input id="search" class="field" placeholder="🔎 Имя, телефон, маршрут или номер заявки">
-              <select id="filter" class="field">
-                <option value="">Все статусы</option>
-                <option value="new">Новая</option>
-                <option value="in_progress">В работе</option>
-                <option value="options_sent">Варианты отправлены</option>
-                <option value="booked">Забронировано</option>
-                <option value="completed">Завершено</option>
-                <option value="cancelled">Отменено</option>
-              </select>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Заявка</th><th>Клиент</th><th>Маршрут</th><th>Дата</th><th>Пасс.</th><th>Багаж</th><th>Статус</th><th>Действие</th></tr></thead>
-              <tbody id="list"></tbody>
-            </table>
-          </div>
-          <div id="empty" class="empty hidden">Заявок пока нет.</div>
-        </div>
-      </section>
-
-      <section id="flights" class="tab hidden"><div class="page-title"><div><h1>Рейсы</h1><p>Раздел подготовлен для добавления актуальных рейсов.</p></div></div><div class="panel"><h3>Следующий этап</h3><p class="muted">Здесь сделаем добавление рейса через админку: город, страна, дата, время, авиакомпания, багаж и цена.</p></div></section>
-      <section id="offers" class="tab hidden"><div class="page-title"><div><h1>Акции</h1><p>Управление выгодными предложениями.</p></div></div><div class="panel"><h3>Следующий этап</h3><p class="muted">Добавим создание и включение/выключение акций без изменения кода сайта.</p></div></section>
-      <section id="cities" class="tab hidden"><div class="page-title"><div><h1>Направления</h1><p>Города и страны для формы поиска.</p></div></div><div class="panel"><h3>Следующий этап</h3><p class="muted">Сделаем список направлений, который можно редактировать из админки.</p></div></section>
-      <section id="settings" class="tab hidden"><div class="page-title"><div><h1>Настройки</h1><p>Основные параметры системы.</p></div></div><div class="panel"><p><b>WhatsApp:</b> +992753582002</p><p><b>Instagram:</b> @aviakassa_havo</p><p class="muted">Пароль администратора хранится в Render Environment Variable ADMIN_PASSWORD и не показывается на сайте.</p></div></section>
-    </main>
-  </div>
-</div>
-<div id="toast" class="toast hidden"></div>
-
+:root{--navy:#071a35;--blue:#1683ff;--bg:#f4f7fb;--card:#fff;--line:#e5ebf3;--muted:#708096;--green:#17a673;--yellow:#f3ad1b;--red:#d64545}*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--navy)}button,input,select,textarea{font:inherit}.hidden{display:none!important}.app{min-height:100vh}.topbar{height:72px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:10}.brand{font-size:21px;font-weight:800}.brand span{color:var(--blue)}.user{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px}.avatar{width:38px;height:38px;border-radius:50%;background:#eaf3ff;display:grid;place-items:center;color:var(--blue);font-weight:800}.layout{display:grid;grid-template-columns:235px 1fr;min-height:calc(100vh - 72px)}.side{background:var(--navy);color:#fff;padding:22px 14px}.nav{display:grid;gap:6px}.nav button{border:0;background:transparent;color:#b9c6d8;text-align:left;padding:13px 14px;border-radius:10px;cursor:pointer;font-weight:700}.nav button.active,.nav button:hover{background:#153157;color:#fff}.nav small{display:block;color:#7386a0;text-transform:uppercase;font-size:10px;margin:20px 14px 6px}.main{padding:28px;max-width:1550px;width:100%;margin:auto}.page-title{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:22px}.page-title h1{margin:0;font-size:30px}.page-title p{margin:7px 0 0;color:var(--muted)}.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer}.btn.primary{background:var(--navy);color:#fff}.btn.light{background:#eef4fb;color:var(--navy)}.btn.green{background:#e8f8f0;color:#137d58}.btn.red{background:#fff0f0;color:var(--red)}.btn.blue{background:#eaf3ff;color:#1670d2}.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:18px}.stat{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:18px}.stat .label{color:var(--muted);font-size:13px}.stat .num{font-size:28px;font-weight:900;margin-top:6px}.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}.tools{display:flex;gap:10px;flex-wrap:wrap;flex:1}.tools input{min-width:260px}.field{border:1px solid #d8e2ed;border-radius:10px;padding:10px 12px;background:#fff;outline:none}.field:focus{border-color:#8bbfff}.table-wrap{overflow:auto;margin-top:14px}table{width:100%;border-collapse:collapse;min-width:1150px}th,td{padding:12px 10px;border-bottom:1px solid #edf1f5;text-align:left;vertical-align:top}th{font-size:12px;color:#748399;text-transform:uppercase}td{font-size:14px}.code{font-weight:900}.muted{color:var(--muted);font-size:12px}.route{font-weight:800}.badge{display:inline-flex;border-radius:999px;padding:6px 9px;font-size:11px;font-weight:800;white-space:nowrap}.b-new{background:#eaf3ff;color:#1670d2}.b-work{background:#fff5dc;color:#9a6a00}.b-options{background:#f0eaff;color:#7047bd}.b-booked{background:#e8f8f0;color:#16835e}.b-done{background:#e8f6ed;color:#287b4e}.b-cancel{background:#ffecec;color:#c33737}.actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.wa{color:#16835e;text-decoration:none;font-weight:800}.empty{text-align:center;padding:40px;color:var(--muted)}.notice{margin-top:12px;padding:12px 14px;border-radius:10px;background:#fff8df;color:#755600;font-size:13px}.login{min-height:100vh;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#eef6ff,#f7f9fc)}.login-card{width:min(440px,100%);background:#fff;border:1px solid var(--line);border-radius:20px;padding:28px;box-shadow:0 18px 50px #071a3514}.login-card h1{margin:14px 0 8px}.login-card p{color:var(--muted)}.login-card input{width:100%;margin:8px 0}.login-card button{width:100%;margin-top:8px}.toast{position:fixed;right:18px;bottom:18px;background:var(--navy);color:#fff;padding:12px 16px;border-radius:10px;box-shadow:0 10px 30px #0002;z-index:30}.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.form-grid .full{grid-column:1/-1}.form-grid label{display:grid;gap:6px;font-size:13px;font-weight:800;color:#4b5d73}.form-grid input,.form-grid select,.form-grid textarea{width:100%}.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.section-head h2{margin:0}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.mini-card{border:1px solid var(--line);border-radius:14px;padding:15px;background:#fff}.mini-card h3{margin:0 0 6px}.mini-card p{margin:5px 0;color:var(--muted);font-size:13px}.modal{position:fixed;inset:0;background:#071a3566;display:grid;place-items:center;padding:20px;z-index:25}.modal-card{width:min(760px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:18px;padding:22px;box-shadow:0 25px 80px #0003}.modal-head{display:flex;justify-content:space-between;gap:10px;align-items:start}.close{border:0;background:#eef4fb;border-radius:10px;font-size:22px;width:40px;height:40px;cursor:pointer}.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}.detail{padding:12px;border:1px solid var(--line);border-radius:12px;background:#f9fbfd}.detail b{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;text-transform:uppercase}.detail span{font-weight:700;word-break:break-word}.login-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.small-note{color:var(--muted);font-size:12px}.pill{padding:5px 8px;border-radius:999px;background:#eef4fb;font-size:11px;font-weight:800}.check{display:flex;align-items:center;gap:8px}.check input{width:auto}
+@media(max-width:1000px){.layout{grid-template-columns:1fr}.side{padding:8px;position:sticky;top:72px;z-index:8}.nav{display:flex;overflow:auto}.nav small{display:none}.nav button{white-space:nowrap}.main{padding:16px}.stats{grid-template-columns:repeat(3,1fr)}.cards{grid-template-columns:1fr 1fr}}
+@media(max-width:650px){.stats{grid-template-columns:1fr 1fr}.form-grid,.grid2,.grid3,.detail-grid,.login-row{grid-template-columns:1fr}.cards{grid-template-columns:1fr}.page-title h1{font-size:24px}.topbar{padding:0 14px}.user span{display:none}}
+</style></head><body>
+<div id="login" class="login"><div class="login-card"><div class="brand">✈️ Aviakassa_<span>havo</span></div><h1>Админ-панель</h1><p>Вход администратора или менеджера.</p><div class="login-row"><input id="username" class="field" placeholder="Логин" value="admin"><input id="password" class="field" type="password" placeholder="Пароль"></div><button id="loginBtn" class="btn primary">Войти</button><div id="loginMsg" class="notice hidden"></div></div></div>
+<div id="app" class="app hidden"><header class="topbar"><div class="brand">✈️ Aviakassa_<span>havo</span></div><div class="user"><span id="userLabel">Менеджер</span><div id="avatar" class="avatar">A</div><button id="logout" class="btn light">Выйти</button></div></header><div class="layout"><aside class="side"><div class="nav"><small>Управление</small><button class="active" data-tab="bookings">📋 Заявки</button><button data-tab="flights">✈️ Рейсы</button><button data-tab="offers">🔥 Акции</button><button data-tab="cities">🌍 Направления</button><small>Система</small><button data-tab="managers" id="managersNav">👥 Менеджеры</button><button data-tab="settings">🔐 Безопасность</button></div></aside><main class="main">
+<section id="bookings" class="tab"><div class="page-title"><div><h1>Заявки</h1><p>Все заявки клиентов с сайта</p></div><div class="actions"><button class="btn green" id="exportXlsx">📊 Экспорт Excel</button><button class="btn light" id="refresh">↻ Обновить</button></div></div><div class="stats"><div class="stat"><div class="label">Сегодня</div><div class="num" id="sToday">0</div></div><div class="stat"><div class="label">За 7 дней</div><div class="num" id="sWeek">0</div></div><div class="stat"><div class="label">За месяц</div><div class="num" id="sMonth">0</div></div><div class="stat"><div class="label">Всего</div><div class="num" id="sTotal">0</div></div><div class="stat"><div class="label">Новые</div><div class="num" id="sNew">0</div></div></div><div class="panel"><div class="toolbar"><div class="tools"><input id="search" class="field" placeholder="🔎 Имя, телефон, маршрут или номер заявки"><select id="filter" class="field"><option value="">Все статусы</option><option value="new">Новая</option><option value="in_progress">В работе</option><option value="options_sent">Варианты отправлены</option><option value="booked">Забронировано</option><option value="completed">Завершено</option><option value="cancelled">Отменено</option></select></div></div><div class="table-wrap"><table><thead><tr><th>Заявка</th><th>Клиент</th><th>Маршрут</th><th>Дата</th><th>Пасс.</th><th>Багаж</th><th>Статус</th><th>Действия</th></tr></thead><tbody id="list"></tbody></table></div><div id="empty" class="empty hidden">Заявок пока нет.</div></div></section>
+<section id="flights" class="tab hidden"><div class="page-title"><div><h1>Рейсы</h1><p>Добавляй и редактируй рейсы без изменения кода.</p></div><button class="btn primary" id="addFlight">+ Добавить рейс</button></div><div id="flightList" class="cards"></div></section>
+<section id="offers" class="tab hidden"><div class="page-title"><div><h1>Акции</h1><p>Управление акциями и специальными предложениями.</p></div><button class="btn primary" id="addOffer">+ Добавить акцию</button></div><div id="offerList" class="cards"></div></section>
+<section id="cities" class="tab hidden"><div class="page-title"><div><h1>Направления</h1><p>Города и страны для будущего использования на сайте.</p></div><button class="btn primary" id="addCity">+ Добавить направление</button></div><div id="cityList" class="cards"></div></section>
+<section id="managers" class="tab hidden"><div class="page-title"><div><h1>Менеджеры</h1><p>У каждого менеджера свой логин и пароль.</p></div><button class="btn primary" id="addManager">+ Добавить менеджера</button></div><div class="panel"><div id="managerList"></div></div></section>
+<section id="settings" class="tab hidden"><div class="page-title"><div><h1>Безопасность</h1><p>Защита админ-панели.</p></div></div><div class="panel"><h3>Защита включена</h3><p class="small-note">Пароли не отображаются в интерфейсе. Вход защищён временной сессией, ограничением попыток и отдельными аккаунтами менеджеров.</p><p><b>WhatsApp:</b> +992753582002</p><p><b>Instagram:</b> @aviakassa_havo</p></div></section>
+</main></div></div>
+<div id="modal" class="modal hidden"><div class="modal-card"><div class="modal-head"><div><h2 id="modalTitle">Карточка</h2><p id="modalSub" class="muted"></p></div><button class="close" id="modalClose">×</button></div><div id="modalBody"></div></div></div><div id="toast" class="toast hidden"></div>
 <script>
-let token=localStorage.getItem("av_admin_token")||"", all=[];
-const $=id=>document.getElementById(id);
-const labels={new:"Новая",in_progress:"В работе",options_sent:"Варианты отправлены",booked:"Забронировано",completed:"Завершено",cancelled:"Отменено"};
-const cls={new:"b-new",in_progress:"b-work",options_sent:"b-options",booked:"b-booked",completed:"b-done",cancelled:"b-cancel"};
-
-function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
-function showToast(t){$("toast").textContent=t;$("toast").classList.remove("hidden");setTimeout(()=>$("toast").classList.add("hidden"),2200)}
-function showApp(){ $("login").classList.add("hidden");$("app").classList.remove("hidden"); load(); }
-function logout(){localStorage.removeItem("av_admin_token");token="";location.reload()}
-
-async function login(){
- const pw=$("password").value;
- const r=await fetch("/api/admin/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pw})});
- const d=await r.json();
- if(d.ok){token=d.token;localStorage.setItem("av_admin_token",token);showApp()}
- else{$("loginMsg").textContent="Неверный пароль. Проверь ADMIN_PASSWORD в Render.";$("loginMsg").classList.remove("hidden")}
+let token=localStorage.getItem("av_admin_token")||"", me=null, all=[];const $=id=>document.getElementById(id);
+const labels={new:"Новая",in_progress:"В работе",options_sent:"Варианты отправлены",booked:"Забронировано",completed:"Завершено",cancelled:"Отменено"};const cls={new:"b-new",in_progress:"b-work",options_sent:"b-options",booked:"b-booked",completed:"b-done",cancelled:"b-cancel"};
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}function toast(t){$("toast").textContent=t;$("toast").classList.remove("hidden");setTimeout(()=>$("toast").classList.add("hidden"),2200)}
+async function api(url,opt={}){const headers={...(opt.headers||{}),Authorization:"Bearer "+token};if(opt.body&&!headers["Content-Type"])headers["Content-Type"]="application/json";const r=await fetch(url,{...opt,headers});if(r.status===401){logout();throw Error("UNAUTHORIZED")}if(!r.ok){let d={};try{d=await r.json()}catch{}throw Error(d.error||"Ошибка")};return r}
+function logout(){localStorage.removeItem("av_admin_token");token="";location.reload()}function showApp(){
+ $("login").classList.add("hidden");$("app").classList.remove("hidden");$("userLabel").textContent=me?.name||"Менеджер";$("avatar").textContent=(me?.name||"A").slice(0,1).toUpperCase();if(me?.role!=="admin")$("managersNav").classList.add("hidden");loadBookings();
 }
-async function load(){
- const r=await fetch("/api/admin/bookings",{headers:{Authorization:"Bearer "+token}});
- if(r.status===401){logout();return}
- const d=await r.json();all=d.bookings||[];render();
-}
-function render(){
- const q=$("search").value.toLowerCase().trim(),f=$("filter").value;
- const a=all.filter(x=>(!f||x.status===f)&&(!q||[x.name,x.phone,x.from_city,x.to_city,x.request_code].join(" ").toLowerCase().includes(q)));
- $("sTotal").textContent=all.length;
- $("sNew").textContent=all.filter(x=>x.status==="new").length;
- $("sWork").textContent=all.filter(x=>x.status==="in_progress").length;
- $("sBooked").textContent=all.filter(x=>x.status==="booked").length;
- $("empty").classList.toggle("hidden",a.length>0);
- $("list").innerHTML=a.map(x=>{
-   const phone=x.phone||"", wa=phone.replace(/[^\d]/g,"");
-   return `<tr>
-    <td><div class="code">${esc(x.request_code)}</div><div class="muted">${new Date(x.created_at).toLocaleString()}</div></td>
-    <td><b>${esc(x.name)}</b><br><a class="wa" href="https://wa.me/${wa}" target="_blank">${esc(phone)}</a></td>
-    <td><div class="route">${esc(x.from_city)} → ${esc(x.to_city)}</div></td>
-    <td>${esc(x.departure_date||"—")}${x.return_date?`<br><span class="muted">↩ ${esc(x.return_date)}</span>`:""}</td>
-    <td>${esc(x.passengers)}</td>
-    <td>${esc(x.baggage)}</td>
-    <td><span class="badge ${cls[x.status]||"b-new"}">${labels[x.status]||x.status}</span></td>
-    <td><select class="field status-select" data-id="${x.id}">
-      ${Object.entries(labels).map(([k,v])=>`<option value="${k}" ${x.status===k?"selected":""}>${v}</option>`).join("")}
-    </select></td>
-   </tr>`
- }).join("");
- document.querySelectorAll(".status-select").forEach(s=>s.onchange=()=>setStatus(s.dataset.id,s.value));
-}
-async function setStatus(id,status){
- const r=await fetch("/api/admin/bookings",{method:"PATCH",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({id:Number(id),status})});
- if(r.ok){showToast("Статус обновлён");load()}else showToast("Не удалось изменить статус");
-}
-
-$("loginBtn").onclick=login;$("password").onkeydown=e=>{if(e.key==="Enter")login()};
-$("refresh").onclick=load;$("search").oninput=render;$("filter").onchange=render;
-document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>{
- document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));b.classList.add("active");
- document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"));$(b.dataset.tab).classList.remove("hidden");
-});
-if(token)showApp();
-</script>
-</body>
-</html>
+async function login(){try{const username=$("username").value.trim()||"admin",password=$("password").value;const r=await fetch("/api/admin/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username,password})});const d=await r.json();if(!r.ok)throw Error(d.error||"INVALID_PASSWORD");token=d.token;me=d.user;localStorage.setItem("av_admin_token",token);showApp()}catch(e){$("loginMsg").textContent=e.message==="TOO_MANY_ATTEMPTS"?"Слишком много попыток. Попробуйте позже.":"Неверный логин или пароль.";$("loginMsg").classList.remove("hidden")}}
+async function loadMe(){try{const r=await api("/api/admin/me");me=(await r.json()).user;showApp()}catch{}}
+async function loadBookings(){const qs=new URLSearchParams();if($("search").value)qs.set("q",$("search").value);if($("filter").value)qs.set("status",$("filter").value);const r=await api("/api/admin/bookings?"+qs);all=(await r.json()).bookings||[];renderBookings();loadStats()}
+async function loadStats(){try{const r=await api("/api/admin/stats"),s=(await r.json()).stats;$("sToday").textContent=s.today;$("sWeek").textContent=s.week;$("sMonth").textContent=s.month;$("sTotal").textContent=s.total;$("sNew").textContent=all.filter(x=>x.status==="new").length}catch{}}
+function renderBookings(){const q=$("search").value.toLowerCase().trim(),f=$("filter").value,a=all.filter(x=>(!f||x.status===f)&&(!q||[x.name,x.phone,x.from_city,x.to_city,x.request_code].join(" ").toLowerCase().includes(q)));$("empty").classList.toggle("hidden",a.length>0);$("list").innerHTML=a.map(x=>{const wa=(x.phone||"").replace(/\D/g,"");return `<tr><td><div class="code">${esc(x.request_code)}</div><div class="muted">${new Date(x.created_at).toLocaleString("ru-RU")}</div></td><td><b>${esc(x.name)}</b><br><a class="wa" href="https://wa.me/${wa}" target="_blank">📞 ${esc(x.phone)}</a></td><td><div class="route">${esc(x.from_city)} → ${esc(x.to_city)}</div></td><td>${esc(x.departure_date||"—")}${x.return_date?`<br><span class="muted">↩ ${esc(x.return_date)}</span>`:""}</td><td>${esc(x.passengers)}</td><td>${esc(x.baggage)}</td><td><span class="badge ${cls[x.status]||"b-new"}">${labels[x.status]||x.status}</span></td><td><div class="actions"><button class="btn blue" data-open="${x.id}">📝 Открыть</button><select class="field status-select" data-id="${x.id}">${Object.entries(labels).map(([k,v])=>`<option value="${k}" ${x.status===k?"selected":""}>${v}</option>`).join("")}</select></div></td></tr>`}).join("");document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openBooking(Number(b.dataset.open)));document.querySelectorAll(".status-select").forEach(s=>s.onchange=()=>setStatus(s.dataset.id,s.value))}
+async function setStatus(id,status){try{await api("/api/admin/bookings",{method:"PATCH",body:JSON.stringify({id:Number(id),status})});toast("Статус обновлён");loadBookings()}catch(e){toast(e.message)}}
+function openModal(title,sub,body){$("modalTitle").textContent=title;$("modalSub").textContent=sub||"";$("modalBody").innerHTML=body;$("modal").classList.remove("hidden")}$(
+"modalClose").onclick=()=>$("modal").classList.add("hidden");$("modal").onclick=e=>{if(e.target===$("modal"))$("modal").classList.add("hidden")};
+function openBooking(id){const x=all.find(a=>Number(a.id)===id);if(!x)return;const wa=(x.phone||"").replace(/\D/g,"");openModal("Заявка "+x.request_code,new Date(x.created_at).toLocaleString("ru-RU"),`<div class="detail-grid">${[["Имя",x.name],["Телефон",x.phone],["Откуда",x.from_city],["Куда",x.to_city],["Дата вылета",x.departure_date],["Дата возвращения",x.return_date||"—"],["Пассажиры",x.passengers],["Багаж",x.baggage],["Статус",labels[x.status]||x.status],["Менеджер",x.manager_name||"Не назначен"],["Заметка",x.notes||"—"],["Номер заявки",x.request_code]].map(([a,b])=>`<div class="detail"><b>${esc(a)}</b><span>${esc(b)}</span></div>`).join("")}</div><div class="actions"><a class="btn green" href="https://wa.me/${wa}?text=${encodeURIComponent("Здравствуйте! По вашей заявке "+x.request_code+" по маршруту "+x.from_city+" → "+x.to_city+".")}" target="_blank">📞 Написать в WhatsApp</a><button class="btn light" onclick="document.getElementById('modal').classList.add('hidden')">Закрыть</button></div>`) }
+async function exportXlsx(){try{const qs=new URLSearchParams();if($("search").value)qs.set("q",$("search").value);if($("filter").value)qs.set("status",$("filter").value);const r=await api("/api/admin/bookings.xlsx?"+qs);const blob=await r.blob(),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="aviakassa-zayavki.xlsx";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);toast("Excel-файл готов") }catch(e){toast(e.message)}}
+async function listData(kind){const r=await api("/api/admin/"+kind);return (await r.json())[kind]||[]}
+function formModal(title,fields,onSave){openModal(title,"Заполните поля",`<form id="genericForm" class="form-grid">${fields.map(f=>`<label class="${f.full?'full':''}">${esc(f.label)}${f.type==="select"?`<select class="field" name="${f.key}">${f.options.map(o=>`<option value="${esc(o.value)}">${esc(o.label)}</option>`).join("")}</select>`:f.type==="textarea"?`<textarea class="field" name="${f.key}" rows="4"></textarea>`:`<input class="field" name="${f.key}" type="${f.type||"text"}" ${f.required!==false?"required":""}>`}</label>`).join("")}<div class="full actions"><button class="btn primary">Сохранить</button></div></form>`);$("genericForm").onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.target),o=Object.fromEntries(fd.entries());fields.forEach(f=>{if(f.type==="checkbox")o[f.key]=!!fd.get(f.key)});try{await onSave(o);$("modal").classList.add("hidden");toast("Сохранено");}catch(err){toast(err.message)}}}
+async function loadFlights(){const a=await listData("flights");$("flightList").innerHTML=a.map(x=>`<div class="mini-card"><h3>${esc(x.from_city)}, ${esc(x.from_country)} → ${esc(x.to_city)}, ${esc(x.to_country)}</h3><p>📅 ${esc(x.flight_date)} · 🕐 ${esc(x.flight_time)}</p><p>✈️ ${esc(x.airline)} · 🧳 ${esc(x.baggage)}</p><p><b>${esc(x.price)} ${esc(x.currency)}</b> · ${x.active?"Активен":"Выключен"}</p><div class="actions"><button class="btn blue" data-edit-flight="${x.id}">Изменить</button><button class="btn red" data-del-flight="${x.id}">Удалить</button></div></div>`).join("");document.querySelectorAll("[data-del-flight]").forEach(b=>b.onclick=()=>delItem("flights",b.dataset.delFlight,loadFlights));document.querySelectorAll("[data-edit-flight]").forEach(b=>b.onclick=()=>editFlight(a.find(x=>x.id==b.dataset.editFlight)))}
+const flightFields=[{key:"from_city",label:"Город отправления"},{key:"from_country",label:"Страна отправления"},{key:"to_city",label:"Город прибытия"},{key:"to_country",label:"Страна прибытия"},{key:"flight_date",label:"Дата",type:"date"},{key:"flight_time",label:"Время"},{key:"airline",label:"Авиакомпания"},{key:"baggage",label:"Багаж"},{key:"price",label:"Цена",type:"number"},{key:"currency",label:"Валюта",required:false}];
+function editFlight(x){formModal(x?"Изменить рейс":"Добавить рейс",flightFields,async o=>{if(x)o.id=x.id;else o.active="true";await api("/api/admin/flights",{method:x?"PATCH":"POST",body:JSON.stringify(o)});loadFlights()})}
+async function loadOffers(){const a=await listData("offers");$("offerList").innerHTML=a.map(x=>`<div class="mini-card"><h3>${esc(x.title)}</h3><p>${esc(x.description||"")}</p><p><b>${esc(x.discount||"")}</b> · до ${esc(x.valid_until||"без срока")}</p><p>${x.active?"Активна":"Выключена"}</p><div class="actions"><button class="btn blue" data-edit-offer="${x.id}">Изменить</button><button class="btn red" data-del-offer="${x.id}">Удалить</button></div></div>`).join("");document.querySelectorAll("[data-del-offer]").forEach(b=>b.onclick=()=>delItem("offers",b.dataset.delOffer,loadOffers));document.querySelectorAll("[data-edit-offer]").forEach(b=>b.onclick=()=>editOffer(a.find(x=>x.id==b.dataset.editOffer)))}
+function editOffer(x){formModal(x?"Изменить акцию":"Добавить акцию",[{key:"title",label:"Название"},{key:"description",label:"Описание",type:"textarea",required:false,full:true},{key:"discount",label:"Скидка / выгода",required:false},{key:"valid_until",label:"До даты",type:"date",required:false}],async o=>{if(x)o.id=x.id;else o.active="true";await api("/api/admin/offers",{method:x?"PATCH":"POST",body:JSON.stringify(o)});loadOffers()})}
+async function loadCities(){const a=await listData("directions");$("cityList").innerHTML=a.map(x=>`<div class="mini-card"><h3>🌍 ${esc(x.city)}</h3><p>${esc(x.country)} ${x.code?"· "+esc(x.code):""}</p><p>${x.active?"Активно":"Выключено"}</p><div class="actions"><button class="btn blue" data-edit-city="${x.id}">Изменить</button><button class="btn red" data-del-city="${x.id}">Удалить</button></div></div>`).join("");document.querySelectorAll("[data-del-city]").forEach(b=>b.onclick=()=>delItem("directions",b.dataset.delCity,loadCities));document.querySelectorAll("[data-edit-city]").forEach(b=>b.onclick=()=>editCity(a.find(x=>x.id==b.dataset.editCity)))}
+function editCity(x){formModal(x?"Изменить направление":"Добавить направление",[{key:"city",label:"Город"},{key:"country",label:"Страна"},{key:"code",label:"Код аэропорта",required:false}],async o=>{if(x)o.id=x.id;else o.active="true";await api("/api/admin/directions",{method:x?"PATCH":"POST",body:JSON.stringify(o)});loadCities()})}
+async function delItem(kind,id,reload){if(!confirm("Удалить запись?"))return;try{await api(`/api/admin/${kind}?id=${encodeURIComponent(id)}`,{method:"DELETE"});reload();toast("Удалено")}catch(e){toast(e.message)}}
+async function loadManagers(){if(me?.role!=="admin")return;const a=await listData("managers");$("managerList").innerHTML=`<div class="table-wrap"><table style="min-width:700px"><thead><tr><th>Имя</th><th>Логин</th><th>Роль</th><th>Статус</th><th>Действия</th></tr></thead><tbody>${a.map(x=>`<tr><td><b>${esc(x.name)}</b></td><td>${esc(x.username)}</td><td>${esc(x.role)}</td><td>${x.active?"Активен":"Отключён"}</td><td class="actions"><button class="btn light" data-toggle-manager="${x.id}" data-active="${x.active}">${x.active?"Отключить":"Включить"}</button><button class="btn blue" data-pass-manager="${x.id}">Новый пароль</button></td></tr>`).join("")}</tbody></table></div>`;document.querySelectorAll("[data-toggle-manager]").forEach(b=>b.onclick=async()=>{await api("/api/admin/managers",{method:"PATCH",body:JSON.stringify({id:Number(b.dataset.toggleManager),active:b.dataset.active!=="true"})});loadManagers()});document.querySelectorAll("[data-pass-manager]").forEach(b=>b.onclick=()=>{const p=prompt("Новый пароль (минимум 10 символов):");if(p)api("/api/admin/managers",{method:"PATCH",body:JSON.stringify({id:Number(b.dataset.passManager),password:p})}).then(()=>toast("Пароль изменён")).catch(e=>toast(e.message))})}
+function addManager(){formModal("Добавить менеджера",[{key:"name",label:"Имя"},{key:"username",label:"Логин"},{key:"password",label:"Пароль (минимум 10 символов)",type:"password"}],async o=>{await api("/api/admin/managers",{method:"POST",body:JSON.stringify(o)});loadManagers()})}
+$("loginBtn").onclick=login;$("password").onkeydown=e=>{if(e.key==="Enter")login()};$("refresh").onclick=loadBookings;$("search").oninput=()=>loadBookings();$("filter").onchange=()=>loadBookings();$("exportXlsx").onclick=exportXlsx;$("logout").onclick=logout;$("addFlight").onclick=()=>editFlight();$("addOffer").onclick=()=>editOffer();$("addCity").onclick=()=>editCity();$("addManager").onclick=addManager;
+document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"));$(b.dataset.tab).classList.remove("hidden");if(b.dataset.tab==="flights")loadFlights();if(b.dataset.tab==="offers")loadOffers();if(b.dataset.tab==="cities")loadCities();if(b.dataset.tab==="managers")loadManagers()});
+if(token)loadMe();
+</script></body></html>
