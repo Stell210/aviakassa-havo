@@ -102,3 +102,106 @@ function setLang(l){
  const floating=document.querySelector(".floating-wa"); if(floating) floating.href="https://wa.me/992753582002?text="+encodeURIComponent(x.whatsAppGreeting);
 }
 
+
+
+// ===== Functional controls / language / request form =====
+(function(){
+  function $(id){ return document.getElementById(id); }
+
+  function wireLanguageButtons(){
+    document.querySelectorAll("[data-lang]").forEach(function(btn){
+      btn.addEventListener("click",function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        setLang(btn.dataset.lang);
+      });
+    });
+  }
+
+  function wireTripButtons(){
+    const wrap=$("returnDateWrap");
+    const ret=$("returnDate");
+    document.querySelectorAll(".trip-btn").forEach(function(btn){
+      btn.addEventListener("click",function(e){
+        e.preventDefault();
+        document.querySelectorAll(".trip-btn").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        const isRound=btn.dataset.trip==="round";
+        if(wrap) wrap.classList.toggle("hidden-field",!isRound);
+        if(ret) ret.required=isRound;
+        if(isRound && $("date") && ret && $("date").value) ret.min=$("date").value;
+      });
+    });
+  }
+
+  function wireDates(){
+    const d=$("date"), r=$("returnDate");
+    if(!d) return;
+    const today=new Date();
+    const iso=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);
+    d.min=iso;
+    d.addEventListener("change",function(){
+      if(r) {
+        r.min=d.value||iso;
+        if(r.value && d.value && r.value<d.value) r.value="";
+      }
+    });
+    if(r) r.addEventListener("change",function(){
+      if(d.value && r.value && r.value<d.value) r.value="";
+    });
+  }
+
+  function wireCities(){
+    ["from","to"].forEach(function(id){
+      const el=$(id); if(!el)return;
+      ["change","blur"].forEach(ev=>el.addEventListener(ev,()=>normalizeCity(id)));
+    });
+  }
+
+  async function submitRequest(e){
+    e.preventDefault();
+    const name=$("clientName")?.value.trim(), phone=$("clientPhone")?.value.trim();
+    const from=$("from")?.value.trim(), to=$("to")?.value.trim(), date=$("date")?.value;
+    const ret=$("returnDate")?.value||"", passengers=$("passengers")?.value||"1";
+    const baggage=$("baggage")?.value||"";
+    const round=document.querySelector(".trip-btn.active")?.dataset.trip==="round";
+    if(!name||!phone||!from||!to||!date||(round&&!ret)) {
+      $("ticketForm")?.reportValidity(); return;
+    }
+    normalizeCity("from"); normalizeCity("to");
+    const payload={name,phone,from:$("from").value.trim(),to:$("to").value.trim(),date,returnDate:round?ret:"",passengers,baggage};
+    const status=$("requestStatus"), t=translations[lang]||translations.ru, x=extraTranslations[lang]||extraTranslations.ru;
+    if(status) status.textContent=x.requestSaving||"Saving…";
+    let code="REQ-"+Date.now().toString(36).toUpperCase();
+    try{
+      const r=await fetch("/api/bookings",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      const data=await r.json();
+      if(!r.ok||!data.ok) throw new Error(data.error||"API_ERROR");
+      code=data.requestCode||code;
+    }catch(err){
+      saveLocalRequest({...payload,id:code,createdAt:new Date().toISOString(),status:"new"});
+    }
+    if(status) status.textContent=x.requestAccepted||"Request received.";
+    const greeting=x.whatsAppGreeting||"Hello!";
+    let msg=greeting+"\n\n"+"Имя: "+name+"\n"+"Телефон: "+phone+"\n"+"Откуда: "+from+"\n"+"Куда: "+to+"\n"+"Дата вылета: "+date+"\n";
+    if(round) msg+="Дата возвращения: "+ret+"\n";
+    msg+="Пассажиры: "+passengers+"\n"+"Багаж: "+baggage+"\n"+"Номер заявки: "+code;
+    window.open("https://wa.me/992753582002?text="+encodeURIComponent(msg),"_blank","noopener");
+  }
+
+  function init(){
+    wireLanguageButtons();
+    wireTripButtons();
+    wireDates();
+    wireCities();
+    const form=$("ticketForm");
+    if(form) form.addEventListener("submit",submitRequest);
+    const y=$("year"); if(y)y.textContent=new Date().getFullYear();
+    // Apply the saved language after all handlers are installed.
+    setLang(lang);
+    // Keep the current language active visually.
+    document.querySelectorAll("[data-lang]").forEach(b=>b.classList.toggle("active",b.dataset.lang===lang));
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",init);
+  else init();
+})();
