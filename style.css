@@ -51,3 +51,7 @@ input:focus,select:focus{outline:3px solid #1687ff22;border-color:#1687ff}
 .request-status{margin-top:10px;color:#58708b;font-size:13px;min-height:18px}
 
 .city-hint{font-size:12px;color:#718096;margin:-4px 0 6px}
+
+
+/* v14 public content from admin */
+.dynamic-section{padding-top:75px}.flight-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.flight-card{background:#fff;border:1px solid #e1e8f1;border-radius:20px;padding:23px;box-shadow:0 8px 25px #071a3508}.flight-route{font-size:20px;font-weight:900;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.flight-meta{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}.flight-meta span,.offer-discount{background:#f1f5f9;border-radius:999px;padding:8px 11px;font-size:12px;font-weight:800;color:#52627a}.flight-price{font-size:26px;font-weight:900;margin:10px 0}.flight-card .primary{width:100%;margin-top:8px}.public-empty{background:#fff;border:1px dashed #d4deea;border-radius:18px;padding:24px;color:#718096}.public-offer{min-height:180px}.offer-discount{display:inline-block;background:#fff4d6;color:#8a5a00}.offer-description{color:#718096;line-height:1.5;font-size:13px}.public-offer .primary{margin-top:auto;padding:11px 14px;font-size:12px}.public-offer{display:flex;flex-direction:column}.route-code{font-size:11px;color:#1687ff;font-weight:900}.route .routeText{display:block}@media(max-width:700px){.flight-grid{grid-template-columns:1fr}.dynamic-section{padding-top:55px}}

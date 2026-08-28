@@ -158,6 +158,51 @@ function setLang(l){
     });
   }
 
+  function escHtml(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));}
+  function money(v,currency){
+    const n=Number(v);
+    if(!Number.isFinite(n)) return escHtml(v)+" "+escHtml(currency||"");
+    return new Intl.NumberFormat("ru-RU",{maximumFractionDigits:0}).format(n)+" "+escHtml(currency||"TJS");
+  }
+  function publicEmpty(text){return `<div class="public-empty">${escHtml(text)}</div>`;}
+  function waUrl(text){return "https://wa.me/992753582002?text="+encodeURIComponent(text);}
+  function flagForCountry(country){
+    const map={"Россия":"🇷🇺","Таджикистан":"🇹🇯","ОАЭ":"🇦🇪","Турция":"🇹🇷","Китай":"🇨🇳","Казахстан":"🇰🇿","Узбекистан":"🇺🇿","Кыргызстан":"🇰🇬","Азербайджан":"🇦🇿","Катар":"🇶🇦","Грузия":"🇬🇪","Иран":"🇮🇷","Индия":"🇮🇳"};
+    return map[country]||"🌍";
+  }
+  function formatDate(v){
+    if(!v)return "";
+    const d=new Date(String(v).slice(0,10)+"T00:00:00");
+    if(Number.isNaN(d.getTime()))return escHtml(v);
+    return d.toLocaleDateString(lang==="en"?"en-GB":lang==="tj"?"tg-TJ":"ru-RU",{day:"2-digit",month:"long",year:"numeric"});
+  }
+  async function loadPublicContent(){
+    try{
+      const [fr,or,dr]=await Promise.all([fetch("/api/flights"),fetch("/api/offers"),fetch("/api/directions")]);
+      if(fr.ok){const data=await fr.json(); renderPublicFlights(data.flights||[]);}
+      if(or.ok){const data=await or.json(); renderPublicOffers(data.offers||[]);}
+      if(dr.ok){const data=await dr.json(); renderPublicDirections(data.directions||[]);}
+    }catch(e){console.warn("Public content load failed",e);}
+  }
+  function renderPublicFlights(items){
+    const box=$("publicFlights"); if(!box)return;
+    if(!items.length){box.innerHTML=publicEmpty("Сейчас нет опубликованных рейсов. Следите за обновлениями.");return;}
+    box.innerHTML=items.map(x=>{
+      const msg=`Здравствуйте! Хочу узнать подробнее о рейсе ${x.from_city} → ${x.to_city}, ${x.flight_date}, ${x.flight_time}.`;
+      return `<article class="flight-card"><div class="flight-route"><span>${flagForCountry(x.from_country)} ${escHtml(x.from_city)}</span><span>→</span><span>${flagForCountry(x.to_country)} ${escHtml(x.to_city)}</span></div><div class="flight-meta"><span>📅 ${formatDate(x.flight_date)}</span><span>🕐 ${escHtml(x.flight_time)}</span><span>✈️ ${escHtml(x.airline)}</span><span>🧳 ${escHtml(x.baggage)}</span></div><div class="flight-price">${money(x.price,x.currency)}</div><a class="primary" href="${waUrl(msg)}" target="_blank" rel="noopener">Узнать / оформить в WhatsApp</a></article>`;
+    }).join("");
+  }
+  function renderPublicOffers(items){
+    const box=$("publicOffers"); if(!box)return;
+    if(!items.length){box.innerHTML=publicEmpty("Сейчас нет активных акций.");return;}
+    box.innerHTML=items.map(x=>{const msg=`Здравствуйте! Хочу узнать подробнее об акции: ${x.title}.`;return `<article class="offer public-offer"><span>🔥</span><b>${escHtml(x.title)}</b>${x.discount?`<span class="offer-discount">${escHtml(x.discount)}</span>`:""}${x.description?`<div class="offer-description">${escHtml(x.description)}</div>`:""}${x.valid_until?`<small>До ${formatDate(x.valid_until)}</small>`:""}<a class="primary" href="${waUrl(msg)}" target="_blank" rel="noopener">Узнать подробнее →</a></article>`}).join("");
+  }
+  function renderPublicDirections(items){
+    const box=$("publicDirections"); if(!box)return;
+    if(!items.length){box.innerHTML=publicEmpty("Сейчас нет опубликованных направлений.");return;}
+    box.innerHTML=items.map(x=>{const msg=`Здравствуйте! Хочу узнать о билетах Душанбе → ${x.city}.`;return `<a class="route" href="${waUrl(msg)}" target="_blank" rel="noopener"><b>${flagForCountry(x.country)} <span class="city">${escHtml(x.city)}</span></b><span class="routeText">Душанбе → ${escHtml(x.city)}</span>${x.code?`<span class="route-code">${escHtml(x.code)} · ${escHtml(x.country)}</span>`:`<span class="route-code">${escHtml(x.country)}</span>`}<i>→</i></a>`}).join("");
+  }
+
   async function submitRequest(e){
     e.preventDefault();
     const name=$("clientName")?.value.trim(), phone=$("clientPhone")?.value.trim();
@@ -199,6 +244,7 @@ function setLang(l){
     const y=$("year"); if(y)y.textContent=new Date().getFullYear();
     // Apply the saved language after all handlers are installed.
     setLang(lang);
+    loadPublicContent();
     // Keep the current language active visually.
     document.querySelectorAll("[data-lang]").forEach(b=>b.classList.toggle("active",b.dataset.lang===lang));
   }

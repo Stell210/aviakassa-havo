@@ -17,3 +17,6 @@ Render:
 - После обновления дождитесь успешного Deploy.
 
 Важно: фотографии в этот ZIP не добавлялись.
+
+
+V14 fixes: mobile admin layout, loading of flights/offers/directions, editable forms with existing values, active visibility checkbox, safer partial PATCH updates.

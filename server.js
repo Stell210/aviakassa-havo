@@ -233,11 +233,20 @@ async function api(req,res,url){
     }
 
     const crud = async (table, fields, required, body, id=null) => {
-      const values=fields.map(f=>body[f]);
-      for(const f of required){if(body[f]===undefined || body[f]===null || String(body[f]).trim()==="") throw Object.assign(new Error("REQUIRED"),{status:400});}
       if(id){
-        const sets=fields.map((f,i)=>`${f}=$${i+1}`).join(","); await pool.query(`UPDATE ${table} SET ${sets} WHERE id=$${fields.length+1}`,[...values,id]);
-      } else {const cols=fields.join(","),ph=fields.map((_,i)=>`$${i+1}`).join(",");await pool.query(`INSERT INTO ${table}(${cols}) VALUES(${ph})`,values);}
+        for(const f of required){if(body[f]===undefined || body[f]===null || String(body[f]).trim()==="") throw Object.assign(new Error("REQUIRED"),{status:400});}
+        const provided=fields.filter(f=>body[f]!==undefined);
+        if(!provided.length) throw Object.assign(new Error("NO_FIELDS"),{status:400});
+        const values=provided.map(f=>body[f]);
+        const sets=provided.map((f,i)=>`${f}=$${i+1}`).join(",");
+        await pool.query(`UPDATE ${table} SET ${sets} WHERE id=$${provided.length+1}`,[...values,id]);
+      } else {
+        const values=fields.map(f=>body[f]);
+        for(const f of required){if(body[f]===undefined || body[f]===null || String(body[f]).trim()==="") throw Object.assign(new Error("REQUIRED"),{status:400});}
+        const cols=fields.filter((f,i)=>body[f]!==undefined), vals=fields.filter((f,i)=>body[f]!==undefined).map(f=>body[f]);
+        const ph=cols.map((_,i)=>`$${i+1}`).join(",");
+        await pool.query(`INSERT INTO ${table}(${cols.join(",")}) VALUES(${ph})`,vals);
+      }
     };
     const map={
       flights:{table:"flights",fields:["from_city","from_country","to_city","to_country","flight_date","flight_time","airline","baggage","price","currency","active"],required:["from_city","from_country","to_city","to_country","flight_date","flight_time","airline","baggage","price"]},
