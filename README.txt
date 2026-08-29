@@ -1,4 +1,4 @@
-Aviakassa_havo v27
+Aviakassa_havo v11
 
 Обновление админ-панели:
 - WhatsApp одним нажатием из карточки заявки.
