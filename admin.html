@@ -258,6 +258,36 @@ function parseReelsDate(v){
  const d=new Date(raw);return Number.isNaN(d.getTime())?null:d;
 }
 function fmtReelsDate(v){const d=parseReelsDate(v);if(!d)return String(v||"");return d.toLocaleDateString(adminLang==="en"?"en-US":adminLang==="tj"?"ru-RU":"ru-RU",{day:"2-digit",month:"short",year:"numeric"})}
+function fitText(c,text,maxWidth,font){
+  const value=String(text??"");
+  if(font)c.font=font;
+  if(c.measureText(value).width<=maxWidth)return value;
+  const ellipsis="…";
+  let out=value;
+  while(out.length && c.measureText(out+ellipsis).width>maxWidth)out=out.slice(0,-1);
+  return out+ellipsis;
+}
+function wrapCanvas(c,text,maxWidth,font){
+  const value=String(text??"").trim();
+  if(font)c.font=font;
+  if(!value)return [""];
+  const words=value.split(/\s+/);
+  const lines=[];let line="";
+  for(const word of words){
+    const test=line?line+" "+word:word;
+    if(c.measureText(test).width<=maxWidth){line=test;continue}
+    if(line)lines.push(line);
+    if(c.measureText(word).width<=maxWidth){line=word;continue}
+    let part="";
+    for(const ch of word){
+      const testPart=part+ch;
+      if(part && c.measureText(testPart).width>maxWidth){lines.push(part);part=ch}else part=testPart;
+    }
+    line=part;
+  }
+  if(line)lines.push(line);
+  return lines.length?lines:[""];
+}
 function roundRect(c,x,y,w,h,r,fill){
   const radius=Math.max(0,Math.min(r,Math.min(w,h)/2));
   c.beginPath();
