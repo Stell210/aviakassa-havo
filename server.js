@@ -341,10 +341,7 @@ const server=http.createServer(async(req,res)=>{
   try{
     const u=new URL(req.url,`http://${req.headers.host||"localhost"}`);
     if(u.pathname.startsWith("/api/")){const handled=await api(req,res,u);if(handled!==false)return;}
-    let p;
-    if(u.pathname==="/") p=path.join(publicDir,"index.html");
-    else if(u.pathname==="/admin" || u.pathname==="/admin/") p=path.join(publicDir,"admin.html");
-    else p=path.join(publicDir,u.pathname.replace(/^\/+/,""));
+    let p=u.pathname==="/"?path.join(publicDir,"index.html"):path.join(publicDir,u.pathname.replace(/^\/+/,""));
     if(!p.startsWith(publicDir))return send(res,403,{error:"FORBIDDEN"});
     if(fs.existsSync(p)&&fs.statSync(p).isFile()){const ext=path.extname(p).toLowerCase();res.writeHead(200,{"Content-Type":mime[ext]||"application/octet-stream"});fs.createReadStream(p).pipe(res);return;}
     send(res,404,{error:"NOT_FOUND"});
