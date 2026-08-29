@@ -21,7 +21,7 @@
       <button data-lang="tj">TJ</button>
       <button data-lang="en">EN</button>
     </div>
-    <a class="wa small" href="https://wa.me/992753582002" target="_blank">WhatsApp</a><a class="admin-nav" href="/admin.html" data-i18n="adminPanelLink">Админ-панель</a>
+    <a class="wa small" href="https://wa.me/992753582002" target="_blank">WhatsApp</a><a class="admin-nav" href="/admin" data-admin-link data-i18n="adminPanelLink">Админ-панель</a>
   </div>
 </header>
 
@@ -193,7 +193,7 @@
 </section>
 <a class="floating-wa" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20авиабилет." target="_blank" aria-label="WhatsApp">💬 <span>WhatsApp</span></a>
 </main>
-<footer><b>✈️ Aviakassa_havo</b><span data-i18n="footerLoc">Душанбе · Таджикистан</span><a class="admin-link" href="/admin.html" data-i18n="adminPanelLink">Админ-панель</a><span>© <span id="year"></span></span></footer>
+<footer><b>✈️ Aviakassa_havo</b><span data-i18n="footerLoc">Душанбе · Таджикистан</span><a class="admin-link" href="/admin" data-admin-link data-i18n="adminPanelLink">Админ-панель</a><span>© <span id="year"></span></span></footer>
 
 <div id="flightDetailModal" class="site-modal" hidden><div class="site-modal-card"><button id="closeFlightDetail" class="site-modal-close">×</button><div id="flightDetailBody"></div></div></div>
 <script>
@@ -211,6 +211,7 @@
  });
 })();
 </script>
+<script>document.addEventListener("click",function(e){const a=e.target.closest("[data-admin-link]");if(!a)return;e.preventDefault();window.location.assign("/admin");});</script>
 <script src="script.js"></script>
 </body>
 </html>
