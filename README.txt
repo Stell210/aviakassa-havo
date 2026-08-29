@@ -20,3 +20,6 @@ Render:
 
 
 V14 fixes: mobile admin layout, loading of flights/offers/directions, editable forms with existing values, active visibility checkbox, safer partial PATCH updates.
+
+
+v17 SECURITY: admin password change, manager permissions, manager session revocation, global logout-all, server-side permission enforcement.

@@ -34,7 +34,7 @@ faq4q:"Почему лучше покупать заранее?",faq4a:"Стои
 earlyEyebrow:"СОВЕТ ПУТЕШЕСТВЕННИКУ",earlyTitle:"Покупайте билеты заранее",earlyText:"Чем раньше вы начнёте искать подходящий рейс, тем больше вариантов можно сравнить. Не откладывайте поездку на последний момент.",earlyButton:"Подобрать билет",
 cities:["Москва","Санкт-Петербург","Дубай","Стамбул"],routes:["Душанбе → Москва","Душанбе → Санкт-Петербург","Душанбе → Дубай","Душанбе → Стамбул"]
 },
-tj:{oneWay:"Ба як тараф",roundTrip:"Рафту баргашт",returnDateLabel:"Санаи бозгашт",baggageLabel:"Бағоҷ",bag23:"23 кг + 10 кг бағоҷи дастӣ 10 кг",bagOnlyHand:"Танҳо бағоҷи дастӣ",bagAsk:"Шартҳоро пурсидан",hotEyebrow:"САФАРҲОИ МАШҲУР",hotTitle:"Ба куҷо бисёр парвоз мекунанд",hotIntro:"Самтро интихоб кунед — дархост дар WhatsApp кушода мешавад.",bagEyebrow:"БАҒОҶ",bagTitle:"Чиро бо худ гирифтан?",bagText:"Шартҳои бағоҷ аз тарифи интихобшуда вобастаанд. Пеш аз расмӣ кардан мо шартҳоро мефаҳмонем.",checkedBag:"бағоҷ",handBag:"бағоҷи дастӣ",
+tj:{oneWay:"Ба як тараф",roundTrip:"Рафту баргашт",returnDateLabel:"Санаи бозгашт",baggageLabel:"Бағоҷ",bag23:"23 кг + 10 кг бағоҷи дастӣ",bagOnlyHand:"Танҳо бағоҷи дастӣ",bagAsk:"Шартҳоро пурсидан",hotEyebrow:"САФАРҲОИ МАШҲУР",hotTitle:"Ба куҷо бисёр парвоз мекунанд",hotIntro:"Самтро интихоб кунед — дархост дар WhatsApp кушода мешавад.",bagEyebrow:"БАҒОҶ",bagTitle:"Чиро бо худ гирифтан?",bagText:"Шартҳои бағоҷ аз тарифи интихобшуда вобастаанд. Пеш аз расмӣ кардан мо шартҳоро мефаҳмонем.",checkedBag:"бағоҷ",handBag:"бағоҷи дастӣ",
 navSearch:"Чипта ёфтан",navRoutes:"Самтҳо",navHow:"Чӣ тавр кор мекунад",badge:"🌍 Душанбе → тамоми ҷаҳон",
 heroTitle:"Ба он ҷое парвоз кунед,<br><span>ки орзу доред.</span>",heroText:"Мо барои шумо парвози мувофиқро меёбем, шартҳоро мефаҳмонем ва дар гирифтани чипта кӯмак мекунем.",
 findTicket:"Чипта ёфтан ✈️",writeWhatsApp:"Ба WhatsApp нависед",quickRequest:"ДАРХОСТИ ЗУД",where:"Ба куҷо парвоз мекунем?",
@@ -68,9 +68,9 @@ cities:["Moscow","Saint Petersburg","Dubai","Istanbul"],routes:["Dushanbe → Mo
 }};
 let lang=localStorage.getItem("aviakassa_lang")||"ru";
 const extraTranslations={
-ru:{namePlaceholder:"Имя",phonePlaceholder:"+992...",toPlaceholder:"Москва",requestSaving:"Сохраняем заявку…",requestAccepted:"Заявка принята. Открываем WhatsApp…",whatsAppGreeting:"Здравствуйте! Хочу подобрать авиабилет.",offerAction:"Узнать варианты →",citiesAll:["Душанбе, Таджикистан","Москва, Россия","Казань, Россия","Санкт-Петербург, Россия","Дубай, ОАЭ","Стамбул, Турция"],cityNames:["Москва","Санкт-Петербург","Дубай","Стамбул"],routeNames:["Душанбе → Москва","Душанбе → Санкт-Петербург","Душанбе → Дубай","Душанбе → Стамбул"]},
-tj:{namePlaceholder:"Ном",phonePlaceholder:"+992...",toPlaceholder:"Москва",requestSaving:"Дархостро нигоҳ медорем…",requestAccepted:"Дархост қабул шуд. WhatsApp кушода мешавад…",whatsAppGreeting:"Салом! Ман мехоҳам чиптаи ҳавопаймо интихоб кунам.",offerAction:"Вариантҳоро дидан →",citiesAll:["Душанбе, Тоҷикистон","Москва, Россия","Қазон, Россия","Санкт-Петербург, Россия","Дубай, АМА","Истанбул, Туркия"],cityNames:["Москва","Санкт-Петербург","Дубай","Истанбул"],routeNames:["Душанбе → Москва","Душанбе → Санкт-Петербург","Душанбе → Дубай","Душанбе → Истанбул"]},
-en:{namePlaceholder:"Name",phonePlaceholder:"+992...",toPlaceholder:"Moscow",requestSaving:"Saving your request…",requestAccepted:"Request received. Opening WhatsApp…",whatsAppGreeting:"Hello! I would like to find a flight.",offerAction:"See options →",citiesAll:["Dushanbe, Tajikistan","Moscow, Russia","Kazan, Russia","Saint Petersburg, Russia","Dubai, UAE","Istanbul, Turkey"],cityNames:["Moscow","Saint Petersburg","Dubai","Istanbul"],routeNames:["Dushanbe → Moscow","Dushanbe → Saint Petersburg","Dushanbe → Dubai","Dushanbe → Istanbul"]}
+ru:{namePlaceholder:"Имя",phonePlaceholder:"+992...",toPlaceholder:"Москва",requestSaving:"Сохраняем заявку…",requestAccepted:"Заявка принята. Открываем WhatsApp…",whatsAppGreeting:"Здравствуйте! Хочу подобрать авиабилет.",offerAction:"Узнать варианты →",flightAction:"Узнать / оформить в WhatsApp",until:"До",noFlights:"Сейчас нет опубликованных рейсов. Следите за обновлениями.",noOffers:"Сейчас нет активных акций.",noDirections:"Сейчас нет опубликованных направлений.",citiesAll:["Душанбе, Таджикистан","Москва, Россия","Казань, Россия","Санкт-Петербург, Россия","Дубай, ОАЭ","Стамбул, Турция"],cityNames:["Москва","Санкт-Петербург","Дубай","Стамбул"],routeNames:["Душанбе → Москва","Душанбе → Санкт-Петербург","Душанбе → Дубай","Душанбе → Стамбул"]},
+tj:{namePlaceholder:"Ном",phonePlaceholder:"+992...",toPlaceholder:"Москва",requestSaving:"Дархостро нигоҳ медорем…",requestAccepted:"Дархост қабул шуд. WhatsApp кушода мешавад…",whatsAppGreeting:"Салом! Ман мехоҳам чиптаи ҳавопаймо интихоб кунам.",offerAction:"Вариантҳоро дидан →",flightAction:"Пурсидан / фармоиш дар WhatsApp",until:"То",noFlights:"Ҳоло парвози нашршуда нест. Навсозиҳоро пайгирӣ кунед.",noOffers:"Ҳоло аксияи фаъол нест.",noDirections:"Ҳоло самти нашршуда нест.",citiesAll:["Душанбе, Тоҷикистон","Москва, Россия","Қазон, Россия","Санкт-Петербург, Россия","Дубай, АМА","Истанбул, Туркия"],cityNames:["Москва","Санкт-Петербург","Дубай","Истанбул"],routeNames:["Душанбе → Москва","Душанбе → Санкт-Петербург","Душанбе → Дубай","Душанбе → Истанбул"]},
+en:{namePlaceholder:"Name",phonePlaceholder:"+992...",toPlaceholder:"Moscow",requestSaving:"Saving your request…",requestAccepted:"Request received. Opening WhatsApp…",whatsAppGreeting:"Hello! I would like to find a flight.",offerAction:"See options →",flightAction:"Ask / book via WhatsApp",until:"Until",noFlights:"There are no published flights yet. Follow updates.",noOffers:"There are no active offers.",noDirections:"There are no published destinations.",citiesAll:["Dushanbe, Tajikistan","Moscow, Russia","Kazan, Russia","Saint Petersburg, Russia","Dubai, UAE","Istanbul, Turkey"],cityNames:["Moscow","Saint Petersburg","Dubai","Istanbul"],routeNames:["Dushanbe → Moscow","Dushanbe → Saint Petersburg","Dushanbe → Dubai","Dushanbe → Istanbul"]}
 };
 
 function updateCityList(l){
@@ -160,14 +160,16 @@ function setLang(l){
 
   function escHtml(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));}
   function money(v,currency){
-    const n=Number(v);
-    if(!Number.isFinite(n)) return escHtml(v)+" "+escHtml(currency||"");
-    return new Intl.NumberFormat("ru-RU",{maximumFractionDigits:0}).format(n)+" "+escHtml(currency||"TJS");
+    const raw=String(v??"").trim();
+    if(!raw) return "—";
+    const n=Number(raw.replace(/\s/g,""));
+    if(!Number.isFinite(n)) return escHtml(raw);
+    return new Intl.NumberFormat("ru-RU",{maximumFractionDigits:0}).format(n)+(currency?" "+escHtml(currency):"");
   }
   function publicEmpty(text){return `<div class="public-empty">${escHtml(text)}</div>`;}
   function waUrl(text){return "https://wa.me/992753582002?text="+encodeURIComponent(text);}
   function flagForCountry(country){
-    const map={"Россия":"🇷🇺","Таджикистан":"🇹🇯","ОАЭ":"🇦🇪","Турция":"🇹🇷","Китай":"🇨🇳","Казахстан":"🇰🇿","Узбекистан":"🇺🇿","Кыргызстан":"🇰🇬","Азербайджан":"🇦🇿","Катар":"🇶🇦","Грузия":"🇬🇪","Иран":"🇮🇷","Индия":"🇮🇳"};
+    const map={"Россия":"🇷🇺","Таджикистан":"🇹🇯","ОАЭ":"🇦🇪","Турция":"🇹🇷","Китай":"🇨🇳","Казахстан":"🇰🇿","Узбекистан":"🇺🇿","Кыргызстан":"🇰🇬","Азербайджан":"🇦🇿","Катар":"🇶🇦","Грузия":"🇬🇪","Иран":"🇮🇷","Индия":"🇮🇳","Саудовская Аравия":"🇸🇦","Оман":"🇴🇲","Бахрейн":"🇧🇭","Кувейт":"🇰🇼","Малайзия":"🇲🇾","Сингапур":"🇸🇬","Индонезия":"🇮🇩","Южная Корея":"🇰🇷","Япония":"🇯🇵","Филиппины":"🇵🇭","Вьетнам":"🇻🇳","Израиль":"🇮🇱","Египет":"🇪🇬","Марокко":"🇲🇦","Кения":"🇰🇪","ЮАР":"🇿🇦","Великобритания":"🇬🇧","Франция":"🇫🇷","Германия":"🇩🇪","Италия":"🇮🇹","Испания":"🇪🇸","Нидерланды":"🇳🇱","Австрия":"🇦🇹","Чехия":"🇨🇿","Польша":"🇵🇱","Греция":"🇬🇷","США":"🇺🇸","Канада":"🇨🇦","Мексика":"🇲🇽","Бразилия":"🇧🇷","Аргентина":"🇦🇷","Австралия":"🇦🇺","Новая Зеландия":"🇳🇿","Молдова":"🇲🇩","Армения":"🇦🇲"};
     return map[country]||"🌍";
   }
   function formatDate(v){
@@ -186,20 +188,20 @@ function setLang(l){
   }
   function renderPublicFlights(items){
     const box=$("publicFlights"); if(!box)return;
-    if(!items.length){box.innerHTML=publicEmpty("Сейчас нет опубликованных рейсов. Следите за обновлениями.");return;}
+    if(!items.length){box.innerHTML=publicEmpty((extraTranslations[lang]||extraTranslations.ru).noFlights);return;}
     box.innerHTML=items.map(x=>{
       const msg=`Здравствуйте! Хочу узнать подробнее о рейсе ${x.from_city} → ${x.to_city}, ${x.flight_date}, ${x.flight_time}.`;
-      return `<article class="flight-card"><div class="flight-route"><span>${flagForCountry(x.from_country)} ${escHtml(x.from_city)}</span><span>→</span><span>${flagForCountry(x.to_country)} ${escHtml(x.to_city)}</span></div><div class="flight-meta"><span>📅 ${formatDate(x.flight_date)}</span><span>🕐 ${escHtml(x.flight_time)}</span><span>✈️ ${escHtml(x.airline)}</span><span>🧳 ${escHtml(x.baggage)}</span></div><div class="flight-price">${money(x.price,x.currency)}</div><a class="primary" href="${waUrl(msg)}" target="_blank" rel="noopener">Узнать / оформить в WhatsApp</a></article>`;
+      return `<article class="flight-card"><div class="flight-route"><span>${flagForCountry(x.from_country)} ${escHtml(x.from_city)}${x.from_airport?", "+escHtml(x.from_airport):""}${x.from_airport_code?" ("+escHtml(x.from_airport_code)+")":""}</span><span>→</span><span>${flagForCountry(x.to_country)} ${escHtml(x.to_city)}${x.to_airport?", "+escHtml(x.to_airport):""}${x.to_airport_code?" ("+escHtml(x.to_airport_code)+")":""}</span></div><div class="flight-meta"><span>📅 ${formatDate(x.flight_date)}</span><span>🕐 ${escHtml(x.flight_time)}</span><span>✈️ ${escHtml(x.airline)}</span><span>🧳 ${escHtml(x.baggage)}</span></div><div class="flight-price">${money(x.price,x.currency)}</div><div class="flight-actions"><a class="primary" href="${waUrl(msg)}" target="_blank" rel="noopener">${escHtml((extraTranslations[lang]||extraTranslations.ru).flightAction)}</a><button class="secondary" data-flight-detail="${x.id}">Подробнее</button></div></article>`;
     }).join("");
   }
   function renderPublicOffers(items){
     const box=$("publicOffers"); if(!box)return;
-    if(!items.length){box.innerHTML=publicEmpty("Сейчас нет активных акций.");return;}
-    box.innerHTML=items.map(x=>{const msg=`Здравствуйте! Хочу узнать подробнее об акции: ${x.title}.`;return `<article class="offer public-offer"><span>🔥</span><b>${escHtml(x.title)}</b>${x.discount?`<span class="offer-discount">${escHtml(x.discount)}</span>`:""}${x.description?`<div class="offer-description">${escHtml(x.description)}</div>`:""}${x.valid_until?`<small>До ${formatDate(x.valid_until)}</small>`:""}<a class="primary" href="${waUrl(msg)}" target="_blank" rel="noopener">Узнать подробнее →</a></article>`}).join("");
+    if(!items.length){box.innerHTML=publicEmpty((extraTranslations[lang]||extraTranslations.ru).noOffers);return;}
+    box.innerHTML=items.map(x=>{const msg=`Здравствуйте! Хочу узнать подробнее об акции: ${x.title}.`;return `<article class="offer public-offer"><span>🔥</span><b>${escHtml(x.title)}</b>${x.discount?`<span class="offer-discount">${escHtml(x.discount)}</span>`:""}${x.description?`<div class="offer-description">${escHtml(x.description)}</div>`:""}${x.valid_until?`<small>${escHtml((extraTranslations[lang]||extraTranslations.ru).until)} ${formatDate(x.valid_until)}</small>`:""}<a class="primary" href="${waUrl(msg)}" target="_blank" rel="noopener">${escHtml((extraTranslations[lang]||extraTranslations.ru).offerAction)}</a></article>`}).join("");
   }
   function renderPublicDirections(items){
     const box=$("publicDirections"); if(!box)return;
-    if(!items.length){box.innerHTML=publicEmpty("Сейчас нет опубликованных направлений.");return;}
+    if(!items.length){box.innerHTML=publicEmpty((extraTranslations[lang]||extraTranslations.ru).noDirections);return;}
     box.innerHTML=items.map(x=>{const msg=`Здравствуйте! Хочу узнать о билетах Душанбе → ${x.city}.`;return `<a class="route" href="${waUrl(msg)}" target="_blank" rel="noopener"><b>${flagForCountry(x.country)} <span class="city">${escHtml(x.city)}</span></b><span class="routeText">Душанбе → ${escHtml(x.city)}</span>${x.code?`<span class="route-code">${escHtml(x.code)} · ${escHtml(x.country)}</span>`:`<span class="route-code">${escHtml(x.country)}</span>`}<i>→</i></a>`}).join("");
   }
 
@@ -250,4 +252,13 @@ function setLang(l){
   }
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",init);
   else init();
+
+(function(){
+ const ss=document.getElementById("smartSearch"); if(!ss)return;
+ const box=document.getElementById("searchResults"), section=document.getElementById("flightSearchResults");
+ const money2=v=>{const n=Number(String(v||"").replace(/[^0-9.,-]/g,"").replace(/,/g,"."));return Number.isFinite(n)?new Intl.NumberFormat("ru-RU").format(n):String(v||"")};
+ async function run(){const p=new URLSearchParams();[["from","sfFrom"],["to","sfTo"],["date","sfDate"],["airline","sfAirline"],["airport","sfAirport"]].forEach(([k,id])=>{const x=document.getElementById(id)?.value.trim();if(x)p.set(k,x)});p.set("sort",document.getElementById("sfSort")?.value||"date");section.hidden=false;box.innerHTML=publicEmpty("Ищем рейсы…");try{const r=await fetch("/api/search-flights?"+p);const d=await r.json();let a=d.flights||[];const sort=p.get("sort");if(sort==="price")a.sort((x,y)=>(parseFloat(String(x.price).replace(/[^0-9.,-]/g,"").replace(/,/g,"."))||Infinity)-(parseFloat(String(y.price).replace(/[^0-9.,-]/g,"").replace(/,/g,"."))||Infinity));else if(sort==="time")a.sort((x,y)=>String(x.flight_time).localeCompare(String(y.flight_time)));box.innerHTML=a.length?a.map(x=>`<article class="flight-card"><div class="flight-route"><span>${escHtml(x.from_city)}${x.from_airport?", "+escHtml(x.from_airport):""}${x.from_airport_code?" ("+escHtml(x.from_airport_code)+")":""}</span><span>→</span><span>${escHtml(x.to_city)}${x.to_airport?", "+escHtml(x.to_airport):""}${x.to_airport_code?" ("+escHtml(x.to_airport_code)+")":""}</span></div><div class="flight-meta"><span>📅 ${formatDate(x.flight_date)}</span><span>🕐 ${escHtml(x.flight_time||"")}</span><span>✈️ ${escHtml(x.airline||"")}</span><span>🧳 ${escHtml(x.baggage||"")}</span></div><div class="flight-price">${money2(x.price)}${x.currency?" "+escHtml(x.currency):""}</div><a class="primary" href="${waUrl("Здравствуйте! Хочу узнать о рейсе "+x.from_city+" → "+x.to_city+", "+x.flight_date+".")}" target="_blank">${escHtml((extraTranslations[lang]||extraTranslations.ru).flightAction)}</a></article>`).join(""):publicEmpty("Рейсы не найдены");}catch(e){box.innerHTML=publicEmpty("Не удалось выполнить поиск");}}
+ ss.addEventListener("submit",e=>{e.preventDefault();run()});
+})();
+
 })();

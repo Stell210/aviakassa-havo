@@ -107,6 +107,13 @@
   <div id="publicDirections" class="routes"></div>
 </section>
 
+
+<section class="section search-results-section" id="flightSearchResults" hidden>
+  <div class="head"><div><span class="eyebrow" data-i18n="searchEyebrow">ПОИСК</span><h2 data-i18n="searchTitle">Найти рейс</h2></div></div>
+  <form id="smartSearch" class="smart-search"><input id="sfFrom" class="field" placeholder="Откуда"><input id="sfTo" class="field" placeholder="Куда"><input id="sfDate" class="field" type="date"><select id="sfAirline" class="field"><option value="">Все авиакомпании</option></select><select id="sfAirport" class="field"><option value="">Все аэропорты</option></select><select id="sfSort" class="field"><option value="date">По дате</option><option value="price">Сначала дешевле</option><option value="time">По времени</option></select><button class="primary" type="submit">🔎 <span data-i18n="searchButton">Найти</span></button></form>
+  <div id="searchResults" class="flight-grid"></div>
+</section>
+
 <section class="section benefits">
   <div class="head"><div><span class="eyebrow" data-i18n="whyUs">ПОЧЕМУ МЫ</span><h2 data-i18n="simple">Всё проще, чем кажется</h2></div></div>
   <div class="benefit-grid">
@@ -187,6 +194,11 @@
 <a class="floating-wa" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20авиабилет." target="_blank" aria-label="WhatsApp">💬 <span>WhatsApp</span></a>
 </main>
 <footer><b>✈️ Aviakassa_havo</b><span data-i18n="footerLoc">Душанбе · Таджикистан</span><span>© <span id="year"></span></span></footer>
+
+<div id="flightDetailModal" class="site-modal" hidden><div class="site-modal-card"><button id="closeFlightDetail" class="site-modal-close">×</button><div id="flightDetailBody"></div></div></div>
+<script>
+(function(){const box=document.getElementById("flightDetailModal"),body=document.getElementById("flightDetailBody"),close=document.getElementById("closeFlightDetail");if(!box)return;close.onclick=()=>box.hidden=true;document.addEventListener("click",async e=>{const a=e.target.closest("[data-flight-detail]");if(!a)return;e.preventDefault();try{const r=await fetch("/api/flight?id="+encodeURIComponent(a.dataset.flightDetail));const d=await r.json();if(!d.ok)throw Error();const f=d.flight;body.innerHTML=`<h2>${escHtml(f.from_city)} → ${escHtml(f.to_city)}</h2><div class="site-detail-grid"><div><b>Дата</b>${escHtml(f.flight_date)}</div><div><b>Время</b>${escHtml(f.flight_time)}</div><div><b>Авиакомпания</b>${escHtml(f.airline)}</div><div><b>Багаж</b>${escHtml(f.baggage)}</div><div><b>Вылет</b>${escHtml(f.from_airport)} (${escHtml(f.from_airport_code)})</div><div><b>Прилёт</b>${escHtml(f.to_airport)} (${escHtml(f.to_airport_code)})</div><div><b>Цена</b>${escHtml(f.price)} ${escHtml(f.currency||"")}</div></div><a class="primary" target="_blank" href="${waUrl("Здравствуйте! Хочу забронировать рейс "+f.from_city+" → "+f.to_city+", "+f.flight_date+".")}">📲 Забронировать</a>`;box.hidden=false}catch(err){}})})();
+</script>
 <script src="script.js"></script>
 </body>
 </html>

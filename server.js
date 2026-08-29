@@ -8,6 +8,8 @@ const XLSX = require("xlsx");
 const PORT = process.env.PORT || 10000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 const DATABASE_URL = process.env.DATABASE_URL || "";
+const SUPPLIER_API_URL = process.env.SUPPLIER_API_URL || "";
+const SUPPLIER_API_KEY = process.env.SUPPLIER_API_KEY || "";
 const publicDir = __dirname;
 const pool = DATABASE_URL ? new Pool({
   connectionString: DATABASE_URL,
@@ -15,6 +17,7 @@ const pool = DATABASE_URL ? new Pool({
 }) : null;
 
 const sessions = new Map();
+let sessionEpoch = 1;
 const loginAttempts = new Map();
 const SESSION_TTL = 12 * 60 * 60 * 1000;
 const LOGIN_WINDOW = 10 * 60 * 1000;
@@ -34,7 +37,7 @@ function verifyPassword(password, stored) {
 }
 function issueSession(user) {
   const token = crypto.randomBytes(32).toString("hex");
-  sessions.set(token, { ...user, expires: Date.now() + SESSION_TTL });
+  sessions.set(token, { ...user, epoch: sessionEpoch, issuedAt: Date.now(), expires: Date.now() + SESSION_TTL });
   return token;
 }
 function getSession(req) {
@@ -43,6 +46,7 @@ function getSession(req) {
   const token = h.slice(7);
   const s = sessions.get(token);
   if (!s) return null;
+  if (s.epoch !== sessionEpoch) { sessions.delete(token); return null; }
   if (s.expires < Date.now()) { sessions.delete(token); return null; }
   s.expires = Date.now() + SESSION_TTL;
   return s;
@@ -74,6 +78,11 @@ function countFailed(ip){
 }
 function clearFailed(ip){ loginAttempts.delete(ip); }
 function validDate(v){ return !v || /^\d{4}-\d{2}-\d{2}$/.test(String(v)); }
+const ALL_PERMISSIONS = ["bookings_view","bookings_edit","export_excel","flights_manage","offers_manage","directions_manage"];
+const DEFAULT_MANAGER_PERMISSIONS = ["bookings_view","bookings_edit","export_excel"];
+function hasPermission(user, permission){ return user?.role === "admin" || Array.isArray(user?.permissions) && user.permissions.includes(permission); }
+function revokeUserSessions(userId){ for(const [token,s] of sessions){ if(String(s.id||"")===String(userId||"")) sessions.delete(token); } }
+function revokeAllSessions(){ sessionEpoch++; sessions.clear(); }
 
 async function initDb(){
   if(!pool) return;
@@ -104,24 +113,34 @@ async function initDb(){
       username VARCHAR(80) UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       role VARCHAR(20) NOT NULL DEFAULT 'manager',
+      permissions JSONB NOT NULL DEFAULT '["bookings_view","bookings_edit","export_excel"]'::jsonb,
       active BOOLEAN NOT NULL DEFAULT TRUE,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    ALTER TABLE managers ADD COLUMN IF NOT EXISTS permissions JSONB NOT NULL DEFAULT '["bookings_view","bookings_edit","export_excel"]'::jsonb;
     CREATE TABLE IF NOT EXISTS flights (
       id BIGSERIAL PRIMARY KEY,
       from_city TEXT NOT NULL,
       from_country TEXT NOT NULL,
+      from_airport TEXT NOT NULL DEFAULT '',
+      from_airport_code VARCHAR(10) NOT NULL DEFAULT '',
       to_city TEXT NOT NULL,
       to_country TEXT NOT NULL,
+      to_airport TEXT NOT NULL DEFAULT '',
+      to_airport_code VARCHAR(10) NOT NULL DEFAULT '',
       flight_date DATE NOT NULL,
       flight_time VARCHAR(20) NOT NULL,
       airline TEXT NOT NULL,
       baggage TEXT NOT NULL DEFAULT '',
-      price NUMERIC(12,2) NOT NULL DEFAULT 0,
+      price TEXT NOT NULL DEFAULT '0',
       currency VARCHAR(10) NOT NULL DEFAULT 'TJS',
       active BOOLEAN NOT NULL DEFAULT TRUE,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    ALTER TABLE flights ADD COLUMN IF NOT EXISTS from_airport TEXT NOT NULL DEFAULT '';
+    ALTER TABLE flights ADD COLUMN IF NOT EXISTS from_airport_code VARCHAR(10) NOT NULL DEFAULT '';
+    ALTER TABLE flights ADD COLUMN IF NOT EXISTS to_airport TEXT NOT NULL DEFAULT '';
+    ALTER TABLE flights ADD COLUMN IF NOT EXISTS to_airport_code VARCHAR(10) NOT NULL DEFAULT '';
     CREATE TABLE IF NOT EXISTS offers (
       id BIGSERIAL PRIMARY KEY,
       title TEXT NOT NULL,
@@ -141,6 +160,8 @@ async function initDb(){
       UNIQUE(city,country)
     );
   `);
+  // Price is stored as text so admin can enter symbols, currencies, and phrases.
+  await pool.query(`ALTER TABLE flights ALTER COLUMN price TYPE TEXT USING regexp_replace(price::text, '\\.00$', ''), ALTER COLUMN price SET DEFAULT '0'`);
   // Keep the existing Render ADMIN_PASSWORD as the master admin account.
   if(ADMIN_PASSWORD){
     const existing=await pool.query(`SELECT id FROM managers WHERE username='admin' LIMIT 1`);
@@ -164,15 +185,15 @@ async function api(req,res,url){
 
   if(req.method==="POST" && url.pathname==="/api/admin/login"){
     if(rateLimited(ip)) return send(res,429,{ok:false,error:"TOO_MANY_ATTEMPTS"});
-    const b=await parseBody(req), password=String(b.password||""), username=safe(b.username||"admin",80)||"admin";
+    const b=await parseBody(req), password=String(b.password||""), username=safe(b.username||"admin",80).toLowerCase()||"admin";
     let user=null;
-    if(username==="admin" && ADMIN_PASSWORD && password===ADMIN_PASSWORD) user={id:null,name:"Главный администратор",username:"admin",role:"admin"};
-    if(!user && pool){
-      const q=await pool.query(`SELECT id,name,username,password_hash,role,active FROM managers WHERE username=$1 LIMIT 1`,[username]);
-      if(q.rowCount && q.rows[0].active && verifyPassword(password,q.rows[0].password_hash)) user={id:q.rows[0].id,name:q.rows[0].name,username:q.rows[0].username,role:q.rows[0].role};
+    if(pool){
+      const q=await pool.query(`SELECT id,name,username,password_hash,role,active,permissions FROM managers WHERE username=$1 LIMIT 1`,[username]);
+      if(q.rowCount && q.rows[0].active && verifyPassword(password,q.rows[0].password_hash)) user={id:q.rows[0].id,name:q.rows[0].name,username:q.rows[0].username,role:q.rows[0].role,permissions:Array.isArray(q.rows[0].permissions)?q.rows[0].permissions:[]};
     }
+    if(!user && username==="admin" && ADMIN_PASSWORD && password===ADMIN_PASSWORD) user={id:null,name:"Главный администратор",username:"admin",role:"admin",permissions:ALL_PERMISSIONS};
     if(!user){countFailed(ip);return send(res,401,{ok:false,error:"INVALID_PASSWORD"});}
-    clearFailed(ip); return send(res,200,{ok:true,token:issueSession(user),user:{name:user.name,username:user.username,role:user.role}});
+    clearFailed(ip); return send(res,200,{ok:true,token:issueSession(user),user:{id:user.id,name:user.name,username:user.username,role:user.role,permissions:user.permissions||[]}});
   }
   if(req.method==="POST" && url.pathname==="/api/admin/logout"){
     const h=String(req.headers.authorization||""); if(h.startsWith("Bearer ")) sessions.delete(h.slice(7));
@@ -183,9 +204,10 @@ async function api(req,res,url){
     const user=authorized(req); if(!user) return send(res,401,{ok:false,error:"UNAUTHORIZED"});
     if(!pool) return send(res,503,{ok:false,error:"DATABASE_NOT_CONFIGURED"});
 
-    if(req.method==="GET" && url.pathname==="/api/admin/me") return send(res,200,{ok:true,user:{id:user.id,name:user.name,username:user.username,role:user.role}});
+    if(req.method==="GET" && url.pathname==="/api/admin/me") return send(res,200,{ok:true,user:{id:user.id,name:user.name,username:user.username,role:user.role,permissions:user.permissions||[]}});
 
     if(req.method==="GET" && url.pathname==="/api/admin/bookings"){
+      if(!hasPermission(user,"bookings_view")) return send(res,403,{ok:false,error:"FORBIDDEN"});
       const qtext=safe(url.searchParams.get("q"),100), status=safe(url.searchParams.get("status"),40);
       const args=[], where=[];
       if(status){args.push(status);where.push(`b.status=$${args.length}`)}
@@ -194,17 +216,22 @@ async function api(req,res,url){
       return send(res,200,{ok:true,bookings:q.rows});
     }
     if(req.method==="PATCH" && url.pathname==="/api/admin/bookings"){
-      const b=await parseBody(req),id=Number(b.id),status=safe(b.status,40),notes=safe(b.notes,2000);
+      if(!hasPermission(user,"bookings_edit")) return send(res,403,{ok:false,error:"FORBIDDEN"});
+      const b=await parseBody(req),id=Number(b.id),status=safe(b.status,40),notes=safe(b.notes,2000),managerId=b.managerId===null?null:(b.managerId!==undefined?Number(b.managerId):user.id||null);
       const allowed=["new","in_progress","options_sent","booked","completed","cancelled"];
       if(!Number.isInteger(id)||!allowed.includes(status)) return send(res,400,{ok:false,error:"INVALID_DATA"});
-      await pool.query(`UPDATE bookings SET status=$1,notes=$2,manager_id=$3 WHERE id=$4`,[status,notes,user.id||null,id]);
+      await pool.query(`UPDATE bookings SET status=$1,notes=$2,manager_id=$3 WHERE id=$4`,[status,notes,Number.isInteger(managerId)?managerId:null,id]);
       return send(res,200,{ok:true});
     }
+  if(req.method==="GET" && url.pathname==="/api/admin/analytics"){ const user=authorized(req); if(!user)return send(res,401,{ok:false,error:"UNAUTHORIZED"}); if(!hasPermission(user,"bookings_view"))return send(res,403,{ok:false,error:"FORBIDDEN"}); if(!pool)return send(res,503,{ok:false,error:"DATABASE_NOT_CONFIGURED"}); const q=await pool.query(`SELECT created_at::date AS day,COUNT(*)::int AS count FROM bookings WHERE created_at>=CURRENT_DATE-INTERVAL '29 days' GROUP BY created_at::date ORDER BY day`); const routes=await pool.query(`SELECT from_city,to_city,COUNT(*)::int AS count FROM bookings GROUP BY from_city,to_city ORDER BY count DESC LIMIT 10`); const statuses=await pool.query(`SELECT status,COUNT(*)::int AS count FROM bookings GROUP BY status ORDER BY count DESC`); return send(res,200,{ok:true,daily:q.rows,routes:routes.rows,statuses:statuses.rows}); }
+
     if(req.method==="GET" && url.pathname==="/api/admin/stats"){
+      if(!hasPermission(user,"bookings_view")) return send(res,403,{ok:false,error:"FORBIDDEN"});
       const q=await pool.query(`SELECT COUNT(*) FILTER (WHERE created_at::date=CURRENT_DATE) AS today, COUNT(*) FILTER (WHERE created_at>=CURRENT_DATE-INTERVAL '6 days') AS week, COUNT(*) FILTER (WHERE created_at>=date_trunc('month',CURRENT_DATE)) AS month, COUNT(*) AS total FROM bookings`);
       return send(res,200,{ok:true,stats:q.rows[0]});
     }
     if(req.method==="GET" && url.pathname==="/api/admin/bookings.xlsx"){
+      if(!hasPermission(user,"export_excel")) return send(res,403,{ok:false,error:"FORBIDDEN"});
       const qtext=safe(url.searchParams.get("q"),100), status=safe(url.searchParams.get("status"),40), args=[], where=[];
       if(status){args.push(status);where.push(`b.status=$${args.length}`)}
       if(qtext){args.push(`%${qtext}%`);where.push(`(b.name ILIKE $${args.length} OR b.phone ILIKE $${args.length} OR b.from_city ILIKE $${args.length} OR b.to_city ILIKE $${args.length} OR b.request_code ILIKE $${args.length})`)}
@@ -216,22 +243,46 @@ async function api(req,res,url){
 
     if(req.method==="GET" && url.pathname==="/api/admin/managers"){
       if(user.role!=="admin") return send(res,403,{ok:false,error:"ADMIN_ONLY"});
-      const q=await pool.query(`SELECT id,name,username,role,active,created_at FROM managers ORDER BY created_at DESC`); return send(res,200,{ok:true,managers:q.rows});
+      const q=await pool.query(`SELECT id,name,username,role,active,permissions,created_at FROM managers ORDER BY created_at DESC`); return send(res,200,{ok:true,managers:q.rows});
     }
     if(req.method==="POST" && url.pathname==="/api/admin/managers"){
       if(user.role!=="admin") return send(res,403,{ok:false,error:"ADMIN_ONLY"});
       const b=await parseBody(req),name=safe(b.name,120),username=safe(b.username,80).toLowerCase(),password=String(b.password||"");
       if(!name||!username||password.length<10) return send(res,400,{ok:false,error:"NAME_USERNAME_AND_10_CHAR_PASSWORD_REQUIRED"});
-      try{const q=await pool.query(`INSERT INTO managers(name,username,password_hash,role) VALUES($1,$2,$3,'manager') RETURNING id,name,username,role,active,created_at`,[name,username,hashPassword(password)]);return send(res,201,{ok:true,manager:q.rows[0]});}catch(e){if(e.code==="23505")return send(res,409,{ok:false,error:"USERNAME_EXISTS"});throw e;}
+      try{const q=await pool.query(`INSERT INTO managers(name,username,password_hash,role,permissions) VALUES($1,$2,$3,'manager',$4) RETURNING id,name,username,role,active,created_at`,[name,username,hashPassword(password),JSON.stringify(DEFAULT_MANAGER_PERMISSIONS)]);return send(res,201,{ok:true,manager:q.rows[0]});}catch(e){if(e.code==="23505")return send(res,409,{ok:false,error:"USERNAME_EXISTS"});throw e;}
     }
     if(req.method==="PATCH" && url.pathname==="/api/admin/managers"){
       if(user.role!=="admin") return send(res,403,{ok:false,error:"ADMIN_ONLY"});
       const b=await parseBody(req),id=Number(b.id); if(!Number.isInteger(id))return send(res,400,{ok:false,error:"INVALID_ID"});
-      if(b.active!==undefined) await pool.query(`UPDATE managers SET active=$1 WHERE id=$2`,[!!b.active,id]);
-      if(b.password!==undefined && String(b.password).length>=10) await pool.query(`UPDATE managers SET password_hash=$1 WHERE id=$2`,[hashPassword(String(b.password)),id]);
+      if(b.active!==undefined){ await pool.query(`UPDATE managers SET active=$1 WHERE id=$2`,[!!b.active,id]); revokeUserSessions(id); }
+      if(b.password!==undefined){ if(String(b.password).length<10)return send(res,400,{ok:false,error:"PASSWORD_MIN_10"}); await pool.query(`UPDATE managers SET password_hash=$1 WHERE id=$2`,[hashPassword(String(b.password)),id]); revokeUserSessions(id); }
+      if(b.permissions!==undefined){ const perms=Array.isArray(b.permissions)?b.permissions.filter(x=>ALL_PERMISSIONS.includes(x)):[]; await pool.query(`UPDATE managers SET permissions=$1::jsonb WHERE id=$2`,[JSON.stringify(perms),id]); revokeUserSessions(id); }
       return send(res,200,{ok:true});
     }
 
+    if(req.method==="POST" && url.pathname==="/api/admin/password"){
+      if(user.role!=="admin") return send(res,403,{ok:false,error:"ADMIN_ONLY"});
+      const b=await parseBody(req),current=String(b.currentPassword||""),next=String(b.newPassword||"");
+      if(next.length<10) return send(res,400,{ok:false,error:"PASSWORD_MIN_10"});
+      let valid=false,adminId=user.id;
+      if(pool){ const q=await pool.query(`SELECT id,password_hash FROM managers WHERE username='admin' AND role='admin' LIMIT 1`); if(q.rowCount){adminId=q.rows[0].id;valid=verifyPassword(current,q.rows[0].password_hash);} }
+      if(!valid && !adminId && ADMIN_PASSWORD) valid=current===ADMIN_PASSWORD;
+      if(!valid) return send(res,401,{ok:false,error:"CURRENT_PASSWORD_INVALID"});
+      if(!pool || !adminId) return send(res,503,{ok:false,error:"ADMIN_DB_ACCOUNT_REQUIRED"});
+      await pool.query(`UPDATE managers SET password_hash=$1 WHERE id=$2`,[hashPassword(next),adminId]);
+      revokeAllSessions();
+      return send(res,200,{ok:true});
+    }
+    if(req.method==="POST" && url.pathname==="/api/admin/logout-all"){
+      if(user.role!=="admin") return send(res,403,{ok:false,error:"ADMIN_ONLY"});
+      revokeAllSessions(); return send(res,200,{ok:true});
+    }
+    if(req.method==="POST" && url.pathname==="/api/admin/logout-my-sessions"){
+      revokeUserSessions(user.id); return send(res,200,{ok:true});
+    }
+
+    if(req.method==="GET" && url.pathname==="/api/admin/booking-managers"){ const q=await pool.query("SELECT id,name,username,active FROM managers WHERE active=true ORDER BY name"); return send(res,200,{ok:true,managers:q.rows}); }
+    if(req.method==="POST" && url.pathname==="/api/admin/assign-booking"){ if(!hasPermission(user,"bookings_edit"))return send(res,403,{ok:false,error:"FORBIDDEN"}); const b=await parseBody(req),id=Number(b.id),managerId=Number(b.managerId); if(!Number.isInteger(id)||!Number.isInteger(managerId))return send(res,400,{ok:false,error:"INVALID_ID"}); await pool.query("UPDATE bookings SET manager_id=$1 WHERE id=$2",[managerId,id]); return send(res,200,{ok:true}); }
     const crud = async (table, fields, required, body, id=null) => {
       if(id){
         for(const f of required){if(body[f]===undefined || body[f]===null || String(body[f]).trim()==="") throw Object.assign(new Error("REQUIRED"),{status:400});}
@@ -249,11 +300,13 @@ async function api(req,res,url){
       }
     };
     const map={
-      flights:{table:"flights",fields:["from_city","from_country","to_city","to_country","flight_date","flight_time","airline","baggage","price","currency","active"],required:["from_city","from_country","to_city","to_country","flight_date","flight_time","airline","baggage","price"]},
+      flights:{table:"flights",fields:["from_city","from_country","from_airport","from_airport_code","to_city","to_country","to_airport","to_airport_code","flight_date","flight_time","airline","baggage","price","currency","active"],required:["from_city","from_country","from_airport","from_airport_code","to_city","to_country","to_airport","to_airport_code","flight_date","flight_time","airline","baggage","price"]},
       offers:{table:"offers",fields:["title","description","discount","valid_until","active"],required:["title"]},
       directions:{table:"directions",fields:["city","country","code","active"],required:["city","country"]}
     };
     for(const [key,cfg] of Object.entries(map)){
+      const perm = key==="flights" ? "flights_manage" : key==="offers" ? "offers_manage" : "directions_manage";
+      if(!hasPermission(user,perm)) continue;
       if(req.method==="GET" && url.pathname===`/api/admin/${key}`){const q=await pool.query(`SELECT * FROM ${cfg.table} ORDER BY created_at DESC`);return send(res,200,{ok:true,[key]:q.rows});}
       if(req.method==="POST" && url.pathname===`/api/admin/${key}`){const b=await parseBody(req);try{await crud(cfg.table,cfg.fields,cfg.required,b);return send(res,201,{ok:true});}catch(e){return send(res,e.status||500,{ok:false,error:e.message});}}
       if(req.method==="PATCH" && url.pathname===`/api/admin/${key}`){const b=await parseBody(req),id=Number(b.id);if(!Number.isInteger(id))return send(res,400,{ok:false,error:"INVALID_ID"});try{await crud(cfg.table,cfg.fields,cfg.required,b,id);return send(res,200,{ok:true});}catch(e){return send(res,e.status||500,{ok:false,error:e.message});}}
@@ -261,10 +314,25 @@ async function api(req,res,url){
     }
   }
 
+  if(req.method==="GET" && url.pathname==="/api/admin/supplier/status"){ const user=authorized(req); if(!user)return send(res,401,{ok:false,error:"UNAUTHORIZED"}); if(user.role!=="admin")return send(res,403,{ok:false,error:"ADMIN_ONLY"}); return send(res,200,{ok:true,configured:!!(SUPPLIER_API_URL&&SUPPLIER_API_KEY),providerUrl:SUPPLIER_API_URL?SUPPLIER_API_URL.replace(/\/[^\/]*$/,"/…"):""}); }
+  if(req.method==="POST" && url.pathname==="/api/admin/supplier/sync"){ const user=authorized(req); if(!user)return send(res,401,{ok:false,error:"UNAUTHORIZED"}); if(user.role!=="admin")return send(res,403,{ok:false,error:"ADMIN_ONLY"}); if(!SUPPLIER_API_URL||!SUPPLIER_API_KEY)return send(res,503,{ok:false,error:"SUPPLIER_NOT_CONFIGURED",message:"Set SUPPLIER_API_URL and SUPPLIER_API_KEY in Render environment variables."}); try{const r=await fetch(SUPPLIER_API_URL,{headers:{Authorization:`Bearer ${SUPPLIER_API_KEY}`,Accept:"application/json"}});const text=await r.text();if(!r.ok)return send(res,502,{ok:false,error:"SUPPLIER_HTTP_ERROR",status:r.status,body:text.slice(0,1000)});let data;try{data=JSON.parse(text)}catch{data={raw:text.slice(0,5000)}} return send(res,200,{ok:true,provider:data});}catch(e){return send(res,502,{ok:false,error:"SUPPLIER_REQUEST_FAILED",message:e.message});} }
   // Public lists for future site integrations.
   if(req.method==="GET" && url.pathname==="/api/directions" && pool){const q=await pool.query(`SELECT id,city,country,code FROM directions WHERE active=true ORDER BY city`);return send(res,200,{ok:true,directions:q.rows});}
   if(req.method==="GET" && url.pathname==="/api/flights" && pool){const q=await pool.query(`SELECT * FROM flights WHERE active=true AND flight_date>=CURRENT_DATE ORDER BY flight_date,flight_time LIMIT 500`);return send(res,200,{ok:true,flights:q.rows});}
   if(req.method==="GET" && url.pathname==="/api/offers" && pool){const q=await pool.query(`SELECT * FROM offers WHERE active=true AND (valid_until IS NULL OR valid_until>=CURRENT_DATE) ORDER BY created_at DESC`);return send(res,200,{ok:true,offers:q.rows});}
+  if(req.method==="GET" && url.pathname==="/api/search-flights" && pool){
+    const from=safe(url.searchParams.get("from"),120), to=safe(url.searchParams.get("to"),120), date=safe(url.searchParams.get("date"),20), airline=safe(url.searchParams.get("airline"),120), airport=safe(url.searchParams.get("airport"),20), direct=url.searchParams.get("direct");
+    const args=[], where=["active=true","flight_date>=CURRENT_DATE"];
+    if(from){args.push(`%${from}%`);where.push(`(from_city ILIKE $${args.length} OR from_airport ILIKE $${args.length} OR from_airport_code ILIKE $${args.length})`)}
+    if(to){args.push(`%${to}%`);where.push(`(to_city ILIKE $${args.length} OR to_airport ILIKE $${args.length} OR to_airport_code ILIKE $${args.length})`)}
+    if(date && validDate(date)){args.push(date);where.push(`flight_date=$${args.length}`)}
+    if(airline){args.push(`%${airline}%`);where.push(`airline ILIKE $${args.length}`)}
+    if(airport){args.push(`%${airport}%`);where.push(`(from_airport ILIKE $${args.length} OR to_airport ILIKE $${args.length} OR from_airport_code ILIKE $${args.length} OR to_airport_code ILIKE $${args.length})`)}
+    const q=await pool.query(`SELECT * FROM flights WHERE ${where.join(" AND ")} ORDER BY flight_date,flight_time LIMIT 500`,args); return send(res,200,{ok:true,flights:q.rows});
+  }
+
+  if(req.method==="GET" && url.pathname==="/api/flight" && pool){ const id=Number(url.searchParams.get("id")); if(!Number.isInteger(id)) return send(res,400,{ok:false,error:"INVALID_ID"}); const q=await pool.query("SELECT * FROM flights WHERE id=$1 AND active=true",[id]); return send(res,q.rowCount?200:404,{ok:!!q.rowCount,flight:q.rows[0]||null}); }
+
   return false;
 }
 
