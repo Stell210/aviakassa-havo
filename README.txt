@@ -23,3 +23,14 @@ V14 fixes: mobile admin layout, loading of flights/offers/directions, editable f
 
 
 v17 SECURITY: admin password change, manager permissions, manager session revocation, global logout-all, server-side permission enforcement.
+
+GLOBAL AIRPORT AUTOCOMPLETE (v27)
+---------------------------------
+The admin flight form now uses a worldwide airport catalog loaded from the
+world-countries-cities-db CDN. The airport dataset is derived from OurAirports
+and contains large/medium airports plus airports with IATA codes.
+
+Flow: type a city -> choose a city suggestion (country + airport examples + IATA)
+-> choose the airport -> airport name and IATA code are filled automatically.
+The form keeps a local fallback catalog and browser cache if the external catalog
+cannot be reached.
