@@ -209,22 +209,57 @@ const reelsText={ru:{direct:"ПРЯМЫЕ РЕЙСЫ",baggage:"Багаж от 2
 let reelsFlights=[];let reelsTemplate="route";
 function rt(k){return (reelsText[adminLang]||reelsText.ru)[k]||k}
 function loadReelsFlights(){api("/api/admin/flights").then(async r=>{const d=await r.json();reelsFlights=d.flights||[];renderReelsFlightList();drawReels()}).catch(()=>{reelsFlights=[];renderReelsFlightList();drawReels()})}
-function fmtReelsDate(v){if(!v)return "";const d=new Date(String(v)+"T00:00:00");return d.toLocaleDateString(adminLang==="en"?"en-US":"ru-RU",{day:"2-digit",month:"2-digit"})}
-function renderReelsFlightList(){const box=$("reelsFlightList");if(!box)return;if(!reelsFlights.length){box.innerHTML='<div class="empty">'+esc(rt("empty"))+'</div>';return}box.innerHTML=reelsFlights.map(f=>`<label class="reels-flight"><input type="checkbox" data-reels-id="${f.id}"><span><b>${esc(f.from_city)} → ${esc(f.to_city)}</b><small>📅 ${esc(fmtReelsDate(f.flight_date))} · 🕐 ${esc(f.flight_time||"")} · ✈️ ${esc(f.airline||"")}</small><small>🧳 ${esc(f.baggage||"")} · 💰 ${esc(f.price||"")}${f.currency?" "+esc(f.currency):""}</small></span></label>`).join("");box.querySelectorAll("[data-reels-id]").forEach(c=>c.onchange=()=>{updateReelsCount();drawReels()});updateReelsCount()}
-function selectedReelsFlights(){const max=Number($("reelsMax")?.value||8);return [...document.querySelectorAll("[data-reels-id]:checked")].map(c=>reelsFlights.find(f=>String(f.id)===String(c.dataset.reelsId))).filter(Boolean).slice(0,max)}
-function updateReelsCount(){const n=selectedReelsFlights().length;const el=$("reelsCount");if(el)el.textContent=(adminLang==="ru"?"Выбрано: ":adminLang==="tj"?"Интихоб шуд: ":"Selected: ")+n}
-function roundRect(c,x,y,w,h,r,fill){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();c.fillStyle=fill;c.fill()}
-function fitText(c,text,maxW,font){c.font=font;let s=String(text);if(c.measureText(s).width<=maxW)return s;while(s.length>4&&c.measureText(s+"…").width>maxW)s=s.slice(0,-1);return s+"…"}
-function wrapCanvas(c,text,maxW,font){c.font=font;const words=String(text).split(/\s+/),lines=[];let line="";for(const w of words){const t=line?line+" "+w:w;if(c.measureText(t).width>maxW&&line){lines.push(line);line=w}else line=t}if(line)lines.push(line);return lines.slice(0,3)}
-function drawReels(){const canvas=$("reelsCanvas");if(!canvas)return;const c=canvas.getContext("2d"),W=1080,H=1920;c.clearRect(0,0,W,H);c.fillStyle="#05070c";c.fillRect(0,0,W,H);const g=c.createLinearGradient(0,0,W,H);g.addColorStop(0,"#071a35");g.addColorStop(.55,"#0b4d8e");g.addColorStop(1,"#02040a");c.fillStyle=g;c.fillRect(0,0,W,H);
- // Keep every important element well inside the 9:16 canvas to survive Instagram UI cropping/zoom.
- c.fillStyle="#fff";c.font="900 42px Arial";c.fillText("✈️ Aviakassa_havo",72,112);c.fillStyle="#ffd34d";c.font="900 30px Arial";c.fillText(rt("direct"),74,160);
- const title=reelsTemplate==="minimal"?"✈️ АВИАБИЛЕТЫ":reelsTemplate==="sale"?"🔥 ВЫГОДНЫЕ БИЛЕТЫ":reelsTemplate==="route"?"ДУШАНБЕ → МОСКВА":reelsTemplate==="ekb"?"ЕКАТЕРИНБУРГ → ДУШАНБЕ":reelsTemplate==="nsk"?"НОВОСИБИРСК → ДУШАНБЕ":reelsTemplate==="offer"?"🔥 СПЕЦИАЛЬНОЕ ПРЕДЛОЖЕНИЕ":"✈️ ЛЮБОЙ МАРШРУТ";c.fillStyle="#fff";c.font="900 64px Arial";c.fillText(fitText(c,title,930,"900 64px Arial"),72,245);
- const selected=selectedReelsFlights();let y=315;if(!selected.length){roundRect(c,72,y,936,250,24,"#ffffff12");c.fillStyle="#fff";c.font="800 38px Arial";c.fillText(rt("select"),105,y+140)}
- selected.slice(0,7).forEach((f,i)=>{const h=174;roundRect(c,72,y,936,h-12,22,i%2?"#ffffff12":"#ffffff18");c.fillStyle="#fff";c.font="900 35px Arial";c.fillText(fitText(c,`${fmtReelsDate(f.flight_date)}  ${f.from_city} → ${f.to_city}`,590,"900 35px Arial"),102,y+52);c.fillStyle="#9fd3ff";c.font="700 28px Arial";c.fillText(fitText(c,`${f.airline||""} · ${f.flight_time||""}`,560,"700 28px Arial"),102,y+96);c.fillStyle="#ffd34d";c.font="900 32px Arial";c.fillText(fitText(c,`${f.price||""}${f.currency?" "+f.currency:""}`,300,"900 32px Arial"),690,y+52);c.fillStyle="#d8e7f7";c.font="600 23px Arial";c.fillText(fitText(c,f.baggage||"",300,"600 23px Arial"),690,y+90);y+=h});
- const fy=H-390;roundRect(c,72,fy,936,300,26,"#00000066");c.fillStyle="#fff";c.font="900 30px Arial";if($("reelsBaggage")?.checked)c.fillText(rt("baggage"),105,fy+50);c.fillStyle="#ffd34d";c.font="700 25px Arial";let sy=fy+95;wrapCanvas(c,$("reelsSubline")?.value||rt("confirm"),850,"700 25px Arial").forEach(line=>{c.fillText(line,105,sy);sy+=34});c.fillStyle="#fff";c.font="800 27px Arial";c.fillText(rt("world"),105,fy+190);c.fillStyle="#fff";c.font="700 25px Arial";c.fillText(rt("contacts"),105,fy+228);c.font="800 28px Arial";c.fillText("+992 753 582 002   ·   +7 914 398-26-45",105,fy+270);
- // 70px dark margin = intentional black border/safe area.
- c.strokeStyle="#000";c.lineWidth=70;c.strokeRect(35,35,W-70,H-70);
+function parseReelsDate(v){
+ if(!v)return null;
+ const raw=String(v).trim();
+ if(/^\d{4}-\d{2}-\d{2}$/.test(raw)){const [y,m,d]=raw.split("-").map(Number);return new Date(y,m-1,d)}
+ if(/^\d{2}\.\d{2}\.\d{4}$/.test(raw)){const [d,m,y]=raw.split(".").map(Number);return new Date(y,m-1,d)}
+ const d=new Date(raw);return Number.isNaN(d.getTime())?null:d;
+}
+function fmtReelsDate(v){const d=parseReelsDate(v);if(!d)return String(v||"");return d.toLocaleDateString(adminLang==="en"?"en-US":adminLang==="tj"?"ru-RU":"ru-RU",{day:"2-digit",month:"short",year:"numeric"})}
+function drawRoundedImage(c,x,y,w,h,r,fill){roundRect(c,x,y,w,h,r,fill)}
+function drawPlane(c,x,y,scale,fill){c.save();c.translate(x,y);c.scale(scale,scale);c.fillStyle=fill;c.beginPath();c.moveTo(0,-16);c.lineTo(115,0);c.lineTo(0,16);c.lineTo(22,3);c.lineTo(22,-3);c.closePath();c.fill();c.beginPath();c.moveTo(35,-2);c.lineTo(65,-48);c.lineTo(76,-48);c.lineTo(58,-1);c.lineTo(76,48);c.lineTo(65,48);c.lineTo(35,2);c.closePath();c.fill();c.restore()}
+function drawReels(){
+ const canvas=$("reelsCanvas");if(!canvas)return;const c=canvas.getContext("2d"),W=1080,H=1920;
+ c.clearRect(0,0,W,H);
+ // Premium aviation background
+ const bg=c.createLinearGradient(0,0,W,H);bg.addColorStop(0,"#06152d");bg.addColorStop(.38,"#0b4f91");bg.addColorStop(.72,"#071f3d");bg.addColorStop(1,"#020711");c.fillStyle=bg;c.fillRect(0,0,W,H);
+ const glow=c.createRadialGradient(820,300,20,820,300,520);glow.addColorStop(0,"#2b9cff55");glow.addColorStop(1,"#2b9cff00");c.fillStyle=glow;c.fillRect(0,0,W,H);
+ // subtle clouds / light streaks
+ c.globalAlpha=.10;for(let i=0;i<7;i++){c.fillStyle="#fff";c.beginPath();c.ellipse(120+i*170,360+(i%3)*85,130,28,0,0,Math.PI*2);c.fill()}c.globalAlpha=1;
+ // outer frame and top brand
+ roundRect(c,38,38,1004,184,34,"#ffffff0d");
+ c.fillStyle="#fff";c.font="900 42px Arial";c.fillText("✈️ Aviakassa_havo",78,98);
+ c.fillStyle="#8fd0ff";c.font="700 23px Arial";c.fillText(rt("world"),80,137);
+ c.fillStyle="#ffd34d";c.font="900 26px Arial";c.fillText(rt("direct"),80,180);
+ // template headline
+ const title=reelsTemplate==="minimal"?"✈️ АВИАБИЛЕТЫ":reelsTemplate==="sale"?"🔥 ВЫГОДНЫЕ БИЛЕТЫ":reelsTemplate==="route"?"ДУШАНБЕ → МОСКВА":reelsTemplate==="ekb"?"ЕКАТЕРИНБУРГ → ДУШАНБЕ":reelsTemplate==="nsk"?"НОВОСИБИРСК → ДУШАНБЕ":reelsTemplate==="offer"?"🔥 СПЕЦИАЛЬНОЕ ПРЕДЛОЖЕНИЕ":"✈️ ЛЮБОЙ МАРШРУТ";
+ c.fillStyle="#ffd34d";c.font="900 72px Arial";c.fillText(fitText(c,title,920,"900 72px Arial"),78,285);
+ // decorative flight path
+ c.strokeStyle="#ffffff55";c.lineWidth=3;c.setLineDash([12,12]);c.beginPath();c.moveTo(90,330);c.quadraticCurveTo(520,260,990,330);c.stroke();c.setLineDash([]);drawPlane(c,505,286,.42,"#fff");
+ const selected=selectedReelsFlights();let y=370;
+ if(!selected.length){roundRect(c,72,y,936,300,30,"#ffffff12");c.fillStyle="#fff";c.font="800 38px Arial";c.fillText(rt("select"),108,y+165)}
+ selected.slice(0,7).forEach((f,i)=>{
+   const h=188, x=62, w=956;
+   roundRect(c,x,y,w,h-14,26,i%2?"#ffffff12":"#ffffff18");
+   c.fillStyle="#ffd34d";c.font="900 28px Arial";c.fillText(fmtReelsDate(f.flight_date),96,y+45);
+   c.fillStyle="#fff";c.font="900 38px Arial";c.fillText(fitText(c,`${f.from_city||""} → ${f.to_city||""}`,590,"900 38px Arial"),96,y+90);
+   c.fillStyle="#9fd3ff";c.font="700 25px Arial";c.fillText(fitText(c,`${f.airline||""}  ·  ${f.flight_time||""}`,570,"700 25px Arial"),96,y+132);
+   c.fillStyle="#dbeeff";c.font="600 22px Arial";c.fillText(fitText(c,f.baggage||"",560,"600 22px Arial"),96,y+163);
+   roundRect(c,720,y+28,255,112,20,"#061a35aa");c.fillStyle="#ffd34d";c.font="900 38px Arial";c.textAlign="right";c.fillText(fitText(c,`${f.price||""}${f.currency?" "+f.currency:""}`,220,"900 38px Arial"),948,y+78);c.fillStyle="#fff";c.font="700 20px Arial";c.fillText("ЛУЧШАЯ ЦЕНА",948,y+112);c.textAlign="left";
+   y+=h;
+ });
+ // Bottom CTA panel with premium hierarchy
+ const fy=H-465;roundRect(c,58,fy,964,395,34,"#020a17dd");c.strokeStyle="#2a9dff66";c.lineWidth=2;c.stroke();
+ if($("reelsBaggage")?.checked){c.fillStyle="#fff";c.font="900 30px Arial";c.fillText("🧳 "+rt("baggage"),96,fy+58)}
+ c.fillStyle="#ffd34d";c.font="800 27px Arial";let sy=fy+105;wrapCanvas(c,$("reelsSubline")?.value||rt("confirm"),830,"800 27px Arial").forEach(line=>{c.fillText(line,96,sy);sy+=36});
+ c.fillStyle="#fff";c.font="900 27px Arial";c.fillText(rt("world"),96,fy+190);
+ c.fillStyle="#8fd0ff";c.font="700 24px Arial";c.fillText(rt("contacts"),96,fy+228);
+ c.fillStyle="#fff";c.font="800 27px Arial";c.fillText("+992 753 582 002   ·   +7 914 398-26-45",96,fy+270);
+ roundRect(c,96,fy+300,400,58,18,"#16a765");c.fillStyle="#fff";c.font="900 24px Arial";c.fillText("WhatsApp / Telegram",130,fy+338);
+ c.fillStyle="#9fb7cf";c.font="600 20px Arial";c.fillText("Aviakassa_havo  •  24/7",650,fy+338);
+ // Instagram-safe frame: content stays well inside, black outer margin
+ c.strokeStyle="#000";c.lineWidth=72;c.strokeRect(36,36,W-72,H-72);
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-reels-template]");if(!b)return;reelsTemplate=b.dataset.reelsTemplate;document.querySelectorAll("[data-reels-template]").forEach(x=>x.classList.toggle("active",x===b));drawReels()});
 if($("reelsGenerate"))$("reelsGenerate").onclick=()=>{if(!selectedReelsFlights().length){toast(rt("select"));return}drawReels();toast(adminLang==="ru"?"Reels создан":adminLang==="tj"?"Reels сохта шуд":"Reels created")};
