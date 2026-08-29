@@ -258,6 +258,17 @@ function parseReelsDate(v){
  const d=new Date(raw);return Number.isNaN(d.getTime())?null:d;
 }
 function fmtReelsDate(v){const d=parseReelsDate(v);if(!d)return String(v||"");return d.toLocaleDateString(adminLang==="en"?"en-US":adminLang==="tj"?"ru-RU":"ru-RU",{day:"2-digit",month:"short",year:"numeric"})}
+function roundRect(c,x,y,w,h,r,fill){
+  const radius=Math.max(0,Math.min(r,Math.min(w,h)/2));
+  c.beginPath();
+  c.moveTo(x+radius,y);
+  c.arcTo(x+w,y,x+w,y+h,radius);
+  c.arcTo(x+w,y+h,x,y+h,radius);
+  c.arcTo(x,y+h,x,y,radius);
+  c.arcTo(x,y,x+w,y,radius);
+  c.closePath();
+  if(fill){c.fillStyle=fill;c.fill();}
+}
 function drawRoundedImage(c,x,y,w,h,r,fill){roundRect(c,x,y,w,h,r,fill)}
 function drawPlane(c,x,y,scale,fill){c.save();c.translate(x,y);c.scale(scale,scale);c.fillStyle=fill;c.beginPath();c.moveTo(0,-16);c.lineTo(115,0);c.lineTo(0,16);c.lineTo(22,3);c.lineTo(22,-3);c.closePath();c.fill();c.beginPath();c.moveTo(35,-2);c.lineTo(65,-48);c.lineTo(76,-48);c.lineTo(58,-1);c.lineTo(76,48);c.lineTo(65,48);c.lineTo(35,2);c.closePath();c.fill();c.restore()}
 function drawReels(){
