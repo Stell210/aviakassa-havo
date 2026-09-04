@@ -27,7 +27,7 @@ services:
       - key: TRAVELPORT_API_URL
         value: https://api.pp.travelport.net/11/air/catalog/search/catalogproductofferings
       - key: TRAVELPORT_CONTENT_SOURCES
-        value: GDS,NDC
+        value: GDS
 databases:
   - name: aviakassa-havo-db
     databaseName: aviakassa
