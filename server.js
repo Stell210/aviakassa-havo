@@ -10,6 +10,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 const DATABASE_URL = process.env.DATABASE_URL || "";
 const SUPPLIER_API_URL = process.env.SUPPLIER_API_URL || "";
 const SUPPLIER_API_KEY = process.env.SUPPLIER_API_KEY || "";
+const AVIASALES_API_TOKEN = process.env.AVIASALES_API_TOKEN || "";
 const publicDir = __dirname;
 const pool = DATABASE_URL ? new Pool({
   connectionString: DATABASE_URL,
@@ -320,6 +321,93 @@ async function api(req,res,url){
   if(req.method==="GET" && url.pathname==="/api/directions" && pool){const q=await pool.query(`SELECT id,city,country,code FROM directions WHERE active=true ORDER BY city`);return send(res,200,{ok:true,directions:q.rows});}
   if(req.method==="GET" && url.pathname==="/api/flights" && pool){const q=await pool.query(`SELECT * FROM flights WHERE active=true AND flight_date>=CURRENT_DATE ORDER BY flight_date,flight_time LIMIT 500`);return send(res,200,{ok:true,flights:q.rows});}
   if(req.method==="GET" && url.pathname==="/api/offers" && pool){const q=await pool.query(`SELECT * FROM offers WHERE active=true AND (valid_until IS NULL OR valid_until>=CURRENT_DATE) ORDER BY created_at DESC`);return send(res,200,{ok:true,offers:q.rows});}
+  if(req.method==="GET" && url.pathname==="/api/live-search-flights"){
+    const from=safe(url.searchParams.get("from"),120);
+    const to=safe(url.searchParams.get("to"),120);
+    const date=safe(url.searchParams.get("date"),20);
+    const direct=url.searchParams.get("direct") !== "false";
+    const currency=(safe(url.searchParams.get("currency"),8)||"rub").toLowerCase();
+
+    const cityIata = {
+      "душанбе":"DYU","dushanbe":"DYU",
+      "москва":"MOW","moscow":"MOW",
+      "санкт-петербург":"LED","saint petersburg":"LED",
+      "казань":"KZN","kazan":"KZN",
+      "екатеринбург":"SVX","yekaterinburg":"SVX",
+      "новосибирск":"OVB","novosibirsk":"OVB",
+      "самара":"KUF","samara":"KUF",
+      "уфа":"UFA","ufa":"UFA",
+      "красноярск":"KJA","krasnoyarsk":"KJA",
+      "ростов-на-дону":"ROV","rostov-on-don":"ROV",
+      "тюмень":"TJM","tyumen":"TJM",
+      "сургут":"SGC","surgut":"SGC",
+      "минеральные воды":"MRV","mineralnye vody":"MRV",
+      "дубай":"DXB","dubai":"DXB",
+      "стамбул":"IST","istanbul":"IST",
+      "пекин":"PEK","beijing":"PEK",
+      "алматы":"ALA","almaty":"ALA",
+      "астана":"NQZ","astana":"NQZ",
+      "ташкент":"TAS","tashkent":"TAS",
+      "самарканд":"SKD","samarkand":"SKD",
+      "бишкек":"FRU","bishkek":"FRU",
+      "баку":"GYD","baku":"GYD",
+      "тегеран":"IKA","tehran":"IKA",
+      "дели":"DEL","delhi":"DEL",
+      "абу-даби":"AUH","abu dhabi":"AUH",
+      "доха":"DOH","doha":"DOH",
+      "анталья":"AYT","antalya":"AYT",
+      "тбилиси":"TBS","tbilisi":"TBS"
+    };
+    function extractIata(value){
+      const raw=String(value||"").trim();
+      const paren=raw.match(/\(([A-Za-z]{3})\)/);
+      if(paren) return paren[1].toUpperCase();
+      if(/^[A-Za-z]{3}$/.test(raw)) return raw.toUpperCase();
+      const city=raw.split(",")[0].trim().toLowerCase();
+      return cityIata[city] || null;
+    }
+    if(!AVIASALES_API_TOKEN) return send(res,503,{ok:false,error:"AVIASALES_API_TOKEN_NOT_SET"});
+    if(!date || !validDate(date)) return send(res,400,{ok:false,error:"INVALID_DATE"});
+    const origin=extractIata(from), destination=extractIata(to);
+    if(!origin || !destination) return send(res,400,{ok:false,error:"UNKNOWN_CITY_IATA",message:"Не удалось определить IATA-код города. Используйте город из списка или аэропорт с кодом IATA."});
+
+    const params=new URLSearchParams({
+      origin,destination,departure_at:date,one_way:"true",direct:String(direct),
+      currency,limit:"100",page:"1",sorting:"price",market:"ru",token:AVIASALES_API_TOKEN
+    });
+    try{
+      const rr=await fetch("https://api.travelpayouts.com/aviasales/v3/prices_for_dates?"+params.toString(),{
+        headers:{"X-Access-Token":AVIASALES_API_TOKEN,"Accept":"application/json"}
+      });
+      const raw=await rr.json();
+      if(!rr.ok || raw?.success===false) return send(res,502,{ok:false,error:"AVIASALES_API_ERROR",details:raw?.error||`HTTP_${rr.status}`});
+      const airlineNames={SU:"Aeroflot",S7:"S7 Airlines",U6:"Ural Airlines",UT:"Utair",SZ:"Somon Air",DP:"Pobeda",TK:"Turkish Airlines",EK:"Emirates",FZ:"flydubai",HY:"Uzbekistan Airways",KC:"Air Astana",A4:"Azimuth",WZ:"Red Wings"};
+      const flights=(Array.isArray(raw?.data)?raw.data:[]).map(x=>{
+        const base=Number(x.price);
+        const departure=x.departure_at||null;
+        const duration=Number(x.duration_to||x.duration||0);
+        return {
+          id:`avs-${x.airline||"XX"}-${x.flight_number||""}-${x.departure_at||""}`,
+          source:"aviasales-data-api",
+          from_iata:x.origin||origin,to_iata:x.destination||destination,
+          from_airport_code:x.origin_airport||null,to_airport_code:x.destination_airport||null,
+          airline_code:x.airline||null,airline:airlineNames[x.airline]||x.airline||"Авиакомпания",
+          flight_number:x.flight_number||null,
+          departure_at:departure,return_at:x.return_at||null,
+          transfers:Number(x.transfers||0),duration_to:duration,
+          price:base+500,currency:(x.currency||currency).toUpperCase(),
+          source_price:base,markup:500,
+          baggage:null,hand_baggage:null,baggage_note:"Условия багажа уточняются",
+          link:x.link||null
+        };
+      }).filter(x=>x.price>=500);
+      return send(res,200,{ok:true,source:"Aviasales Data API",requested:{origin,destination,date,direct,currency},flights});
+    }catch(e){
+      console.error("Aviasales search error:",e.message);
+      return send(res,502,{ok:false,error:"AVIASALES_REQUEST_FAILED"});
+    }
+  }
+
   if(req.method==="GET" && url.pathname==="/api/search-flights" && pool){
     const from=safe(url.searchParams.get("from"),120), to=safe(url.searchParams.get("to"),120), date=safe(url.searchParams.get("date"),20), airline=safe(url.searchParams.get("airline"),120), airport=safe(url.searchParams.get("airport"),20), direct=url.searchParams.get("direct");
     const args=[], where=["active=true","flight_date>=CURRENT_DATE"];

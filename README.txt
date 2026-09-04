@@ -34,3 +34,16 @@ Flow: type a city -> choose a city suggestion (country + airport examples + IATA
 -> choose the airport -> airport name and IATA code are filled automatically.
 The form keeps a local fallback catalog and browser cache if the external catalog
 cannot be reached.
+
+
+NEW: Aviasales Data API search
+------------------------------
+- Public flight search now uses /api/live-search-flights.
+- The server reads AVIASALES_API_TOKEN from Render Environment Variables.
+- Only non-stop results are requested (direct=true).
+- Displayed price = Aviasales Data API price + 500 RUB.
+- No purchase/booking is performed on Aviakassa_havo.
+- Data API does not provide baggage/hand-baggage details in this endpoint, so the UI
+  displays "Уточняется" rather than inventing baggage allowances.
+- Travelpayouts Drive code was added to index.html as instructed by the user's
+  Travelpayouts installation page.

@@ -256,9 +256,43 @@ function setLang(l){
 (function(){
  const ss=document.getElementById("smartSearch"); if(!ss)return;
  const box=document.getElementById("searchResults"), section=document.getElementById("flightSearchResults");
- const money2=v=>{const n=Number(String(v||"").replace(/[^0-9.,-]/g,"").replace(/,/g,"."));return Number.isFinite(n)?new Intl.NumberFormat("ru-RU").format(n):String(v||"")};
- async function run(){const p=new URLSearchParams();[["from","sfFrom"],["to","sfTo"],["date","sfDate"],["airline","sfAirline"],["airport","sfAirport"]].forEach(([k,id])=>{const x=document.getElementById(id)?.value.trim();if(x)p.set(k,x)});p.set("sort",document.getElementById("sfSort")?.value||"date");section.hidden=false;box.innerHTML=publicEmpty("Ищем рейсы…");try{const r=await fetch("/api/search-flights?"+p);const d=await r.json();let a=d.flights||[];const sort=p.get("sort");if(sort==="price")a.sort((x,y)=>(parseFloat(String(x.price).replace(/[^0-9.,-]/g,"").replace(/,/g,"."))||Infinity)-(parseFloat(String(y.price).replace(/[^0-9.,-]/g,"").replace(/,/g,"."))||Infinity));else if(sort==="time")a.sort((x,y)=>String(x.flight_time).localeCompare(String(y.flight_time)));box.innerHTML=a.length?a.map(x=>`<article class="flight-card"><div class="flight-route"><span>${escHtml(x.from_city)}${x.from_airport?", "+escHtml(x.from_airport):""}${x.from_airport_code?" ("+escHtml(x.from_airport_code)+")":""}</span><span>→</span><span>${escHtml(x.to_city)}${x.to_airport?", "+escHtml(x.to_airport):""}${x.to_airport_code?" ("+escHtml(x.to_airport_code)+")":""}</span></div><div class="flight-meta"><span>📅 ${formatDate(x.flight_date)}</span><span>🕐 ${escHtml(x.flight_time||"")}</span><span>✈️ ${escHtml(x.airline||"")}</span><span>🧳 ${escHtml(x.baggage||"")}</span></div><div class="flight-price">${money2(x.price)}${x.currency?" "+escHtml(x.currency):""}</div><a class="primary" href="${waUrl("Здравствуйте! Хочу узнать о рейсе "+x.from_city+" → "+x.to_city+", "+x.flight_date+".")}" target="_blank">${escHtml((extraTranslations[lang]||extraTranslations.ru).flightAction)}</a></article>`).join(""):publicEmpty("Рейсы не найдены");}catch(e){box.innerHTML=publicEmpty("Не удалось выполнить поиск");}}
+ const money2=v=>{const n=Number(v);return Number.isFinite(n)?new Intl.NumberFormat("ru-RU").format(n):String(v||"")};
+ const fmtTime=v=>{try{return new Intl.DateTimeFormat("ru-RU",{hour:"2-digit",minute:"2-digit"}).format(new Date(v))}catch{return ""}};
+ const fmtDate=v=>{try{return new Intl.DateTimeFormat("ru-RU",{day:"2-digit",month:"2-digit",year:"numeric"}).format(new Date(v))}catch{return String(v||"")}};
+ const fmtDuration=m=>{m=Number(m||0);if(!m)return "";const h=Math.floor(m/60),mm=m%60;return h?`${h}ч ${mm}м`:`${mm}м`};
+ async function run(){
+   const from=document.getElementById("sfFrom")?.value.trim(), to=document.getElementById("sfTo")?.value.trim(), date=document.getElementById("sfDate")?.value;
+   if(!from||!to||!date){box.innerHTML=publicEmpty("Укажите город вылета, город прилёта и дату");section.hidden=false;return;}
+   const p=new URLSearchParams({from,to,date,direct:"true",currency:"rub"});
+   section.hidden=false;box.innerHTML=publicEmpty("Ищем актуальные предложения…");
+   try{
+     const r=await fetch("/api/live-search-flights?"+p.toString());
+     const d=await r.json();
+     if(!r.ok||!d.ok) throw new Error(d.message||d.error||"API_ERROR");
+     let a=d.flights||[];
+     const sort=document.getElementById("sfSort")?.value||"price";
+     if(sort==="time")a.sort((x,y)=>String(x.departure_at).localeCompare(String(y.departure_at)));
+     else a.sort((x,y)=>Number(x.price)-Number(y.price));
+     box.innerHTML=a.length?a.map(x=>{
+       const direct=Number(x.transfers||0)===0;
+       const fromCode=x.from_airport_code||x.from_iata||"";
+       const toCode=x.to_airport_code||x.to_iata||"";
+       return `<article class="flight-card">
+         <div class="flight-route"><span>${escHtml(fromCode)}</span><span>→</span><span>${escHtml(toCode)}</span></div>
+         <div class="flight-meta">
+           <span>📅 ${escHtml(fmtDate(x.departure_at))}</span>
+           <span>🕐 ${escHtml(fmtTime(x.departure_at))}</span>
+           <span>✈️ ${escHtml(x.airline||"")}${x.flight_number?" "+escHtml(x.flight_number):""}</span>
+           <span>${direct?"Прямой":"С пересадкой"}${x.duration_to?" · "+escHtml(fmtDuration(x.duration_to)):""}</span>
+           <span>🎒 Ручная кладь: ${escHtml(x.hand_baggage||"Уточняется")}</span>
+           <span>🧳 Багаж: ${escHtml(x.baggage||"Уточняется")}</span>
+         </div>
+         <div class="flight-price">${money2(x.price)} ₽</div>
+         <div class="flight-source">Цена источника: ${money2(x.source_price)} ₽ · Aviakassa_havo: +500 ₽</div>
+       </article>`;
+     }).join(""):publicEmpty("На эту дату актуальных предложений не найдено");
+   }catch(e){box.innerHTML=publicEmpty("Не удалось получить актуальные предложения. Проверьте настройки Aviasales Data API.");}
+ }
  ss.addEventListener("submit",e=>{e.preventDefault();run()});
 })();
-
 })();
