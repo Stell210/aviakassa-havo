@@ -20,7 +20,7 @@
 <header class="nav">
   <a class="brand" href="#top">✈️ <span>Aviakassa_havo</span></a>
   <nav>
-    <a data-i18n="navSearch" href="#search">Найти билет</a>
+    <a data-i18n="navSearch" href="#flightSearchResults">Найти билет</a>
     <a href="#flights">Рейсы</a><a data-i18n="navRoutes" href="#routes">Направления</a><a href="#offers">Акции</a>
     <a data-i18n="navHow" href="#steps">Как это работает</a><a data-i18n="navFaq" href="#faq">FAQ</a>
   </nav>
@@ -42,7 +42,7 @@
     <h1 data-i18n-html="heroTitle">Летите туда,<br><span>куда мечтаете.</span></h1>
     <p data-i18n="heroText">Подберём удобный авиарейс, объясним условия и поможем оформить билет.</p>
     <div class="actions">
-      <a class="primary" data-i18n="findTicket" href="#search">Найти билет ✈️</a>
+      <a class="primary" data-i18n="findTicket" href="#flightSearchResults">Найти билет ✈️</a>
       <a class="ghost" data-i18n="writeWhatsApp" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20авиабилет." target="_blank">Написать в WhatsApp</a>
     </div>
   </div>
@@ -102,7 +102,7 @@
 </section>
 
 <section class="section dynamic-section" id="flights">
-  <div class="head"><div><span class="eyebrow">АКТУАЛЬНЫЕ РЕЙСЫ</span><h2>Рейсы</h2></div><p>Актуальные варианты, которые менеджер добавил через админ-панель.</p></div>
+  <div class="head"><div><span class="eyebrow">АКТУАЛЬНЫЕ РЕЙСЫ</span><h2>Рейсы</h2></div><p>Поиск рейсов прямо на Aviakassa_havo.</p></div>
   <div id="publicFlights" class="flight-grid"></div>
 </section>
 
@@ -117,7 +117,7 @@
 </section>
 
 
-<section class="section search-results-section" id="flightSearchResults" hidden>
+<section class="section search-results-section" id="flightSearchResults">
   <div class="head"><div><span class="eyebrow" data-i18n="searchEyebrow">ПОИСК</span><h2 data-i18n="searchTitle">Найти рейс</h2></div></div>
   <form id="smartSearch" class="smart-search"><input id="sfFrom" class="field" placeholder="Откуда"><input id="sfTo" class="field" placeholder="Куда"><input id="sfDate" class="field" type="date"><select id="sfAirline" class="field"><option value="">Все авиакомпании</option></select><select id="sfAirport" class="field"><option value="">Все аэропорты</option></select><select id="sfSort" class="field"><option value="date">По дате</option><option value="price">Сначала дешевле</option><option value="time">По времени</option></select><button class="primary" type="submit">🔎 <span data-i18n="searchButton">Найти</span></button></form>
   <div id="searchResults" class="flight-grid"></div>

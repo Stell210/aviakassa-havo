@@ -207,33 +207,22 @@ function setLang(l){
 
   async function submitRequest(e){
     e.preventDefault();
-    const name=$("clientName")?.value.trim(), phone=$("clientPhone")?.value.trim();
     const from=$("from")?.value.trim(), to=$("to")?.value.trim(), date=$("date")?.value;
-    const ret=$("returnDate")?.value||"", passengers=$("passengers")?.value||"1";
-    const baggage=$("baggage")?.value||"";
-    const round=document.querySelector(".trip-btn.active")?.dataset.trip==="round";
-    if(!name||!phone||!from||!to||!date||(round&&!ret)) {
-      $("ticketForm")?.reportValidity(); return;
-    }
+    if(!from||!to||!date){ $("ticketForm")?.reportValidity(); return; }
     normalizeCity("from"); normalizeCity("to");
-    const payload={name,phone,from:$("from").value.trim(),to:$("to").value.trim(),date,returnDate:round?ret:"",passengers,baggage};
-    const status=$("requestStatus"), t=translations[lang]||translations.ru, x=extraTranslations[lang]||extraTranslations.ru;
-    if(status) status.textContent=x.requestSaving||"Saving…";
-    let code="REQ-"+Date.now().toString(36).toUpperCase();
-    try{
-      const r=await fetch("/api/bookings",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-      const data=await r.json();
-      if(!r.ok||!data.ok) throw new Error(data.error||"API_ERROR");
-      code=data.requestCode||code;
-    }catch(err){
-      saveLocalRequest({...payload,id:code,createdAt:new Date().toISOString(),status:"new"});
+    const sfFrom=$("sfFrom"), sfTo=$("sfTo"), sfDate=$("sfDate");
+    if(sfFrom) sfFrom.value=$("from").value.trim();
+    if(sfTo) sfTo.value=$("to").value.trim();
+    if(sfDate) sfDate.value=date;
+    const section=$("flightSearchResults");
+    if(section) section.hidden=false;
+    const searchForm=$("smartSearch");
+    if(searchForm){
+      const results=$("searchResults");
+      if(results) results.innerHTML=publicEmpty("Ищем актуальные предложения…");
+      section?.scrollIntoView({behavior:"smooth",block:"start"});
+      searchForm.dispatchEvent(new Event("submit",{cancelable:true}));
     }
-    if(status) status.textContent=x.requestAccepted||"Request received.";
-    const greeting=x.whatsAppGreeting||"Hello!";
-    let msg=greeting+"\n\n"+"Имя: "+name+"\n"+"Телефон: "+phone+"\n"+"Откуда: "+from+"\n"+"Куда: "+to+"\n"+"Дата вылета: "+date+"\n";
-    if(round) msg+="Дата возвращения: "+ret+"\n";
-    msg+="Пассажиры: "+passengers+"\n"+"Багаж: "+baggage+"\n"+"Номер заявки: "+code;
-    window.open("https://wa.me/992753582002?text="+encodeURIComponent(msg),"_blank","noopener");
   }
 
   function init(){
