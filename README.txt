@@ -1,49 +1,22 @@
-Aviakassa_havo v11
+Aviakassa_havo v39 — Travelport TripServices + full RU/TJ/EN interface localization
 
-Обновление админ-панели:
-- WhatsApp одним нажатием из карточки заявки.
-- Полная карточка заявки.
-- Статистика: сегодня / 7 дней / месяц / всего.
-- Несколько менеджеров с отдельными логинами и паролями.
-- Усиленная авторизация: временные сессии и ограничение попыток входа.
-- Рейсы: город, страна, дата, время, авиакомпания, багаж, цена.
-- Акции.
-- Направления.
-- Экспорт заявок в настоящий Excel (.xlsx), включая текущие фильтры.
+Changes from v38:
+- Kept Travelport TripServices as the only flight search provider. Aviasales Data API remains removed from application code.
+- Completed RU / TJ / EN localization of the public interface.
+- Added translations for search form labels, filters, sorting, offers section, current flights section, status texts, empty/error states and dynamic flight-card labels.
+- Language selection is preserved in localStorage.
+- Admin panel keeps RU / TJ / EN and now translates additional dynamic notifications and API errors.
+- No changes to Travelport credentials or search API configuration.
 
-Render:
-- Web Service должен иметь DATABASE_URL, указывающий на aviakassa-db.
-- ADMIN_PASSWORD используется как мастер-пароль пользователя admin.
-- После обновления дождитесь успешного Deploy.
+Render environment variables:
+TRAVELPORT_CLIENT_ID
+TRAVELPORT_CLIENT_SECRET
+TRAVELPORT_USERNAME
+TRAVELPORT_PASSWORD
+TRAVELPORT_PCC
+TRAVELPORT_AUTH_URL (optional; trial page may use https://auth.pp.travelport.com/oauth/token)
+TRAVELPORT_API_URL (optional; pre-production API: https://api.pp.travelport.net/11/air/catalog/search/catalogproductofferings)
+TRAVELPORT_CONTENT_SOURCES (optional; default GDS,NDC)
+FLIGHT_MARKUP_RUB (optional; default 500)
 
-Важно: фотографии в этот ZIP не добавлялись.
-
-
-V14 fixes: mobile admin layout, loading of flights/offers/directions, editable forms with existing values, active visibility checkbox, safer partial PATCH updates.
-
-
-v17 SECURITY: admin password change, manager permissions, manager session revocation, global logout-all, server-side permission enforcement.
-
-GLOBAL AIRPORT AUTOCOMPLETE (v27)
----------------------------------
-The admin flight form now uses a worldwide airport catalog loaded from the
-world-countries-cities-db CDN. The airport dataset is derived from OurAirports
-and contains large/medium airports plus airports with IATA codes.
-
-Flow: type a city -> choose a city suggestion (country + airport examples + IATA)
--> choose the airport -> airport name and IATA code are filled automatically.
-The form keeps a local fallback catalog and browser cache if the external catalog
-cannot be reached.
-
-
-NEW: Aviasales Data API search
-------------------------------
-- Public flight search now uses /api/live-search-flights.
-- The server reads AVIASALES_API_TOKEN from Render Environment Variables.
-- Only non-stop results are requested (direct=true).
-- Displayed price = Aviasales Data API price + 500 RUB.
-- No purchase/booking is performed on Aviakassa_havo.
-- Data API does not provide baggage/hand-baggage details in this endpoint, so the UI
-  displays "Уточняется" rather than inventing baggage allowances.
-- Travelpayouts Drive code was added to index.html as instructed by the user's
-  Travelpayouts installation page.
+Important: do not put credentials into GitHub or frontend code. Keep them in Render environment variables.

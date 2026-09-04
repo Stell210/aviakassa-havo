@@ -12,8 +12,22 @@ services:
           property: connectionString
       - key: ADMIN_PASSWORD
         sync: false
-      - key: AVIASALES_API_TOKEN
+      - key: TRAVELPORT_CLIENT_ID
         sync: false
+      - key: TRAVELPORT_CLIENT_SECRET
+        sync: false
+      - key: TRAVELPORT_USERNAME
+        sync: false
+      - key: TRAVELPORT_PASSWORD
+        sync: false
+      - key: TRAVELPORT_PCC
+        sync: false
+      - key: TRAVELPORT_AUTH_URL
+        value: https://auth.pp.travelport.com/oauth/token
+      - key: TRAVELPORT_API_URL
+        value: https://api.pp.travelport.net/11/air/catalog/search/catalogproductofferings
+      - key: TRAVELPORT_CONTENT_SOURCES
+        value: GDS,NDC
 databases:
   - name: aviakassa-havo-db
     databaseName: aviakassa
