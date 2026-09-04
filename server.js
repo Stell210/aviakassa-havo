@@ -358,6 +358,7 @@ async function api(req,res,url){
     const date=safe(url.searchParams.get("date"),20);
     const direct=url.searchParams.get("direct") !== "false";
     const currency=(safe(url.searchParams.get("currency"),8)||"rub").toLowerCase();
+    const requestedAirline=safe(url.searchParams.get("airline"),120);
 
     const cityIata = {
       "душанбе":"DYU","dushanbe":"DYU",
@@ -413,8 +414,10 @@ async function api(req,res,url){
       const raw=await rr.json();
       if(!rr.ok || raw?.success===false) return send(res,502,{ok:false,error:"AVIASALES_API_ERROR",details:raw?.error||`HTTP_${rr.status}`});
       const airlineNames={SU:"Aeroflot",S7:"S7 Airlines",U6:"Ural Airlines",UT:"Utair",SZ:"Somon Air",DP:"Pobeda",TK:"Turkish Airlines",EK:"Emirates",FZ:"flydubai",HY:"Uzbekistan Airways",KC:"Air Astana",A4:"Azimuth",WZ:"Red Wings"};
+      const requestedAirlineCode=Object.keys(airlineNames).find(code=>code===requestedAirline.toUpperCase()) || Object.keys(airlineNames).find(code=>String(airlineNames[code]).toLowerCase()===String(requestedAirline).toLowerCase()) || null;
+      const rawFlights=(Array.isArray(raw?.data)?raw.data:[]).filter(x=>!requestedAirlineCode || String(x.airline||"").toUpperCase()===requestedAirlineCode);
       const markup=await getFlightMarkup();
-    const flights=(Array.isArray(raw?.data)?raw.data:[]).map(x=>{
+    const flights=rawFlights.map(x=>{
         const base=Number(x.price);
         const departure=x.departure_at||null;
         const duration=Number(x.duration_to||x.duration||0);
@@ -437,7 +440,7 @@ async function api(req,res,url){
           link:x.link||null
         };
       }).filter(x=>x.price>=500);
-      return send(res,200,{ok:true,source:"Aviasales Data API",requested:{origin,destination,date,direct,currency},flights});
+      return send(res,200,{ok:true,source:"Aviasales Data API",requested:{origin,destination,date,direct,currency,airline:requestedAirline||null},flights});
     }catch(e){
       console.error("Aviasales search error:",e.message);
       return send(res,502,{ok:false,error:"AVIASALES_REQUEST_FAILED"});

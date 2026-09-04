@@ -329,6 +329,8 @@ document.addEventListener("click",e=>{document.querySelectorAll(".airport-field"
    const from=document.getElementById("sfFrom")?.value.trim(), to=document.getElementById("sfTo")?.value.trim(), date=document.getElementById("sfDate")?.value;
    if(!from||!to||!date){box.innerHTML=publicEmpty("Укажите город вылета, город прилёта и дату");section.hidden=false;return;}
    const p=new URLSearchParams({from,to,date,direct:"false",currency:"rub"});
+   const selectedAirlineBeforeSearch=document.getElementById("sfAirline")?.value||"";
+   if(selectedAirlineBeforeSearch) p.set("airline", selectedAirlineBeforeSearch);
    section.hidden=false;box.innerHTML=publicEmpty("Ищем актуальные предложения…");
    try{
      const r=await fetch("/api/live-search-flights?"+p.toString());
@@ -338,7 +340,7 @@ document.addEventListener("click",e=>{document.querySelectorAll(".airport-field"
      const airlineSelect=document.getElementById("sfAirline");
      const stopsSelect=document.getElementById("sfStops");
      const airportSelect=document.getElementById("sfAirport");
-     const selectedAirline=airlineSelect?.value||"";
+     const selectedAirline=selectedAirlineBeforeSearch;
      const selectedStops=stopsSelect?.value||"";
      const selectedAirport=airportSelect?.value||"";
      const knownAirlines={SU:"Аэрофлот",S7:"S7 Airlines",U6:"Уральские авиалинии",UT:"ЮТэйр",SZ:"Somon Air",DP:"Победа",TK:"Turkish Airlines",EK:"Emirates",FZ:"flydubai",HY:"Uzbekistan Airways",KC:"Air Astana",A4:"Азимут",WZ:"Red Wings","5N":"Smartavia",I8:"ИрАэро",N4:"Nordwind Airlines",R3:"Якутия",YC:"Ямал",EO:"Pegas Fly",ZF:"Azur Air",FV:"Россия",B2:"Белавиа",J2:"Azerbaijan Airlines",HY:"Uzbekistan Airways",CZ:"China Southern",MU:"China Eastern",CA:"Air China",QR:"Qatar Airways",GF:"Gulf Air",WY:"Oman Air",G9:"Air Arabia",XY:"flynas",RJ:"Royal Jordanian",MS:"EgyptAir",EY:"Etihad Airways",PC:"Pegasus Airlines",JU:"Air Serbia",LO:"LOT",LH:"Lufthansa",AF:"Air France",KL:"KLM",OS:"Austrian Airlines",AY:"Finnair",AZ:"ITA Airways",LX:"SWISS",BA:"British Airways",IB:"Iberia",SU:"Аэрофлот",SAS:"SAS"};
