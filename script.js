@@ -355,6 +355,10 @@ document.addEventListener("click",e=>{document.querySelectorAll(".airport-field"
      else a.sort((x,y)=>Number(x.price)-Number(y.price));
      box.innerHTML=a.length?a.map(x=>{
        const direct=Number(x.transfers||0)===0;
+       const transferCodes=Array.isArray(x.transfer_airports)?x.transfer_airports.map(v=>typeof v==="string"?v:(v?.code||v?.iata||v?.airport)).filter(Boolean):[];
+       const transferCities=Array.isArray(x.transfer_cities)?x.transfer_cities.map(v=>typeof v==="string"?v:(v?.city||v?.name)).filter(Boolean):[];
+       const transferNames=[...new Set([...transferCities,...transferCodes.map(code=>AIRPORT_BY_CODE[code]?.city||code)])];
+       const transferHtml=!direct?(transferNames.length?`<span>🔄 Пересадка: через ${transferNames.map(escHtml).join(", ")}</span>`:`<span>🔄 ${Number(x.transfers||0)} ${Number(x.transfers||0)===1?"пересадка":"пересадки"} · город пересадки не указан в данных</span>`):"";
        const fromCode=x.from_airport_code||x.from_iata||"";
        const toCode=x.to_airport_code||x.to_iata||"";
        const fromPlace=AIRPORT_BY_CODE[fromCode]||AIRPORT_BY_CODE[x.from_iata]||null;
@@ -367,6 +371,7 @@ document.addEventListener("click",e=>{document.querySelectorAll(".airport-field"
            <span>🕐 ${escHtml(fmtTime(x.departure_at))}</span>
            <span>✈️ ${escHtml(x.airline||"")}${x.flight_number?" "+escHtml(x.flight_number):""}</span>
            <span>${direct?"Прямой":"С пересадкой"}${x.duration_to?" · "+escHtml(fmtDuration(x.duration_to)):""}</span>
+           ${transferHtml}
            <span>🎒 Ручная кладь: ${escHtml(x.hand_baggage||"Уточняется")}</span>
            <span>🧳 Багаж: ${escHtml(x.baggage||"Уточняется")}</span>
          </div>

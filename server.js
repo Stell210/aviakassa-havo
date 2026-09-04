@@ -427,6 +427,10 @@ async function api(req,res,url){
           flight_number:x.flight_number||null,
           departure_at:departure,return_at:x.return_at||null,
           transfers:Number(x.transfers||0),duration_to:duration,
+          // Data API обычно не передаёт город(а) пересадки отдельным полем.
+          // Сохраняем возможные поля, если поставщик их вернёт.
+          transfer_airports:Array.isArray(x.transfer_airports)?x.transfer_airports:(Array.isArray(x.stopovers)?x.stopovers:(Array.isArray(x.via)?x.via:[])),
+          transfer_cities:Array.isArray(x.transfer_cities)?x.transfer_cities:(Array.isArray(x.via_cities)?x.via_cities:[]),
           price:base+markup,currency:(x.currency||currency).toUpperCase(),
           source_price:base,markup,
           baggage:null,hand_baggage:null,baggage_note:"Условия багажа уточняются",
