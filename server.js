@@ -8,9 +8,8 @@ const XLSX = require("xlsx");
 const PORT = process.env.PORT || 10000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 const DATABASE_URL = process.env.DATABASE_URL || "";
-const SUPPLIER_API_URL = process.env.SUPPLIER_API_URL || "";
-const SUPPLIER_API_KEY = process.env.SUPPLIER_API_KEY || "";
 const AVIASALES_API_TOKEN = process.env.AVIASALES_API_TOKEN || "";
+const DEFAULT_FLIGHT_MARKUP_RUB = Number.isFinite(Number(process.env.FLIGHT_MARKUP_RUB)) ? Math.max(0, Number(process.env.FLIGHT_MARKUP_RUB)) : 500;
 const publicDir = __dirname;
 const pool = DATABASE_URL ? new Pool({
   connectionString: DATABASE_URL,
@@ -84,6 +83,21 @@ const DEFAULT_MANAGER_PERMISSIONS = ["bookings_view","bookings_edit","export_exc
 function hasPermission(user, permission){ return user?.role === "admin" || Array.isArray(user?.permissions) && user.permissions.includes(permission); }
 function revokeUserSessions(userId){ for(const [token,s] of sessions){ if(String(s.id||"")===String(userId||"")) sessions.delete(token); } }
 function revokeAllSessions(){ sessionEpoch++; sessions.clear(); }
+async function getFlightMarkup(){
+  if(!pool) return DEFAULT_FLIGHT_MARKUP_RUB;
+  try{
+    const q=await pool.query("SELECT value FROM site_settings WHERE key=$1 LIMIT 1",["flight_markup_rub"]);
+    if(q.rowCount){ const n=Number(q.rows[0].value); if(Number.isFinite(n) && n>=0) return n; }
+  }catch(e){ console.error("markup read error:",e.message); }
+  return DEFAULT_FLIGHT_MARKUP_RUB;
+}
+async function setFlightMarkup(value){
+  const n=Number(value);
+  if(!Number.isFinite(n) || n<0 || n>1000000) throw new Error("INVALID_MARKUP");
+  if(!pool) throw new Error("DATABASE_NOT_CONFIGURED");
+  await pool.query(`INSERT INTO site_settings(key,value,updated_at) VALUES($1,$2,NOW()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value, updated_at=NOW()`,["flight_markup_rub",String(Math.round(n))]);
+  return Math.round(n);
+}
 
 async function initDb(){
   if(!pool) return;
@@ -159,6 +173,11 @@ async function initDb(){
       active BOOLEAN NOT NULL DEFAULT TRUE,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       UNIQUE(city,country)
+    );
+    CREATE TABLE IF NOT EXISTS site_settings (
+      key VARCHAR(100) PRIMARY KEY,
+      value TEXT NOT NULL DEFAULT '',
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `);
   // Price is stored as text so admin can enter symbols, currencies, and phrases.
@@ -315,6 +334,18 @@ async function api(req,res,url){
     }
   }
 
+  if(req.method==="GET" && url.pathname==="/api/admin/markup"){
+    const user=authorized(req); if(!user)return send(res,401,{ok:false,error:"UNAUTHORIZED"});
+    if(user.role!=="admin")return send(res,403,{ok:false,error:"ADMIN_ONLY"});
+    return send(res,200,{ok:true,markup_rub:await getFlightMarkup(),default_markup_rub:DEFAULT_FLIGHT_MARKUP_RUB});
+  }
+  if(req.method==="PATCH" && url.pathname==="/api/admin/markup"){
+    const user=authorized(req); if(!user)return send(res,401,{ok:false,error:"UNAUTHORIZED"});
+    if(user.role!=="admin")return send(res,403,{ok:false,error:"ADMIN_ONLY"});
+    try{ const b=await parseBody(req); const markup=await setFlightMarkup(b.markup_rub); return send(res,200,{ok:true,markup_rub:markup}); }
+    catch(e){ return send(res,e.message==="INVALID_MARKUP"?400:500,{ok:false,error:e.message}); }
+  }
+
   if(req.method==="GET" && url.pathname==="/api/admin/supplier/status"){ const user=authorized(req); if(!user)return send(res,401,{ok:false,error:"UNAUTHORIZED"}); if(user.role!=="admin")return send(res,403,{ok:false,error:"ADMIN_ONLY"}); return send(res,200,{ok:true,configured:!!AVIASALES_API_TOKEN,provider:"Aviasales Data API",message:AVIASALES_API_TOKEN?"Aviasales API token настроен в Render.":"Добавьте AVIASALES_API_TOKEN в Render Environment."}); }
   if(req.method==="POST" && url.pathname==="/api/admin/supplier/sync"){ const user=authorized(req); if(!user)return send(res,401,{ok:false,error:"UNAUTHORIZED"}); if(user.role!=="admin")return send(res,403,{ok:false,error:"ADMIN_ONLY"}); if(!AVIASALES_API_TOKEN)return send(res,503,{ok:false,error:"AVIASALES_API_TOKEN_NOT_SET",message:"Добавьте AVIASALES_API_TOKEN в Render Environment."}); return send(res,200,{ok:true,provider:"Aviasales Data API",message:"Aviasales API token настроен. Поиск рейсов выполняется через внутренний маршрут /api/live-search-flights."}); }
   // Public lists for future site integrations.
@@ -382,7 +413,8 @@ async function api(req,res,url){
       const raw=await rr.json();
       if(!rr.ok || raw?.success===false) return send(res,502,{ok:false,error:"AVIASALES_API_ERROR",details:raw?.error||`HTTP_${rr.status}`});
       const airlineNames={SU:"Aeroflot",S7:"S7 Airlines",U6:"Ural Airlines",UT:"Utair",SZ:"Somon Air",DP:"Pobeda",TK:"Turkish Airlines",EK:"Emirates",FZ:"flydubai",HY:"Uzbekistan Airways",KC:"Air Astana",A4:"Azimuth",WZ:"Red Wings"};
-      const flights=(Array.isArray(raw?.data)?raw.data:[]).map(x=>{
+      const markup=await getFlightMarkup();
+    const flights=(Array.isArray(raw?.data)?raw.data:[]).map(x=>{
         const base=Number(x.price);
         const departure=x.departure_at||null;
         const duration=Number(x.duration_to||x.duration||0);
@@ -395,8 +427,8 @@ async function api(req,res,url){
           flight_number:x.flight_number||null,
           departure_at:departure,return_at:x.return_at||null,
           transfers:Number(x.transfers||0),duration_to:duration,
-          price:base+500,currency:(x.currency||currency).toUpperCase(),
-          source_price:base,markup:500,
+          price:base+markup,currency:(x.currency||currency).toUpperCase(),
+          source_price:base,markup,
           baggage:null,hand_baggage:null,baggage_note:"Условия багажа уточняются",
           link:x.link||null
         };

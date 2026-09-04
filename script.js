@@ -242,6 +242,82 @@ function setLang(l){
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",init);
   else init();
 
+/* Professional city + airport search */
+const AIRPORTS = [
+  {city:"Душанбе",country:"Таджикистан",airport:"Душанбе",code:"DYU"},
+  {city:"Москва",country:"Россия",airport:"Все аэропорты",code:"MOW"},
+  {city:"Москва",country:"Россия",airport:"Шереметьево",code:"SVO"},
+  {city:"Москва",country:"Россия",airport:"Домодедово",code:"DME"},
+  {city:"Москва",country:"Россия",airport:"Внуково",code:"VKO"},
+  {city:"Москва",country:"Россия",airport:"Жуковский",code:"ZIA"},
+  {city:"Казань",country:"Россия",airport:"Казань",code:"KZN"},
+  {city:"Санкт-Петербург",country:"Россия",airport:"Пулково",code:"LED"},
+  {city:"Екатеринбург",country:"Россия",airport:"Кольцово",code:"SVX"},
+  {city:"Новосибирск",country:"Россия",airport:"Толмачёво",code:"OVB"},
+  {city:"Самара",country:"Россия",airport:"Курумоч",code:"KUF"},
+  {city:"Уфа",country:"Россия",airport:"Уфа",code:"UFA"},
+  {city:"Красноярск",country:"Россия",airport:"Красноярск",code:"KJA"},
+  {city:"Ростов-на-Дону",country:"Россия",airport:"Платов",code:"ROV"},
+  {city:"Тюмень",country:"Россия",airport:"Рощино",code:"TJM"},
+  {city:"Сургут",country:"Россия",airport:"Сургут",code:"SGC"},
+  {city:"Минеральные Воды",country:"Россия",airport:"Минеральные Воды",code:"MRV"},
+  {city:"Дубай",country:"ОАЭ",airport:"Дубай",code:"DXB"},
+  {city:"Стамбул",country:"Турция",airport:"Стамбул",code:"IST"},
+  {city:"Пекин",country:"Китай",airport:"Пекин Capital",code:"PEK"},
+  {city:"Алматы",country:"Казахстан",airport:"Алматы",code:"ALA"},
+  {city:"Астана",country:"Казахстан",airport:"Астана",code:"NQZ"},
+  {city:"Ташкент",country:"Узбекистан",airport:"Ташкент",code:"TAS"},
+  {city:"Самарканд",country:"Узбекистан",airport:"Самарканд",code:"SKD"},
+  {city:"Бишкек",country:"Кыргызстан",airport:"Манас",code:"FRU"},
+  {city:"Баку",country:"Азербайджан",airport:"Гейдар Алиев",code:"GYD"},
+  {city:"Тегеран",country:"Иран",airport:"Имам Хомейни",code:"IKA"},
+  {city:"Дели",country:"Индия",airport:"Индира Ганди",code:"DEL"},
+  {city:"Абу-Даби",country:"ОАЭ",airport:"Абу-Даби",code:"AUH"},
+  {city:"Доха",country:"Катар",airport:"Хамад",code:"DOH"},
+  {city:"Анталья",country:"Турция",airport:"Анталья",code:"AYT"},
+  {city:"Тбилиси",country:"Грузия",airport:"Тбилиси",code:"TBS"}
+];
+const AIRPORT_BY_CODE=Object.fromEntries(AIRPORTS.map(a=>[a.code,a]));
+const normSearch=v=>String(v||"").toLowerCase().replace(/ё/g,"е").trim();
+const airportLabel=a=>`${a.city} — ${a.airport} (${a.code})`;
+function setupAirportPicker(id){
+  const input=document.getElementById(id), field=input?.closest(".airport-field");
+  if(!input||!field)return;
+  const list=field.querySelector(".airport-suggestions"), clear=field.querySelector(".airport-clear");
+  let active=-1;
+  function matches(q){
+    const n=normSearch(q);
+    if(!n)return AIRPORTS.slice(0,10);
+    return AIRPORTS.filter(a=>[a.city,a.country,a.airport,a.code,airportLabel(a)].some(v=>normSearch(v).includes(n))).slice(0,10);
+  }
+  function render(){
+    const arr=matches(input.value);
+    list.innerHTML=arr.map((a,i)=>`<button type="button" class="airport-suggestion${i===active?" active":""}" data-code="${a.code}" role="option">
+      <span class="airport-icon">✈</span><span class="airport-main"><span class="airport-city">${escHtml(a.city)}</span><span class="airport-sub">${escHtml(a.airport)} · ${escHtml(a.country)}</span></span><span class="airport-code">${escHtml(a.code)}</span>
+    </button>`).join("");
+    list.hidden=!arr.length;
+    input.setAttribute("aria-expanded",String(!list.hidden));
+    if(clear)clear.hidden=!input.value;
+  }
+  function choose(a){
+    input.value=airportLabel(a); input.dataset.iata=a.code; list.hidden=true; input.setAttribute("aria-expanded","false");
+    if(clear)clear.hidden=false;
+  }
+  input.addEventListener("focus",render);
+  input.addEventListener("input",()=>{input.dataset.iata="";active=-1;render()});
+  input.addEventListener("keydown",e=>{
+    const items=[...list.querySelectorAll(".airport-suggestion")];
+    if(e.key==="ArrowDown"){e.preventDefault();active=Math.min(active+1,items.length-1);render();}
+    else if(e.key==="ArrowUp"){e.preventDefault();active=Math.max(active-1,0);render();}
+    else if(e.key==="Enter"&&active>=0&&items[active]){e.preventDefault();const a=AIRPORT_BY_CODE[items[active].dataset.code];if(a)choose(a);}
+    else if(e.key==="Escape"){list.hidden=true;input.setAttribute("aria-expanded","false");}
+  });
+  list.addEventListener("mousedown",e=>{const b=e.target.closest(".airport-suggestion");if(!b)return;e.preventDefault();const a=AIRPORT_BY_CODE[b.dataset.code];if(a)choose(a)});
+  clear?.addEventListener("click",()=>{input.value="";input.dataset.iata="";input.focus();render()});
+}
+["sfFrom","sfTo"].forEach(setupAirportPicker);
+document.addEventListener("click",e=>{document.querySelectorAll(".airport-field").forEach(f=>{if(!f.contains(e.target)){const l=f.querySelector(".airport-suggestions"),i=f.querySelector("input");if(l){l.hidden=true;i?.setAttribute("aria-expanded","false")}}})});
+
 (function(){
  const ss=document.getElementById("smartSearch"); if(!ss)return;
  const box=document.getElementById("searchResults"), section=document.getElementById("flightSearchResults");
@@ -252,13 +328,28 @@ function setLang(l){
  async function run(){
    const from=document.getElementById("sfFrom")?.value.trim(), to=document.getElementById("sfTo")?.value.trim(), date=document.getElementById("sfDate")?.value;
    if(!from||!to||!date){box.innerHTML=publicEmpty("Укажите город вылета, город прилёта и дату");section.hidden=false;return;}
-   const p=new URLSearchParams({from,to,date,direct:"true",currency:"rub"});
+   const p=new URLSearchParams({from,to,date,direct:"false",currency:"rub"});
    section.hidden=false;box.innerHTML=publicEmpty("Ищем актуальные предложения…");
    try{
      const r=await fetch("/api/live-search-flights?"+p.toString());
      const d=await r.json();
      if(!r.ok||!d.ok) throw new Error(d.message||d.error||"API_ERROR");
      let a=d.flights||[];
+     const airlineSelect=document.getElementById("sfAirline");
+     const stopsSelect=document.getElementById("sfStops");
+     const airportSelect=document.getElementById("sfAirport");
+     const selectedAirline=airlineSelect?.value||"";
+     const selectedStops=stopsSelect?.value||"";
+     const selectedAirport=airportSelect?.value||"";
+     const knownAirlines={SU:"Аэрофлот",S7:"S7 Airlines",U6:"Уральские авиалинии",UT:"ЮТэйр",SZ:"Somon Air",DP:"Победа",TK:"Turkish Airlines",EK:"Emirates",FZ:"flydubai",HY:"Uzbekistan Airways",KC:"Air Astana",A4:"Азимут",WZ:"Red Wings","5N":"Smartavia",I8:"ИрАэро",N4:"Nordwind Airlines",R3:"Якутия",YC:"Ямал",EO:"Pegas Fly",ZF:"Azur Air",FV:"Россия",B2:"Белавиа",J2:"Azerbaijan Airlines",HY:"Uzbekistan Airways",CZ:"China Southern",MU:"China Eastern",CA:"Air China",QR:"Qatar Airways",GF:"Gulf Air",WY:"Oman Air",G9:"Air Arabia",XY:"flynas",RJ:"Royal Jordanian",MS:"EgyptAir",EY:"Etihad Airways",PC:"Pegasus Airlines",JU:"Air Serbia",LO:"LOT",LH:"Lufthansa",AF:"Air France",KL:"KLM",OS:"Austrian Airlines",AY:"Finnair",AZ:"ITA Airways",LX:"SWISS",BA:"British Airways",IB:"Iberia",SU:"Аэрофлот",SAS:"SAS"};
+     const airlineNames=[...new Set([...Object.values(knownAirlines),...a.map(x=>x.airline).filter(Boolean)])].sort((x,y)=>x.localeCompare(y,"ru"));
+     if(airlineSelect){airlineSelect.innerHTML='<option value="">Все авиакомпании</option>'+airlineNames.map(n=>`<option value="${escHtml(n)}">${escHtml(n)}</option>`).join("");airlineSelect.value=selectedAirline;}
+     const airportNames=[...new Set(a.flatMap(x=>[x.from_airport_code,x.to_airport_code]).filter(Boolean))].sort();
+     if(airportSelect){airportSelect.innerHTML='<option value="">Все аэропорты</option>'+airportNames.map(n=>`<option value="${escHtml(n)}">${escHtml(n)}</option>`).join("");airportSelect.value=selectedAirport;}
+     if(selectedAirline)a=a.filter(x=>String(x.airline||"")===selectedAirline);
+     if(selectedStops==="0")a=a.filter(x=>Number(x.transfers||0)===0);
+     if(selectedStops==="1")a=a.filter(x=>Number(x.transfers||0)>0);
+     if(selectedAirport)a=a.filter(x=>String(x.from_airport_code||x.from_iata||"")===selectedAirport||String(x.to_airport_code||x.to_iata||"")===selectedAirport);
      const sort=document.getElementById("sfSort")?.value||"price";
      if(sort==="time")a.sort((x,y)=>String(x.departure_at).localeCompare(String(y.departure_at)));
      else a.sort((x,y)=>Number(x.price)-Number(y.price));
@@ -266,8 +357,11 @@ function setLang(l){
        const direct=Number(x.transfers||0)===0;
        const fromCode=x.from_airport_code||x.from_iata||"";
        const toCode=x.to_airport_code||x.to_iata||"";
+       const fromPlace=AIRPORT_BY_CODE[fromCode]||AIRPORT_BY_CODE[x.from_iata]||null;
+       const toPlace=AIRPORT_BY_CODE[toCode]||AIRPORT_BY_CODE[x.to_iata]||null;
+       const placeHtml=(p,code,cls="")=>p?`<div class="flight-place ${cls}"><strong>${escHtml(p.city)}</strong><span>${escHtml(p.airport)} · ${escHtml(code)}</span></div>`:`<div class="flight-place ${cls}"><strong>${escHtml(code)}</strong></div>`;
        return `<article class="flight-card">
-         <div class="flight-route"><span>${escHtml(fromCode)}</span><span>→</span><span>${escHtml(toCode)}</span></div>
+         <div class="flight-route-detail">${placeHtml(fromPlace,fromCode)}<div class="arrow">→</div>${placeHtml(toPlace,toCode,"right")}</div>
          <div class="flight-meta">
            <span>📅 ${escHtml(fmtDate(x.departure_at))}</span>
            <span>🕐 ${escHtml(fmtTime(x.departure_at))}</span>
@@ -277,11 +371,11 @@ function setLang(l){
            <span>🧳 Багаж: ${escHtml(x.baggage||"Уточняется")}</span>
          </div>
          <div class="flight-price">${money2(x.price)} ₽</div>
-         <div class="flight-source">Цена источника: ${money2(x.source_price)} ₽ · Aviakassa_havo: +500 ₽</div>
        </article>`;
      }).join(""):publicEmpty("На эту дату актуальных предложений не найдено");
    }catch(e){box.innerHTML=publicEmpty("Не удалось получить актуальные предложения. Проверьте настройки Aviasales Data API.");}
  }
+ ["sfAirline","sfAirport","sfStops","sfSort"].forEach(id=>document.getElementById(id)?.addEventListener("change",run));
  ss.addEventListener("submit",e=>{e.preventDefault();run()});
 })();
 })();
