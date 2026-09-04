@@ -424,15 +424,27 @@ async function api(req,res,url){
     if(!date || !validDate(date)) return send(res,400,{ok:false,error:"INVALID_DATE"});
     const origin=extractIata(from), destination=extractIata(to);
     if(!origin || !destination) return send(res,400,{ok:false,error:"UNKNOWN_CITY_IATA",message:"Не удалось определить IATA-код города. Используйте город из списка или аэропорт с кодом IATA."});
-    if(!TRAVELPORT_PCC) return send(res,503,{ok:false,error:"TRAVELPORT_PCC_NOT_SET"});
-    if(!(TRAVELPORT_CLIENT_ID&&TRAVELPORT_CLIENT_SECRET&&TRAVELPORT_USERNAME&&TRAVELPORT_PASSWORD)) return send(res,503,{ok:false,error:"TRAVELPORT_CREDENTIALS_NOT_SET"});
+    if(!TRAVELPORT_PCC) {
+      console.error(`[Travelport] CONFIG ERROR: TRAVELPORT_PCC is not set | ${origin} -> ${destination} | ${date}`);
+      return send(res,503,{ok:false,error:"TRAVELPORT_PCC_NOT_SET"});
+    }
+    if(!(TRAVELPORT_CLIENT_ID&&TRAVELPORT_CLIENT_SECRET&&TRAVELPORT_USERNAME&&TRAVELPORT_PASSWORD)) {
+      console.error(`[Travelport] CONFIG ERROR: credentials incomplete | ${origin} -> ${destination} | ${date}`);
+      return send(res,503,{ok:false,error:"TRAVELPORT_CREDENTIALS_NOT_SET"});
+    }
+
+    console.log(`[Travelport] SEARCH START | ${origin} -> ${destination} | date=${date} | airline=${requestedAirline||"ALL"} | direct=${directParam||"ALL"}`);
 
     try{
       if(!global.__travelportToken || global.__travelportToken.expiresAt < Date.now()+60000){
         const authBody=JSON.stringify({username:TRAVELPORT_USERNAME,password:TRAVELPORT_PASSWORD,client_id:TRAVELPORT_CLIENT_ID,client_secret:TRAVELPORT_CLIENT_SECRET,grant_type:"password"});
         const ar=await fetch(TRAVELPORT_AUTH_URL,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:authBody});
         const aj=await ar.json().catch(()=>({}));
-        if(!ar.ok || !aj.access_token) return send(res,502,{ok:false,error:"TRAVELPORT_AUTH_ERROR",details:aj?.error_description||aj?.error||`HTTP_${ar.status}`});
+        console.log(`[Travelport] AUTH | HTTP ${ar.status} | token=${aj?.access_token?"OK":"MISSING"}`);
+        if(!ar.ok || !aj.access_token) {
+          console.error(`[Travelport] AUTH ERROR | HTTP ${ar.status} | ${aj?.error_description||aj?.error||"NO_TOKEN"}`);
+          return send(res,502,{ok:false,error:"TRAVELPORT_AUTH_ERROR",details:aj?.error_description||aj?.error||`HTTP_${ar.status}`});
+        }
         global.__travelportToken={value:aj.access_token,expiresAt:Date.now()+Math.max(300,Number(aj.expires_in||86400)-120)*1000};
       }
       const body={
@@ -452,8 +464,16 @@ async function api(req,res,url){
         if(code) body.CatalogProductOfferingsRequest.SearchModifiersAir={"@type":"SearchModifiersAir","CarrierPreference":[{"@type":"CarrierPreference","preferenceType":"Permitted","carriers":[code]}]};
       }
       const tpHeaders={"Accept-Encoding":"gzip, deflate","Authorization":`Bearer ${global.__travelportToken.value}`,"Content-Type":"application/json","TVP-PCC-Core":TRAVELPORT_PCC,"Accept":"application/json","Accept-Version":"11","Content-Version":"11","Cache-Control":"no-cache","TraceId":`Aviakassa_${origin}_${destination}`};
+      console.log(`[Travelport] API REQUEST | endpoint=${TRAVELPORT_API_URL} | PCC=${TRAVELPORT_PCC} | sources=${body.CatalogProductOfferingsRequest.contentSourceList.join(",")}`);
       let rr=await fetch(TRAVELPORT_API_URL,{method:"POST",headers:tpHeaders,body:JSON.stringify(body)});
-      let raw=await rr.json().catch(()=>({}));
+      const e2e=rr.headers.get("E2ETrackingID")||rr.headers.get("e2etrackingid")||null;
+      const contentType=rr.headers.get("content-type")||"";
+      let raw=await rr.json().catch(()=>null);
+      if(!raw) {
+        const text=await rr.text().catch(()=>"");
+        raw={__nonJson:text.slice(0,1000)};
+      }
+      console.log(`[Travelport] API RESPONSE | HTTP ${rr.status} | E2E=${e2e||"none"} | content-type=${contentType||"unknown"}`);
       // NDC is available only for customers provisioned for NDC. If a trial account
       // rejects an aggregated GDS+NDC request, retry safely with GDS only.
       if(!rr.ok && body.CatalogProductOfferingsRequest.contentSourceList.includes("NDC")){
@@ -461,17 +481,24 @@ async function api(req,res,url){
         rr=await fetch(TRAVELPORT_API_URL,{method:"POST",headers:tpHeaders,body:JSON.stringify(body)});
         raw=await rr.json().catch(()=>({}));
       }
-      if(!rr.ok) return send(res,502,{ok:false,error:"TRAVELPORT_API_ERROR",details:raw?.Result?.Error||raw?.error||raw?.Result?.Warning||`HTTP_${rr.status}`});
+      if(!rr.ok) {
+        const details=raw?.Result?.Error||raw?.error||raw?.Result?.Warning||raw?.__nonJson||`HTTP_${rr.status}`;
+        console.error(`[Travelport] API ERROR | HTTP ${rr.status} | ${JSON.stringify(details).slice(0,4000)}`);
+        return send(res,502,{ok:false,error:"TRAVELPORT_API_ERROR",details,diagnostics:{httpStatus:rr.status,e2eTrackingId:e2e,contentSources:body.CatalogProductOfferingsRequest.contentSourceList}});
+      }
 
       const root=raw?.CatalogProductOfferingsResponse||raw;
       const resultBlock=root?.Result||{};
       if(Array.isArray(resultBlock?.Error) && resultBlock.Error.length){
-        return send(res,502,{ok:false,error:"TRAVELPORT_SEARCH_ERROR",details:resultBlock.Error,warnings:resultBlock.Warning||[],diagnostics:{httpStatus:rr.status,contentSources:["GDS"]}});
+        console.error(`[Travelport] SEARCH ERROR | HTTP ${rr.status} | ${JSON.stringify(resultBlock.Error).slice(0,6000)}`);
+        return send(res,502,{ok:false,error:"TRAVELPORT_SEARCH_ERROR",details:resultBlock.Error,warnings:resultBlock.Warning||[],diagnostics:{httpStatus:rr.status,e2eTrackingId:e2e,transactionId:root?.transactionId||null,traceId:root?.traceId||null,contentSources:body.CatalogProductOfferingsRequest.contentSourceList}});
       }
 
       const cpo=root?.CatalogProductOfferings||{};
       const offers=asArray(cpo?.CatalogProductOffering);
       const references=asArray(root?.ReferenceList);
+      console.log(`[Travelport] SEARCH DATA | offers=${offers.length} | referenceLists=${references.length} | status=${resultBlock?.status||"unknown"} | transaction=${root?.transactionId||"none"} | trace=${root?.traceId||"none"}`);
+      if(!offers.length) console.warn(`[Travelport] ZERO OFFERS | ${origin} -> ${destination} | ${date} | warnings=${JSON.stringify(resultBlock?.Warning||[]).slice(0,4000)}`);
       const flightRefs={}; const productRefs={}; const brands={}; const terms={};
       for(const rl of references){
         for(const f of asArray(rl?.Flight)) if(f?.id) flightRefs[f.id]=f;
@@ -525,10 +552,11 @@ async function api(req,res,url){
       if(directParam==="true") result=result.filter(f=>Number(f.transfers||0)===0);
       if(directParam==="false") { /* all offers */ }
       result.sort((a,b)=>Number(a.price)-Number(b.price));
-      return send(res,200,{ok:true,source:"Travelport TripServices",requested:{origin,destination,date,currency,airline:requestedAirline||null,direct:directParam},flights:result,warnings:root?.Result?.Warning||[],diagnostics:{contentSources:body.CatalogProductOfferingsRequest.contentSourceList,offersReceived:offers.length,parsedFlights:flights.length}});
+      console.log(`[Travelport] SEARCH DONE | offers=${offers.length} | parsed=${flights.length} | unique=${result.length} | ${origin} -> ${destination} | ${date}`);
+      return send(res,200,{ok:true,source:"Travelport TripServices",requested:{origin,destination,date,currency,airline:requestedAirline||null,direct:directParam},flights:result,warnings:root?.Result?.Warning||[],diagnostics:{contentSources:body.CatalogProductOfferingsRequest.contentSourceList,offersReceived:offers.length,parsedFlights:flights.length,uniqueFlights:result.length,e2eTrackingId:e2e,transactionId:root?.transactionId||null,traceId:root?.traceId||null}});
     }catch(e){
-      console.error("Travelport search error:",e);
-      return send(res,502,{ok:false,error:"TRAVELPORT_REQUEST_FAILED",message:e.message});
+      console.error(`[Travelport] REQUEST FAILED | ${origin} -> ${destination} | ${date} | ${e?.name||"Error"}: ${e?.message||e}`);
+      return send(res,502,{ok:false,error:"TRAVELPORT_REQUEST_FAILED",message:e.message,diagnostics:{origin,destination,date}});
     }
   }
 
