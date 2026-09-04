@@ -441,7 +441,7 @@ async function api(req,res,url){
           "@type":"CatalogProductOfferingsRequestAir",
           "maxNumberOfUpsellsToReturn":4,
           "offersPerPage":50,
-          "contentSourceList":TRAVELPORT_CONTENT_SOURCES.length?TRAVELPORT_CONTENT_SOURCES:["GDS"],
+          "contentSourceList":["GDS"],
           "PassengerCriteria":[{"@type":"PassengerCriteria","number":1,"passengerTypeCode":"ADT"}],
           "SearchCriteriaFlight":[{"@type":"SearchCriteriaFlight","departureDate":date,"From":{"value":origin},"To":{"value":destination}}]
         }
@@ -464,6 +464,11 @@ async function api(req,res,url){
       if(!rr.ok) return send(res,502,{ok:false,error:"TRAVELPORT_API_ERROR",details:raw?.Result?.Error||raw?.error||raw?.Result?.Warning||`HTTP_${rr.status}`});
 
       const root=raw?.CatalogProductOfferingsResponse||raw;
+      const resultBlock=root?.Result||{};
+      if(Array.isArray(resultBlock?.Error) && resultBlock.Error.length){
+        return send(res,502,{ok:false,error:"TRAVELPORT_SEARCH_ERROR",details:resultBlock.Error,warnings:resultBlock.Warning||[],diagnostics:{httpStatus:rr.status,contentSources:["GDS"]}});
+      }
+
       const cpo=root?.CatalogProductOfferings||{};
       const offers=asArray(cpo?.CatalogProductOffering);
       const references=asArray(root?.ReferenceList);
@@ -488,11 +493,17 @@ async function api(req,res,url){
           const flightList=refs.map(id=>flightRefs[id]).filter(Boolean);
           const productList=asArray(pOffer?.Product).map(x=>productRefs[x?.productRef]).filter(Boolean);
           const productFlights=productList.flatMap(p=>asArray(p?.FlightRef||p?.FlightRefs)).map(x=>typeof x==="string"?flightRefs[x]:flightRefs[x?.FlightRef||x?.value]).filter(Boolean);
-          const segs=flightList.length?flightList:productFlights;
-          const allSegs=segs.flatMap(f=>asArray(f?.FlightSegment||f?.Segment||f));
-          const first=segs[0]||{}; const last=segs[segs.length-1]||{};
-          const marketing=first?.carrier||first?.MarketingCarrier?.airlineCode||first?.MarketingCarrier?.code||first?.carrierCode||first?.AirSegment?.MarketingCarrier?.code;
-          const flightNumber=first?.flightNumber||first?.FlightNumber||first?.number||first?.AirSegment?.FlightNumber;
+          const flightObjects=flightList.length?flightList:productFlights;
+          // Travelport keeps the actual departure/arrival/marketing details inside
+          // ReferenceListFlight -> Flight -> FlightSegment. The previous version
+          // treated the Flight object itself as a segment, which caused valid
+          // offers to be returned without usable times/airports and then filtered
+          // out by the frontend.
+          const allSegs=flightObjects.flatMap(f=>asArray(f?.FlightSegment||f?.Segment||f));
+          const first=allSegs[0]||{}; const last=allSegs[allSegs.length-1]||{};
+          const firstFlight=flightObjects[0]||{};
+          const marketing=first?.MarketingCarrier?.airlineCode||first?.MarketingCarrier?.code||first?.carrier||first?.carrierCode||first?.AirSegment?.MarketingCarrier?.code||firstFlight?.carrier||firstFlight?.MarketingCarrier?.airlineCode||firstFlight?.carrierCode;
+          const flightNumber=first?.FlightNumber||first?.flightNumber||first?.number||first?.AirSegment?.FlightNumber||firstFlight?.flightNumber||firstFlight?.FlightNumber;
           const dep=first?.Departure?.dateTime||first?.Departure?.DateTime||first?.departureDateTime||first?.departureTime||first?.AirSegment?.Departure?.dateTime;
           const arr=last?.Arrival?.dateTime||last?.Arrival?.DateTime||last?.arrivalDateTime||last?.arrivalTime||last?.AirSegment?.Arrival?.dateTime;
           const fromCode=first?.Departure?.location||first?.Departure?.airport||first?.Departure?.value||first?.departure||offer?.Departure||origin;
@@ -502,10 +513,10 @@ async function api(req,res,url){
           const brandRef=pOffer?.Brand?.BrandRef; const brand=brands[brandRef]||{};
           const attrs=normalizeBrandText(brand);
           const baggageParts=[]; for(const b of asArray(tc?.BaggageAllowance)){ if(b?.BaggageAllowanceType||b?.BaggageType||b?.Quantity||b?.Weight) baggageParts.push(JSON.stringify(b)); }
-          const direct=segs.length<=1;
+          const direct=allSegs.length<=1;
           const duration=dep&&arr?Math.max(0,Math.round((new Date(arr)-new Date(dep))/60000)):durationMinutes(first?.duration||first?.FlightTime);
           const id=`tp-${offer?.id||"offer"}-${brandRef||"base"}-${flightNumber||Math.random().toString(36).slice(2,8)}`;
-          flights.push({id,source:"travelport-tripservices",from_iata:origin,to_iata:destination,from_airport_code:fromCode,to_airport_code:toCode,airline_code:marketing||null,airline:airlineNames[marketing]||marketing||brand?.name||"Авиакомпания",flight_number:flightNumber||null,departure_at:dep||null,arrival_at:arr||null,return_at:null,transfers:Math.max(0,segs.length-1),duration_to:duration,transfer_airports:intermediate,transfer_cities:[],price:basePrice+markup,currency:currencyCode,source_price:basePrice,markup,baggage:attrs||baggageParts.join(";")||null,hand_baggage:null,baggage_note:attrs?null:"Условия багажа уточняются",link:null,content_source:pOffer?.ContentSource||null,brand:brand?.name||null,raw_offer_id:offer?.id||null});
+          flights.push({id,source:"travelport-tripservices",from_iata:origin,to_iata:destination,from_airport_code:fromCode,to_airport_code:toCode,airline_code:marketing||null,airline:airlineNames[marketing]||marketing||brand?.name||"Авиакомпания",flight_number:flightNumber||null,departure_at:dep||null,arrival_at:arr||null,return_at:null,transfers:Math.max(0,allSegs.length-1),duration_to:duration,transfer_airports:intermediate,transfer_cities:[],price:basePrice+markup,currency:currencyCode,source_price:basePrice,markup,baggage:attrs||baggageParts.join(";")||null,hand_baggage:null,baggage_note:attrs?null:"Условия багажа уточняются",link:null,content_source:pOffer?.ContentSource||null,brand:brand?.name||null,raw_offer_id:offer?.id||null});
         }
       }
       const unique=new Map(); for(const f of flights){ const k=[f.airline_code,f.flight_number,f.departure_at,f.price,f.from_airport_code,f.to_airport_code].join("|"); if(!unique.has(k)) unique.set(k,f); }
