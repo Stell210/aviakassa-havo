@@ -32,3 +32,6 @@ White Label Web widget:
 
 Travelpayouts Drive:
 - Drive script enabled on the public site using the supplied Travelpayouts Drive code.
+
+
+V47: Travelpayouts White Label Widget kept on same page; Drive script disabled on public page to prevent click/search interception. Added TRAVELPAYOUTS_API_TOKEN Render environment variable and admin status check.

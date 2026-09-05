@@ -16,6 +16,7 @@ const TRAVELPORT_PCC = process.env.TRAVELPORT_PCC || "";
 const TRAVELPORT_AUTH_URL = String(process.env.TRAVELPORT_AUTH_URL || "https://auth.pp.travelport.net/oauth/token").replace("auth.pp.travelport.com", "auth.pp.travelport.net").replace("auth.travelport.com", "auth.travelport.net");
 const TRAVELPORT_API_URL = String(process.env.TRAVELPORT_API_URL || "https://api.pp.travelport.net/11/air/catalog/search/catalogproductofferings").replace("api.pp.travelport.com", "api.pp.travelport.net").replace("api.travelport.com", "api.travelport.net");
 const TRAVELPORT_CONTENT_SOURCES = String(process.env.TRAVELPORT_CONTENT_SOURCES || "GDS").split(",").map(x=>x.trim().toUpperCase()).filter(Boolean);
+const TRAVELPAYOUTS_API_TOKEN = String(process.env.TRAVELPAYOUTS_API_TOKEN || "").trim();
 const DEFAULT_FLIGHT_MARKUP_RUB = Number.isFinite(Number(process.env.FLIGHT_MARKUP_RUB)) ? Math.max(0, Number(process.env.FLIGHT_MARKUP_RUB)) : 500;
 const publicDir = __dirname;
 const pool = DATABASE_URL ? new Pool({
@@ -353,6 +354,10 @@ async function api(req,res,url){
     catch(e){ return send(res,e.message==="INVALID_MARKUP"?400:500,{ok:false,error:e.message}); }
   }
 
+  if(req.method==="GET" && url.pathname==="/api/admin/travelpayouts/status"){
+    const user=authorized(req); if(!user)return send(res,401,{ok:false,error:"UNAUTHORIZED"}); if(user.role!=="admin")return send(res,403,{ok:false,error:"ADMIN_ONLY"});
+    return send(res,200,{ok:true,configured:!!TRAVELPAYOUTS_API_TOKEN,provider:"Travelpayouts",token_hint:TRAVELPAYOUTS_API_TOKEN?`${TRAVELPAYOUTS_API_TOKEN.slice(0,4)}••••${TRAVELPAYOUTS_API_TOKEN.slice(-4)}`:""});
+  }
   if(req.method==="GET" && url.pathname==="/api/admin/supplier/status"){
     const user=authorized(req); if(!user)return send(res,401,{ok:false,error:"UNAUTHORIZED"}); if(user.role!=="admin")return send(res,403,{ok:false,error:"ADMIN_ONLY"});
     const configured=!!(TRAVELPORT_CLIENT_ID&&TRAVELPORT_CLIENT_SECRET&&TRAVELPORT_USERNAME&&TRAVELPORT_PASSWORD&&TRAVELPORT_PCC);
