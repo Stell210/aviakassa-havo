@@ -32,13 +32,3 @@ White Label Web widget:
 
 Travelpayouts Drive:
 - Drive script enabled on the public site using the supplied Travelpayouts Drive code.
-
-
-V47: Travelpayouts White Label Widget kept on same page; Drive script disabled on public page to prevent click/search interception. Added TRAVELPAYOUTS_API_TOKEN Render environment variable and admin status check.
-
-
-WHITE LABEL VIEW-ONLY
-- White Label Widget is kept on the public page.
-- The public page attempts to hide common booking/checkout buttons so users can only view flight information.
-- Important: Travelpayouts officially does not allow changing White Label prices or adding a surcharge to those displayed prices. Therefore the admin markup setting cannot legally/technically change the White Label price.
-- To show source price + admin markup as the actual displayed price, Aviakassa_havo needs its own API search results (for example an approved real-time search API), not the Travelpayouts White Label widget.
