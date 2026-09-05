@@ -453,7 +453,7 @@ async function api(req,res,url){
           "@type":"CatalogProductOfferingsRequestAir",
           "maxNumberOfUpsellsToReturn":4,
           "offersPerPage":50,
-          "contentSourceList":["GDS"],
+          "contentSourceList":TRAVELPORT_CONTENT_SOURCES,
           "PassengerCriteria":[{"@type":"PassengerCriteria","number":1,"passengerTypeCode":"ADT"}],
           "SearchCriteriaFlight":[{"@type":"SearchCriteriaFlight","departureDate":date,"From":{"value":origin},"To":{"value":destination}}]
         }
@@ -463,21 +463,42 @@ async function api(req,res,url){
         const code=/^[A-Za-z0-9]{2,3}$/.test(requestedAirline)?requestedAirline.toUpperCase():map[requestedAirline.toLowerCase()];
         if(code) body.CatalogProductOfferingsRequest.SearchModifiersAir={"@type":"SearchModifiersAir","CarrierPreference":[{"@type":"CarrierPreference","preferenceType":"Permitted","carriers":[code]}]};
       }
-      const tpHeaders={"Accept-Encoding":"gzip, deflate","Authorization":`Bearer ${global.__travelportToken.value}`,"Content-Type":"application/json","TVP-PCC-Core":TRAVELPORT_PCC,"Accept":"application/json","Accept-Version":"11","Content-Version":"11","Cache-Control":"no-cache","TraceId":`Aviakassa_${origin}_${destination}`};
+      const makeTpHeaders=()=>({"Accept-Encoding":"gzip, deflate","Authorization":`Bearer ${global.__travelportToken.value}`,"Content-Type":"application/json","TVP-PCC-Core":TRAVELPORT_PCC,"Accept":"application/json","Accept-Version":"11","Content-Version":"11","Cache-Control":"no-cache","TraceId":`Aviakassa_${origin}_${destination}`});
+      let tpHeaders=makeTpHeaders();
       console.log(`[Travelport] API REQUEST | endpoint=${TRAVELPORT_API_URL} | PCC=${TRAVELPORT_PCC} | sources=${body.CatalogProductOfferingsRequest.contentSourceList.join(",")}`);
       let rr=await fetch(TRAVELPORT_API_URL,{method:"POST",headers:tpHeaders,body:JSON.stringify(body)});
-      const e2e=rr.headers.get("E2ETrackingID")||rr.headers.get("e2etrackingid")||null;
-      const contentType=rr.headers.get("content-type")||"";
+      let e2e=rr.headers.get("E2ETrackingID")||rr.headers.get("e2etrackingid")||null;
+      let contentType=rr.headers.get("content-type")||"";
       let raw=await rr.json().catch(()=>null);
       if(!raw) {
         const text=await rr.text().catch(()=>"");
         raw={__nonJson:text.slice(0,1000)};
       }
       console.log(`[Travelport] API RESPONSE | HTTP ${rr.status} | E2E=${e2e||"none"} | content-type=${contentType||"unknown"}`);
+      // A stale/invalid cached token can cause a 401. Refresh once and retry the exact request.
+      // This does not mask provisioning errors: if the fresh token also gets 401, we return it clearly.
+      if(rr.status===401){
+        console.warn(`[Travelport] API 401 | refreshing OAuth token and retrying once`);
+        global.__travelportToken=null;
+        const authBody2=new URLSearchParams({username:TRAVELPORT_USERNAME,password:TRAVELPORT_PASSWORD,client_id:TRAVELPORT_CLIENT_ID,client_secret:TRAVELPORT_CLIENT_SECRET,grant_type:"password"}).toString();
+        const ar2=await fetch(TRAVELPORT_AUTH_URL,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded","Accept":"application/json"},body:authBody2});
+        const aj2=await ar2.json().catch(()=>({}));
+        if(ar2.ok && aj2.access_token){
+          global.__travelportToken={value:aj2.access_token,expiresAt:Date.now()+Math.max(300,Number(aj2.expires_in||86400)-120)*1000};
+          tpHeaders=makeTpHeaders();
+          rr=await fetch(TRAVELPORT_API_URL,{method:"POST",headers:tpHeaders,body:JSON.stringify(body)});
+          e2e=rr.headers.get("E2ETrackingID")||rr.headers.get("e2etrackingid")||null;
+          contentType=rr.headers.get("content-type")||"";
+          raw=await rr.json().catch(()=>null);
+        } else {
+          raw=aj2;
+        }
+      }
       // NDC is available only for customers provisioned for NDC. If a trial account
       // rejects an aggregated GDS+NDC request, retry safely with GDS only.
       if(!rr.ok && body.CatalogProductOfferingsRequest.contentSourceList.includes("NDC")){
         body.CatalogProductOfferingsRequest.contentSourceList=["GDS"];
+        tpHeaders=makeTpHeaders();
         rr=await fetch(TRAVELPORT_API_URL,{method:"POST",headers:tpHeaders,body:JSON.stringify(body)});
         raw=await rr.json().catch(()=>({}));
       }

@@ -377,7 +377,14 @@ document.addEventListener("click",e=>{document.querySelectorAll(".airport-field"
    try{
      const r=await fetch("/api/live-search-flights?"+p.toString());
      const d=await r.json();
-     if(!r.ok||!d.ok) throw new Error(d.message||d.error||"API_ERROR");
+     if(!r.ok||!d.ok){
+       const status=d?.diagnostics?.httpStatus||r.status;
+       if(status===401||d?.error==="TRAVELPORT_API_ERROR"){
+         const detail=typeof d?.details==="string"?d.details:(Array.isArray(d?.details)?d.details.map(x=>x?.Message||x?.message||x?.StatusCode||JSON.stringify(x)).join("; "):d?.details?.Message||d?.details?.message||"");
+         throw new Error(`Travelport HTTP ${status}${detail?` — ${detail}`:""}`);
+       }
+       throw new Error(d.message||d.error||"API_ERROR");
+     }
      let a=d.flights||[];
      const airlineSelect=document.getElementById("sfAirline");
      const stopsSelect=document.getElementById("sfStops");
@@ -422,7 +429,13 @@ document.addEventListener("click",e=>{document.querySelectorAll(".airport-field"
          <div class="flight-price">${moneyWithCurrency(x.price,x.currency)}</div>
        </article>`;
      }).join(""):publicEmpty((extraTranslations[lang]||extraTranslations.ru).noSearchResults);
-   }catch(e){box.innerHTML=publicEmpty((extraTranslations[lang]||extraTranslations.ru).searchError);}
+   }catch(e){
+     const msg=String(e?.message||"");
+     const friendly=msg.startsWith("Travelport HTTP 401")
+       ? (lang==="tj"?"Travelport: дастрасӣ ба ҷустуҷӯи парвозҳо иҷозат дода нашудааст. Танзимоти TripServices/PCC-ро санҷед.":lang==="en"?"Travelport: Air Search access was not authorized. Check TripServices/PCC provisioning.":"Travelport: доступ к Air Search не авторизован. Проверьте provisioning TripServices/PCC.")
+       : msg.startsWith("Travelport HTTP") ? msg : (extraTranslations[lang]||extraTranslations.ru).searchError;
+     box.innerHTML=publicEmpty(friendly);
+   }
  }
  ["sfAirline","sfAirport","sfStops","sfSort"].forEach(id=>document.getElementById(id)?.addEventListener("change",run));
  ss.addEventListener("submit",e=>{e.preventDefault();run()});
