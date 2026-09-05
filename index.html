@@ -7,6 +7,27 @@
 <title>Aviakassa_havo — Авиабилеты</title>
 <link rel="stylesheet" href="style.css">
 
+<!-- Travelpayouts White Label Web widget -->
+<script nowprocket data-noptimize="1" data-cfasync="false" data-wpfc-render="false" seraph-accel-crit="1" data-no-defer="1">
+  (function () {
+        var script = document.createElement("script");
+        script.async = 1;
+        script.type = "module";
+        script.src = "https://tpemb.com/wl_web/main.js?wl_id=21705";
+        document.head.appendChild(script);
+      })();
+</script>
+
+<!-- Travelpayouts Drive -->
+<script nowprocket data-noptimize="1" data-cfasync="false" data-wpfc-render="false" seraph-accel-crit="1" data-no-defer="1" data-cmp-ab="2">
+  (function () {
+      var script = document.createElement("script");
+      script.async = 1;
+      script.setAttribute("data-cmp-ab","2");
+      script.src = 'https://tp-em.com/NTcwMjg0.js?t=570284';
+      document.head.appendChild(script);
+  })();
+</script>
 </head>
 <body>
 <header class="nav">
@@ -42,32 +63,14 @@
 
 <section class="section search-results-section" id="flightSearchResults">
   <div class="head"><div><span class="eyebrow" data-i18n="searchEyebrow">ПОИСК БИЛЕТОВ</span><h2 data-i18n="searchTitle">Найти билеты</h2></div><p data-i18n="searchIntro">Выберите маршрут и дату — результаты поиска появятся прямо на Aviakassa_havo.</p></div>
-  <form id="smartSearch" class="smart-search">
-    <div class="airport-field" data-airport-field="from">
-      <label data-i18n="fromLabel" for="sfFrom">Откуда</label>
-      <div class="airport-input-wrap">
-        <input id="sfFrom" class="field" data-i18n-placeholder="airportPlaceholder" placeholder="Город или аэропорт" autocomplete="off" aria-autocomplete="list" aria-expanded="false">
-        <button type="button" class="airport-clear" data-i18n-aria="clear" aria-label="Очистить" hidden>×</button>
-      </div>
-      <div class="airport-suggestions" role="listbox" hidden></div>
-    </div>
-    <div class="airport-field" data-airport-field="to">
-      <label data-i18n="toLabel" for="sfTo">Куда</label>
-      <div class="airport-input-wrap">
-        <input id="sfTo" class="field" data-i18n-placeholder="airportPlaceholder" placeholder="Город или аэропорт" autocomplete="off" aria-autocomplete="list" aria-expanded="false">
-        <button type="button" class="airport-clear" data-i18n-aria="clear" aria-label="Очистить" hidden>×</button>
-      </div>
-      <div class="airport-suggestions" role="listbox" hidden></div>
-    </div>
-    <input id="sfDate" class="field" type="date">
-    <select id="sfAirline" class="field"><option value="" data-i18n="allAirlines">Все авиакомпании</option></select>
-    <select id="sfAirport" class="field"><option value="" data-i18n="allAirports">Все аэропорты</option></select>
-    <select id="sfStops" class="field"><option value="" data-i18n="allFlights">Все рейсы</option><option value="0" data-i18n="directOnly">Только прямые</option><option value="1" data-i18n="withConnection">С пересадкой</option></select>
-    <select id="sfSort" class="field"><option value="price" data-i18n="sortCheap">Сначала дешёвые</option><option value="time" data-i18n="sortTime">По времени вылета</option></select>
-    <button class="primary" data-i18n="searchButton" type="submit">🔎 Найти билеты</button>
-  </form>
 
-  <div id="searchResults" class="flight-grid"></div>
+  <div class="white-label-search-wrap">
+    <div id="tpwl-search"></div>
+  </div>
+
+  <div class="white-label-results-wrap">
+    <div id="tpwl-tickets"></div>
+  </div>
 </section>
 
 <section class="section dynamic-section" id="flights">

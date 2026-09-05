@@ -1,4 +1,4 @@
-Aviakassa_havo v39 — Travelport TripServices + full RU/TJ/EN interface localization
+Aviakassa_havo v46 — White Label + Drive — Travelport TripServices + full RU/TJ/EN interface localization
 
 Changes from v38:
 - Kept Travelport TripServices as the only flight search provider. Aviasales Data API remains removed from application code.
@@ -23,3 +23,12 @@ Important: do not put credentials into GitHub or frontend code. Keep them in Ren
 
 
 Version v43 fix: Travelport post-migration authentication uses auth.pp.travelport.net and application/x-www-form-urlencoded. Legacy .com auth URLs are normalized to .net automatically. Air API remains api.pp.travelport.net.
+
+
+White Label Web widget:
+- Main script: https://tpemb.com/wl_web/main.js?wl_id=21705
+- Search container: #tpwl-search
+- Results container: #tpwl-tickets
+
+Travelpayouts Drive:
+- Drive script enabled on the public site using the supplied Travelpayouts Drive code.
