@@ -13,8 +13,8 @@ const TRAVELPORT_CLIENT_SECRET = process.env.TRAVELPORT_CLIENT_SECRET || "";
 const TRAVELPORT_USERNAME = process.env.TRAVELPORT_USERNAME || "";
 const TRAVELPORT_PASSWORD = process.env.TRAVELPORT_PASSWORD || "";
 const TRAVELPORT_PCC = process.env.TRAVELPORT_PCC || "";
-const TRAVELPORT_AUTH_URL = process.env.TRAVELPORT_AUTH_URL || "https://auth.pp.travelport.com/oauth/token";
-const TRAVELPORT_API_URL = process.env.TRAVELPORT_API_URL || "https://api.pp.travelport.net/11/air/catalog/search/catalogproductofferings";
+const TRAVELPORT_AUTH_URL = String(process.env.TRAVELPORT_AUTH_URL || "https://auth.pp.travelport.net/oauth/token").replace("auth.pp.travelport.com", "auth.pp.travelport.net").replace("auth.travelport.com", "auth.travelport.net");
+const TRAVELPORT_API_URL = String(process.env.TRAVELPORT_API_URL || "https://api.pp.travelport.net/11/air/catalog/search/catalogproductofferings").replace("api.pp.travelport.com", "api.pp.travelport.net").replace("api.travelport.com", "api.travelport.net");
 const TRAVELPORT_CONTENT_SOURCES = String(process.env.TRAVELPORT_CONTENT_SOURCES || "GDS").split(",").map(x=>x.trim().toUpperCase()).filter(Boolean);
 const DEFAULT_FLIGHT_MARKUP_RUB = Number.isFinite(Number(process.env.FLIGHT_MARKUP_RUB)) ? Math.max(0, Number(process.env.FLIGHT_MARKUP_RUB)) : 500;
 const publicDir = __dirname;
@@ -437,8 +437,8 @@ async function api(req,res,url){
 
     try{
       if(!global.__travelportToken || global.__travelportToken.expiresAt < Date.now()+60000){
-        const authBody=JSON.stringify({username:TRAVELPORT_USERNAME,password:TRAVELPORT_PASSWORD,client_id:TRAVELPORT_CLIENT_ID,client_secret:TRAVELPORT_CLIENT_SECRET,grant_type:"password"});
-        const ar=await fetch(TRAVELPORT_AUTH_URL,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:authBody});
+        const authBody=new URLSearchParams({username:TRAVELPORT_USERNAME,password:TRAVELPORT_PASSWORD,client_id:TRAVELPORT_CLIENT_ID,client_secret:TRAVELPORT_CLIENT_SECRET,grant_type:"password"}).toString();
+        const ar=await fetch(TRAVELPORT_AUTH_URL,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded","Accept":"application/json"},body:authBody});
         const aj=await ar.json().catch(()=>({}));
         console.log(`[Travelport] AUTH | HTTP ${ar.status} | token=${aj?.access_token?"OK":"MISSING"}`);
         if(!ar.ok || !aj.access_token) {

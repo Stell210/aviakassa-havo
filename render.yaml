@@ -23,7 +23,7 @@ services:
       - key: TRAVELPORT_PCC
         sync: false
       - key: TRAVELPORT_AUTH_URL
-        value: https://auth.pp.travelport.com/oauth/token
+        value: https://auth.pp.travelport.net/oauth/token
       - key: TRAVELPORT_API_URL
         value: https://api.pp.travelport.net/11/air/catalog/search/catalogproductofferings
       - key: TRAVELPORT_CONTENT_SOURCES

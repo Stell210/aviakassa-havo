@@ -20,3 +20,6 @@ TRAVELPORT_CONTENT_SOURCES (optional; default GDS,NDC)
 FLIGHT_MARKUP_RUB (optional; default 500)
 
 Important: do not put credentials into GitHub or frontend code. Keep them in Render environment variables.
+
+
+Version v43 fix: Travelport post-migration authentication uses auth.pp.travelport.net and application/x-www-form-urlencoded. Legacy .com auth URLs are normalized to .net automatically. Air API remains api.pp.travelport.net.
