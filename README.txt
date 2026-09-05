@@ -32,3 +32,12 @@ White Label Web widget:
 
 Travelpayouts Drive:
 - Drive script enabled on the public site using the supplied Travelpayouts Drive code.
+
+
+VIEW-ONLY FIX v49
+- Restored the complete public Aviakassa_havo page layout from v46.
+- Travelpayouts White Label Widget remains on the same page with #tpwl-search and #tpwl-tickets.
+- Travelpayouts Drive remains disabled on the public page to avoid click interception/redirect behavior.
+- Added a DOM-level safety layer that hides and blocks ordinary booking CTA elements such as “Выбрать билет”, “Купить”, “Забронировать”, “Book”, etc.
+- Important limitation: Travelpayouts White Label does not allow changing its displayed ticket price or adding a surcharge. The admin markup value therefore is NOT artificially added to White Label prices. Showing +500/+600 on top of a White Label price would be misleading because checkout uses the original provider price.
+- To implement a real source price + admin markup, replace the White Label result rendering with an approved flight-search API and apply markup server-side.

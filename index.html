@@ -18,16 +18,7 @@
       })();
 </script>
 
-<!-- Travelpayouts Drive -->
-<script nowprocket data-noptimize="1" data-cfasync="false" data-wpfc-render="false" seraph-accel-crit="1" data-no-defer="1" data-cmp-ab="2">
-  (function () {
-      var script = document.createElement("script");
-      script.async = 1;
-      script.setAttribute("data-cmp-ab","2");
-      script.src = 'https://tp-em.com/NTcwMjg0.js?t=570284';
-      document.head.appendChild(script);
-  })();
-</script>
+<!-- Travelpayouts Drive intentionally disabled on the public page. -->
 </head>
 <body>
 <header class="nav">
@@ -174,7 +165,7 @@
 
 <div id="flightDetailModal" class="site-modal" hidden><div class="site-modal-card"><button id="closeFlightDetail" class="site-modal-close">×</button><div id="flightDetailBody"></div></div></div>
 <script>
-(function(){const box=document.getElementById("flightDetailModal"),body=document.getElementById("flightDetailBody"),close=document.getElementById("closeFlightDetail");if(!box)return;close.onclick=()=>box.hidden=true;document.addEventListener("click",async e=>{const a=e.target.closest("[data-flight-detail]");if(!a)return;e.preventDefault();try{const r=await fetch("/api/flight?id="+encodeURIComponent(a.dataset.flightDetail));const d=await r.json();if(!d.ok)throw Error();const f=d.flight;body.innerHTML=`<h2>${escHtml(f.from_city)} → ${escHtml(f.to_city)}</h2><div class="site-detail-grid"><div><b>Дата</b>${escHtml(f.flight_date)}</div><div><b>Время</b>${escHtml(f.flight_time)}</div><div><b>Авиакомпания</b>${escHtml(f.airline)}</div><div><b>Багаж</b>${escHtml(f.baggage)}</div><div><b>Вылет</b>${escHtml(f.from_airport)} (${escHtml(f.from_airport_code)})</div><div><b>Прилёт</b>${escHtml(f.to_airport)} (${escHtml(f.to_airport_code)})</div><div><b>Цена</b>${escHtml(f.price)} ${escHtml(f.currency||"")}</div></div><a class="primary" target="_blank" href="${waUrl("Здравствуйте! Хочу забронировать рейс "+f.from_city+" → "+f.to_city+", "+f.flight_date+".")}">📲 Забронировать</a>`;box.hidden=false}catch(err){}})})();
+(function(){const box=document.getElementById("flightDetailModal"),body=document.getElementById("flightDetailBody"),close=document.getElementById("closeFlightDetail");if(!box)return;close.onclick=()=>box.hidden=true;document.addEventListener("click",async e=>{const a=e.target.closest("[data-flight-detail]");if(!a)return;e.preventDefault();try{const r=await fetch("/api/flight?id="+encodeURIComponent(a.dataset.flightDetail));const d=await r.json();if(!d.ok)throw Error();const f=d.flight;body.innerHTML=`<h2>${escHtml(f.from_city)} → ${escHtml(f.to_city)}</h2><div class="site-detail-grid"><div><b>Дата</b>${escHtml(f.flight_date)}</div><div><b>Время</b>${escHtml(f.flight_time)}</div><div><b>Авиакомпания</b>${escHtml(f.airline)}</div><div><b>Багаж</b>${escHtml(f.baggage)}</div><div><b>Вылет</b>${escHtml(f.from_airport)} (${escHtml(f.from_airport_code)})</div><div><b>Прилёт</b>${escHtml(f.to_airport)} (${escHtml(f.to_airport_code)})</div><div><b>Цена</b>${escHtml(f.price)} ${escHtml(f.currency||"")}</div></div><div class="view-only-note">Информация о рейсе доступна для просмотра.</div>`;box.hidden=false}catch(err){}})})();
 </script>
 <script src="script.js"></script>
 </body>
