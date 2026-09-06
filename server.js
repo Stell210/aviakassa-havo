@@ -387,13 +387,7 @@ const server=http.createServer(async(req,res)=>{
     if(u.pathname==="/admin" || u.pathname==="/admin/") u.pathname="/admin.html";
     let p=u.pathname==="/"?path.join(publicDir,"index.html"):path.join(publicDir,u.pathname.replace(/^\/+/,""));
     if(!p.startsWith(publicDir))return send(res,403,{error:"FORBIDDEN"});
-    if(fs.existsSync(p)&&fs.statSync(p).isFile()){
-      const ext=path.extname(p).toLowerCase();
-      const cacheable=[".css",".js",".png",".jpg",".jpeg",".svg",".json",".ico"].includes(ext);
-      res.writeHead(200,{"Content-Type":mime[ext]||"application/octet-stream","Cache-Control":cacheable?"public, max-age=3600":"no-cache"});
-      fs.createReadStream(p).pipe(res);
-      return;
-    }
+    if(fs.existsSync(p)&&fs.statSync(p).isFile()){const ext=path.extname(p).toLowerCase();res.writeHead(200,{"Content-Type":mime[ext]||"application/octet-stream"});fs.createReadStream(p).pipe(res);return;}
     send(res,404,{error:"NOT_FOUND"});
   }catch(e){console.error(e);send(res,500,{error:"SERVER_ERROR"});}
 });
