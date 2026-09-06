@@ -12,12 +12,7 @@ services:
           property: connectionString
       - key: ADMIN_PASSWORD
         sync: false
-        sync: false
-        sync: false
-        sync: false
-        sync: false
-        sync: false
-        value: GDS
+
 databases:
   - name: aviakassa-havo-db
     databaseName: aviakassa
