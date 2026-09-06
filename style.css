@@ -215,7 +215,7 @@ img,iframe,video,canvas,svg{max-width:100%}
   top:0;
   width:59%;
   height:100%;
-  background-image:url('dushanbe-tower.jpeg');
+  background-image:url('aviakassa-dushanbe-aircraft.webp');
   background-repeat:no-repeat;
   background-position:center center;
   background-size:cover;
@@ -273,7 +273,7 @@ body{padding-top:72px;background:#f3f7fc}
 .nav{height:72px;background:rgba(255,255,255,.98);position:fixed;top:0;left:0;right:0;z-index:1000}
 .search-hero{position:relative;min-height:735px;overflow:hidden;background:linear-gradient(115deg,#0753cf 0%,#0a68e8 47%,#1b91ef 100%);color:#fff}
 .search-hero-bg{position:absolute;inset:0;z-index:0;pointer-events:none}
-.tower-photo{position:absolute;right:0;top:0;width:57%;height:100%;background-image:url("dushanbe-tower.jpeg");background-size:cover;background-position:center 52%;filter:saturate(1.03) contrast(1.02)}
+.tower-photo{position:absolute;right:0;top:0;width:57%;height:100%;background-image:url("aviakassa-dushanbe-aircraft.webp");background-size:cover;background-position:center 52%;filter:saturate(1.03) contrast(1.02)}
 .tower-fade{position:absolute;inset:0;background:linear-gradient(90deg,#0753cf 0%,rgba(7,83,207,.96) 25%,rgba(7,83,207,.45) 52%,rgba(7,83,207,.02) 76%),linear-gradient(0deg,rgba(3,54,145,.55),transparent 45%)}
 .tower-label{position:absolute;right:31%;top:43%;font-size:15px;line-height:1.2;letter-spacing:.5px;font-weight:500;text-align:left;text-shadow:0 2px 8px rgba(0,0,0,.2)}
 .search-hero-content{position:relative;z-index:2;max-width:1410px;margin:0 auto;padding:60px 4.1vw 30px}
