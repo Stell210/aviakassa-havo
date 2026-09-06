@@ -110,6 +110,10 @@ Object.assign(translations.en,{
   towerLabel:"BURJ<br>DUSHANBE",statRoutes:"destinations",statAirlines:"airlines",statThousands:"Thousands",statClients:"happy customers",statWorld:"The world",statWorldSmall:"closer with us",heroMotto:"Dushanbe —<br>closer than it seems"
 });
 
+// Current Dushanbe Tower hero translations for every language.
+Object.assign(translations.ru,{navPopular:"Популярные",heroKicker:"— ПУТЕШЕСТВУЙТЕ БОЛЬШЕ",benefitPrice:"Выгодные<br>цены",benefitAirlines:"Надёжные<br>авиакомпании",benefitFast:"Быстрое<br>оформление",benefitSupport:"Поддержка<br>в WhatsApp",towerLabel:"БУРДЖ<br>ДУШАНБЕ",statRoutes:"направлений",statAirlines:"авиакомпаний",statThousands:"Тысячи",statClients:"довольных клиентов",statWorld:"Весь мир",statWorldSmall:"ближе с нами",heroMotto:"Душанбе —<br>ближе, чем кажется"});
+Object.assign(translations.tj,{navPopular:"Машҳур",heroKicker:"— БЕШТАР САФАР КУНЕД",benefitPrice:"Нархҳои<br>хуб",benefitAirlines:"Ширкатҳои ҳавоии<br>боэътимод",benefitFast:"Расмӣ кардани<br>зуд",benefitSupport:"Дастгирӣ дар<br>WhatsApp",towerLabel:"БУРҶИ<br>ДУШАНБЕ",statRoutes:"самт",statAirlines:"ширкатҳои ҳавопаймоӣ",statThousands:"Ҳазорҳо",statClients:"мизоҷони қаноатманд",statWorld:"Тамоми ҷаҳон",statWorldSmall:"бо мо наздиктар",heroMotto:"Душанбе —<br>наздиктар аз он ки ба назар мерасад"});
+
 function setLang(l){
  const t=translations[l]||translations.ru, x=extraTranslations[l]||extraTranslations.ru;
  lang=l; localStorage.setItem("aviakassa_lang",l); window.aviakassaLang=l; document.documentElement.lang=l; document.title=t.siteTitle||document.title;
@@ -158,15 +162,7 @@ document.addEventListener("click",function(e){
 (function(){
   function $(id){ return document.getElementById(id); }
 
-  function wireLanguageButtons(){
-    document.querySelectorAll("[data-lang]").forEach(function(btn){
-      btn.addEventListener("click",function(e){
-        e.preventDefault();
-        e.stopPropagation();
-        setLang(btn.dataset.lang);
-      });
-    });
-  }
+  function wireLanguageButtons(){ /* language clicks handled by capture-phase delegate */ }
 
   function wireTripButtons(){
     const wrap=$("returnDateWrap");

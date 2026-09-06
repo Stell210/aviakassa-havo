@@ -220,7 +220,7 @@ async function api(req,res,url){
         if(q.rowCount && q.rows[0].active && verifyPassword(password,q.rows[0].password_hash)) user={id:q.rows[0].id,name:q.rows[0].name,username:q.rows[0].username,role:q.rows[0].role,permissions:Array.isArray(q.rows[0].permissions)?q.rows[0].permissions:[]};
       }catch(e){ console.error("admin login DB lookup error:",e.message); }
     }
-    if(!user){countFailed(ip);return send(res,401,{ok:false,error:"INVALID_PASSWORD"});}
+    if(!user){countFailed(ip);if(username==="admin" && !ADMIN_PASSWORD && !pool)return send(res,503,{ok:false,error:"ADMIN_NOT_CONFIGURED",message:"ADMIN_PASSWORD is not configured and DATABASE_URL is unavailable."});return send(res,401,{ok:false,error:"INVALID_PASSWORD"});}
     clearFailed(ip); return send(res,200,{ok:true,token:issueSession(user),user:{id:user.id,name:user.name,username:user.username,role:user.role,permissions:user.permissions||[]}});
   }
   if(req.method==="POST" && url.pathname==="/api/admin/logout"){
