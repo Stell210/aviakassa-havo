@@ -267,3 +267,82 @@ img,iframe,video,canvas,svg{max-width:100%}
   .search-hero p{font-size:14px !important;max-width:100% !important;}
   .search-hero-card{margin-top:22px;padding:8px !important;}
 }
+
+/* === Aviakassa_havo visual hero: Burj Dushanbe reference layout === */
+body{padding-top:72px;background:#f3f7fc}
+.nav{height:72px;background:rgba(255,255,255,.98);position:fixed;top:0;left:0;right:0;z-index:1000}
+.search-hero{position:relative;min-height:735px;overflow:hidden;background:linear-gradient(115deg,#0753cf 0%,#0a68e8 47%,#1b91ef 100%);color:#fff}
+.search-hero-bg{position:absolute;inset:0;z-index:0;pointer-events:none}
+.tower-photo{position:absolute;right:0;top:0;width:57%;height:100%;background-image:url("dushanbe-tower.jpeg");background-size:cover;background-position:center 52%;filter:saturate(1.03) contrast(1.02)}
+.tower-fade{position:absolute;inset:0;background:linear-gradient(90deg,#0753cf 0%,rgba(7,83,207,.96) 25%,rgba(7,83,207,.45) 52%,rgba(7,83,207,.02) 76%),linear-gradient(0deg,rgba(3,54,145,.55),transparent 45%)}
+.tower-label{position:absolute;right:31%;top:43%;font-size:15px;line-height:1.2;letter-spacing:.5px;font-weight:500;text-align:left;text-shadow:0 2px 8px rgba(0,0,0,.2)}
+.search-hero-content{position:relative;z-index:2;max-width:1410px;margin:0 auto;padding:60px 4.1vw 30px}
+.hero-copy{max-width:760px}
+.hero-kicker{font-size:12px;letter-spacing:5px;color:rgba(255,255,255,.58);font-weight:500;margin:3px 0 19px}
+.hero-copy h1{font-size:clamp(50px,5.6vw,78px);line-height:.98;letter-spacing:-3.5px;margin:0 0 20px;font-weight:800;color:#fff}
+.hero-copy h1 span{color:#7eeaff}
+.hero-copy p{font-size:21px;line-height:1.45;max-width:700px;margin:0;color:rgba(255,255,255,.78)}
+.hero-benefits{display:flex;gap:38px;margin-top:31px;align-items:center}
+.hero-benefits>div{display:flex;align-items:center;gap:12px;min-width:135px}
+.hero-benefits b{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);font-size:25px;color:#fff}
+.hero-benefits span{font-size:13px;line-height:1.25;font-weight:700;color:#fff}
+.search-hero-card{position:relative;z-index:3;margin-top:46px;max-width:1000px;background:#fff;border-radius:18px;padding:19px 26px 14px;box-shadow:0 18px 55px rgba(0,35,105,.24);border:0}
+#tpwl-search{min-height:85px}
+.hero-stats{display:flex;align-items:center;gap:48px;max-width:1000px;margin-top:35px;padding:17px 27px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);border-radius:17px;backdrop-filter:blur(5px)}
+.hero-stats>div{display:flex;align-items:center;gap:13px;min-width:150px}
+.hero-stats>div>b{font-size:29px;color:#fff;font-weight:700}
+.hero-stats span{display:flex;flex-direction:column;line-height:1.1}
+.hero-stats strong{font-size:22px;color:#fff}
+.hero-stats small{font-size:12px;color:rgba(255,255,255,.82);margin-top:4px}
+.hero-motto{position:absolute;right:4.2vw;bottom:34px;font-size:18px;line-height:1.25;font-style:italic;color:#fff;transform:rotate(-4deg);max-width:190px;text-align:left}
+.search-results-section{margin-top:0;padding-top:0}
+@media(max-width:1100px){
+ .nav nav{gap:16px}
+ .search-hero-content{padding-top:48px}
+ .hero-benefits{gap:20px}
+ .hero-stats{gap:22px}
+ .tower-label{right:27%}
+}
+@media(max-width:900px){
+ .nav nav{display:none}
+ .search-hero{min-height:760px}
+ .tower-photo{width:72%;height:48%;top:auto;bottom:0;background-position:center bottom;opacity:.95}
+ .tower-fade{background:linear-gradient(180deg,#0753cf 0%,rgba(7,83,207,.9) 23%,rgba(7,83,207,.15) 63%,rgba(7,83,207,.45) 100%)}
+ .tower-label{right:8%;top:auto;bottom:220px;font-size:12px}
+ .search-hero-content{padding:45px 6vw 28px}
+ .hero-copy h1{font-size:54px}
+ .hero-copy p{font-size:17px}
+ .hero-benefits{flex-wrap:wrap;gap:16px 25px}
+ .hero-benefits>div{min-width:125px}
+ .search-hero-card{margin-top:30px;padding:12px 12px 8px}
+ .hero-stats{gap:15px;overflow:hidden;max-width:100%;padding:14px 15px}
+ .hero-stats>div{min-width:125px}
+ .hero-stats>div:nth-child(3),.hero-stats>div:nth-child(4){display:none}
+ .hero-motto{display:none}
+}
+@media(max-width:600px){
+ body{padding-top:62px}
+ .nav{height:62px;padding:0 14px}
+ .brand{font-size:16px}
+ .nav-right{gap:5px}
+ .langs button{padding:6px 7px}
+ .wa.small{padding:9px 10px;font-size:12px}
+ .search-hero{min-height:690px}
+ .search-hero-content{padding:34px 18px 22px}
+ .hero-kicker{font-size:9px;letter-spacing:3px;margin-bottom:14px}
+ .hero-copy h1{font-size:42px;letter-spacing:-2px;line-height:1.02}
+ .hero-copy p{font-size:15px}
+ .hero-benefits{margin-top:21px;gap:10px 12px}
+ .hero-benefits>div{min-width:calc(50% - 6px);gap:8px}
+ .hero-benefits b{width:35px;height:35px;font-size:18px}
+ .hero-benefits span{font-size:10px}
+ .search-hero-card{margin-top:23px;border-radius:15px;padding:7px}
+ .hero-stats{margin-top:18px;padding:11px;border-radius:14px;gap:9px}
+ .hero-stats>div{min-width:105px;gap:7px}
+ .hero-stats>div>b{font-size:20px}
+ .hero-stats strong{font-size:16px}
+ .hero-stats small{font-size:9px}
+ .tower-photo{width:100%;height:44%;background-size:cover}
+ .tower-fade{background:linear-gradient(180deg,#0753cf 0%,#0753cf 32%,rgba(7,83,207,.25) 68%,rgba(7,83,207,.55) 100%)}
+ .tower-label{bottom:150px;right:7%;font-size:10px}
+}

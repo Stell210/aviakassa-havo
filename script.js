@@ -85,6 +85,31 @@ function updateCityList(l){
  if(dl) dl.innerHTML=x.citiesAll.map(v=>`<option value="${v}">`).join("\n");
 }
 
+
+/* Reference-layout copy: keep the same meaning across all three site languages. */
+Object.assign(translations.ru,{
+  siteTitle:"Aviakassa_havo — Авиабилеты",
+  navSearch:"Найти билет",navFlights:"Рейсы",navRoutes:"Направления",navPopular:"Популярные",navHow:"Как это работает",navFaq:"FAQ",whatsapp:"WhatsApp",
+  heroKicker:"— ПУТЕШЕСТВУЙТЕ БОЛЬШЕ",heroTitle:"Открывайте мир<br><span>с Aviakassa_havo</span>",heroText:"Авиабилеты по лучшим ценам. Удобно. Быстро. Надёжно.",
+  benefitPrice:"Выгодные<br>цены",benefitAirlines:"Надёжные<br>авиакомпании",benefitFast:"Быстрое<br>оформление",benefitSupport:"Поддержка<br>в WhatsApp",
+  towerLabel:"БУРДЖ<br>ДУШАНБЕ",statRoutes:"направлений",statAirlines:"авиакомпаний",statThousands:"Тысячи",statClients:"довольных клиентов",statWorld:"Весь мир",statWorldSmall:"ближе с нами",
+  heroMotto:"Душанбе —<br>ближе, чем кажется"
+});
+Object.assign(translations.tj,{
+  siteTitle:"Aviakassa_havo — Чиптаҳои ҳавопаймо",
+  navSearch:"Ҷустуҷӯи чипта",navFlights:"Парвозҳо",navRoutes:"Самтҳо",navPopular:"Машҳур",navHow:"Чӣ тавр кор мекунад",navFaq:"Саволҳо",whatsapp:"WhatsApp",
+  heroKicker:"— БЕШТАР САФАР КУНЕД",heroTitle:"Ҷаҳонро кашф кунед<br><span>бо Aviakassa_havo</span>",heroText:"Чиптаҳои ҳавопаймо бо нархҳои хуб. Осон. Зуд. Боваринок.",
+  benefitPrice:"Нархҳои<br>муфид",benefitAirlines:"Ширкатҳои<br>боэътимод",benefitFast:"Расмиятдарории<br>зуд",benefitSupport:"Дастгирӣ<br>дар WhatsApp",
+  towerLabel:"БУРҶИ<br>ДУШАНБЕ",statRoutes:"самт",statAirlines:"ширкати ҳавопаймоӣ",statThousands:"Ҳазорҳо",statClients:"мизоҷони қаноатманд",statWorld:"Тамоми ҷаҳон",statWorldSmall:"бо мо наздиктар",heroMotto:"Душанбе —<br>наздиктар аз он ки ба назар мерасад"
+});
+Object.assign(translations.en,{
+  siteTitle:"Aviakassa_havo — Flights",
+  navSearch:"Find a ticket",navFlights:"Flights",navRoutes:"Destinations",navPopular:"Popular",navHow:"How it works",navFaq:"FAQ",whatsapp:"WhatsApp",
+  heroKicker:"— TRAVEL MORE",heroTitle:"Discover the world<br><span>with Aviakassa_havo</span>",heroText:"Flight tickets at great prices. Easy. Fast. Reliable.",
+  benefitPrice:"Great<br>prices",benefitAirlines:"Reliable<br>airlines",benefitFast:"Fast<br>booking",benefitSupport:"Support<br>on WhatsApp",
+  towerLabel:"BURJ<br>DUSHANBE",statRoutes:"destinations",statAirlines:"airlines",statThousands:"Thousands",statClients:"happy customers",statWorld:"The world",statWorldSmall:"closer with us",heroMotto:"Dushanbe —<br>closer than it seems"
+});
+
 function setLang(l){
  const t=translations[l]||translations.ru, x=extraTranslations[l]||extraTranslations.ru;
  lang=l; localStorage.setItem("aviakassa_lang",l); window.aviakassaLang=l; document.documentElement.lang=l; document.title=t.siteTitle||document.title;

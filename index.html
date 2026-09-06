@@ -62,9 +62,9 @@ footer{background:#fff;padding:22px 5vw}
   <a class="brand" href="#top">✈️ <span>Aviakassa_havo</span></a>
   <nav aria-label="Основная навигация">
     <a data-i18n="navSearch" href="#flightSearchResults">Найти билет</a>
-    <a href="#flightResults">Рейсы</a>
+    <a data-i18n="navFlights" href="#flightResults">Рейсы</a>
     <a data-i18n="navRoutes" href="#routes">Направления</a>
-    <a href="#popular">Популярные</a>
+    <a data-i18n="navPopular" href="#popular">Популярные</a>
     <a data-i18n="navHow" href="#steps">Как это работает</a>
     <a data-i18n="navFaq" href="#faq">FAQ</a>
   </nav>
@@ -74,20 +74,39 @@ footer{background:#fff;padding:22px 5vw}
       <button type="button" data-lang="tj">TJ</button>
       <button type="button" data-lang="en">EN</button>
     </div>
-    <a class="wa small" data-i18n="whatsapp" href="https://wa.me/992753582002" target="_blank">WhatsApp</a>
+    <a class="wa small" data-i18n="whatsapp" href="https://wa.me/992753582002" target="_blank" rel="noopener">WhatsApp</a>
   </div>
 </header>
 
 <main id="top">
 <section class="search-hero" id="flightSearchResults">
-  <div class="search-hero-bg"><div class="dushanbe-tower-art" aria-hidden="true"></div><div class="tower-label" aria-hidden="true">БУРДЖ<br>ДУШАНБЕ</div></div>
+  <div class="search-hero-bg" aria-hidden="true">
+    <div class="tower-photo"></div>
+    <div class="tower-fade"></div>
+    <div class="tower-label" data-i18n="towerLabel">БУРДЖ<br>ДУШАНБЕ</div>
+  </div>
   <div class="search-hero-content">
-    <div class="badge" data-i18n="badge">🌍 Душанбе → весь мир</div>
-    <h1 data-i18n="searchTitle">Найти авиабилеты</h1>
-    <p data-i18n="searchIntro">Укажите маршрут и дату — доступные варианты появятся прямо на Aviakassa_havo.</p>
+    <div class="hero-copy">
+      <div class="hero-kicker" data-i18n="heroKicker">— ПУТЕШЕСТВУЙТЕ БОЛЬШЕ</div>
+      <h1 data-i18n-html="heroTitle">Открывайте мир<br><span>с Aviakassa_havo</span></h1>
+      <p data-i18n="heroText">Авиабилеты по лучшим ценам. Удобно. Быстро. Надёжно.</p>
+      <div class="hero-benefits">
+        <div><b>⌑</b><span data-i18n="benefitPrice">Выгодные<br>цены</span></div>
+        <div><b>⬟</b><span data-i18n="benefitAirlines">Надёжные<br>авиакомпании</span></div>
+        <div><b>ϟ</b><span data-i18n="benefitFast">Быстрое<br>оформление</span></div>
+        <div><b>◉</b><span data-i18n="benefitSupport">Поддержка<br>в WhatsApp</span></div>
+      </div>
+    </div>
     <div class="white-label-search-wrap search-hero-card">
       <div id="tpwl-search"></div>
     </div>
+    <div class="hero-stats">
+      <div><b>✈</b><span><strong>1000+</strong><small data-i18n="statRoutes">направлений</small></span></div>
+      <div><b>♟</b><span><strong>500+</strong><small data-i18n="statAirlines">авиакомпаний</small></span></div>
+      <div><b>★</b><span><strong data-i18n="statThousands">Тысячи</strong><small data-i18n="statClients">довольных клиентов</small></span></div>
+      <div><b>◎</b><span><strong data-i18n="statWorld">Весь мир</strong><small data-i18n="statWorldSmall">ближе с нами</small></span></div>
+    </div>
+    <div class="hero-motto" data-i18n-html="heroMotto">Душанбе —<br>ближе, чем кажется</div>
   </div>
 </section>
 
