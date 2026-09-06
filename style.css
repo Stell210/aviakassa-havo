@@ -522,3 +522,30 @@ body{padding-top:72px;background:#f3f7fc}
   .hero-stats small{font-size:10px !important}
 }
 
+
+/* Final visual hero image: generated Dushanbe/Aviakassahavo campaign artwork */
+.tower-photo-img{
+  position:absolute;
+  right:0;
+  top:0;
+  width:62%;
+  height:100%;
+  object-fit:cover;
+  object-position:center center;
+  filter:saturate(1.04) contrast(1.03);
+  opacity:1;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.35) 12%,#000 34%,#000 100%);
+  mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.35) 12%,#000 34%,#000 100%);
+}
+.search-hero-bg .tower-fade{
+  z-index:2;
+}
+.search-hero-bg .tower-label{
+  z-index:3;
+}
+@media(max-width:900px){
+  .tower-photo-img{width:78%;right:-10%;opacity:.62;object-position:center center;}
+}
+@media(max-width:600px){
+  .tower-photo-img{width:112%;height:62%;right:-34%;top:auto;bottom:-5%;opacity:.40;object-position:center center;}
+}
