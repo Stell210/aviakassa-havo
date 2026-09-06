@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Aviakassa_havo — авиабилеты и подбор рейсов из Душанбе и других городов.">
 <title data-i18n="siteTitle">Aviakassa_havo — Авиабилеты</title>
+<link rel="preconnect" href="https://tpemb.com" crossorigin>
+<link rel="dns-prefetch" href="//tpemb.com">
 <link rel="stylesheet" href="style.css">
 
 <!-- Travelpayouts White Label Web widget -->
@@ -18,7 +20,7 @@
         var script = document.createElement("script");
         script.async = 1;
         script.type = "module";
-        script.src = "https://tpwgts.com/wl_web/main.js?wl_id=21705";
+        script.src = "https://tpemb.com/wl_web/main.js?wl_id=21705";
         document.head.appendChild(script);
       })();
 </script>
@@ -38,9 +40,8 @@ body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-se
 .hero:after{content:"✈";position:absolute;right:8%;bottom:70px;font-size:150px;line-height:1;color:rgba(255,255,255,.11);transform:rotate(-13deg)}
 .hero-shade{background:linear-gradient(90deg,rgba(7,49,139,.42),rgba(7,49,139,.02))}
 .hero-content{max-width:1120px;margin:auto;padding:88px 5vw 155px}.badge{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.3);padding:8px 12px}.hero h1{font-size:clamp(44px,6.4vw,72px);letter-spacing:-3.5px;line-height:1.02;margin:20px 0 16px}.hero h1 span{color:#fff}.hero p{font-size:17px;max-width:570px;color:#f1f6ff}.actions{margin-top:24px}.primary{background:var(--ah-yellow);color:#172033;border-radius:12px;padding:14px 21px;box-shadow:0 7px 18px rgba(0,0,0,.12)}.ghost{border-radius:12px;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.42);padding:14px 20px}
-.search-results-section{max-width:1180px;padding:0 24px 55px;position:relative;margin:0 auto;z-index:5}.search-results-section .head{display:none}.white-label-search-wrap{background:#fff;border:1px solid var(--ah-line);padding:10px 26px 26px;border-radius:24px;box-shadow:0 22px 55px rgba(20,45,90,.13)}
-.white-label-results-wrap{margin:0;background:#fff;border:1px solid var(--ah-line);border-top:0;border-radius:0 0 24px 24px;overflow:hidden;box-shadow:0 22px 55px rgba(20,45,90,.10)}.white-label-results-wrap:empty{display:none}
-#flightResults[hidden]{display:none}.search-results-section:not([hidden]){display:block}
+.search-results-section{max-width:1180px;padding:0 24px 72px;position:relative;margin-top:-92px;z-index:5}.search-results-section .head{background:#fff;border:1px solid var(--ah-line);border-bottom:0;border-radius:24px 24px 0 0;padding:28px 30px 8px;margin:0}.search-results-section .head h2{font-size:32px;margin:5px 0}.search-results-section .head p{font-size:13px}.white-label-search-wrap{background:#fff;border:1px solid var(--ah-line);border-top:0;padding:10px 26px 26px;border-radius:0 0 24px 24px;box-shadow:0 22px 55px rgba(20,45,90,.13)}
+.white-label-results-wrap{margin-top:22px;background:transparent}.white-label-results-wrap:empty{display:none}
 .section{max-width:1180px;padding:76px 5vw}.section .head h2,.step-inner h2{font-size:38px;letter-spacing:-1.7px}.eyebrow{color:var(--ah-blue);font-size:10px;letter-spacing:1.6px}
 .dynamic-section{padding-top:25px}.flight-card,.route,.offer,.benefit-grid>div,.mini-grid>div,.faq-list details,.contact-box{border-color:var(--ah-line);box-shadow:0 8px 25px rgba(16,35,63,.045);border-radius:18px}.flight-card:hover,.route:hover,.offer:hover{box-shadow:0 15px 34px rgba(16,35,63,.08)}
 .routes{grid-template-columns:repeat(3,1fr)}.route{padding:19px}.route b{font-size:16px}.route i{color:var(--ah-blue)}
@@ -52,8 +53,8 @@ body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-se
 footer{background:#fff;padding:22px 5vw}
 /* Keep the embedded Travelpayouts search visually inside the new shell without changing its functionality. */
 #tpwl-search{min-height:86px}.white-label-search-wrap iframe{max-width:100%}
-@media(max-width:900px){.nav nav{display:none}.hero{min-height:520px}.hero-content{padding:70px 6vw 140px}.search-results-section{padding:0 12px 45px;margin:0}.search-results-section .head{display:none}.white-label-search-wrap{padding:8px 16px 18px}.routes{grid-template-columns:1fr 1fr}.offer-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:600px){.nav{height:62px;padding:0 14px}.brand{font-size:16px}.hero{min-height:500px}.hero:after{font-size:90px;right:4%;bottom:90px}.hero-content{padding:62px 6vw 125px}.hero h1{font-size:45px;letter-spacing:-2.4px}.hero p{font-size:15px}.hero .actions{display:grid;grid-template-columns:1fr}.search-results-section{margin:0;padding:0 8px 45px}.search-results-section .head{display:none}.white-label-search-wrap{border-radius:18px;padding:7px 10px 14px}.section{padding:58px 5vw}.section .head h2,.step-inner h2{font-size:31px}.routes,.offer-grid{grid-template-columns:1fr}.contact-box h2{font-size:31px}.nav-right .langs{display:flex}}
+@media(max-width:900px){.nav nav{display:none}.hero{min-height:520px}.hero-content{padding:70px 6vw 140px}.search-results-section{padding:0 12px 55px;margin-top:-78px}.search-results-section .head{padding:23px 20px 4px}.white-label-search-wrap{padding:8px 16px 18px}.routes{grid-template-columns:1fr 1fr}.offer-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.nav{height:62px;padding:0 14px}.brand{font-size:16px}.hero{min-height:500px}.hero:after{font-size:90px;right:4%;bottom:90px}.hero-content{padding:62px 6vw 125px}.hero h1{font-size:45px;letter-spacing:-2.4px}.hero p{font-size:15px}.hero .actions{display:grid;grid-template-columns:1fr}.search-results-section{margin-top:-66px;padding-left:8px;padding-right:8px}.search-results-section .head{border-radius:20px 20px 0 0}.search-results-section .head h2{font-size:28px}.white-label-search-wrap{border-radius:0 0 20px 20px;padding:7px 10px 14px}.section{padding:58px 5vw}.section .head h2,.step-inner h2{font-size:31px}.routes,.offer-grid{grid-template-columns:1fr}.contact-box h2{font-size:31px}.nav-right .langs{display:flex}}
 </style>
 </head>
 <body>
@@ -87,8 +88,8 @@ footer{background:#fff;padding:22px 5vw}
   </div>
 </section>
 
-<section class="search-results-section" id="flightResults" aria-live="polite" hidden>
-  <!-- White Label results are intentionally placed immediately below the search form. -->
+<section class="section search-results-section" id="flightResults">
+  <div class="head"><div><span class="eyebrow" data-i18n="currentFlights">РЕЗУЛЬТАТЫ ПОИСКА</span><h2 data-i18n="navFlights">Билеты</h2></div><p data-i18n="currentFlightsIntro">Выберите подходящий вариант — затем перейдите к продавцу для покупки.</p></div>
   <div class="white-label-results-wrap">
     <div id="tpwl-tickets"></div>
   </div>
@@ -193,19 +194,5 @@ footer{background:#fff;padding:22px 5vw}
 (function(){const box=document.getElementById("flightDetailModal"),body=document.getElementById("flightDetailBody"),close=document.getElementById("closeFlightDetail");if(!box)return;close.onclick=()=>box.hidden=true;document.addEventListener("click",async e=>{const a=e.target.closest("[data-flight-detail]");if(!a)return;e.preventDefault();try{const r=await fetch("/api/flight?id="+encodeURIComponent(a.dataset.flightDetail));const d=await r.json();if(!d.ok)throw Error();const f=d.flight;body.innerHTML=`<h2>${escHtml(f.from_city)} → ${escHtml(f.to_city)}</h2><div class="site-detail-grid"><div><b>${escHtml((window.aviakassaTranslations&&window.aviakassaTranslations[window.aviakassaLang||"ru"]?.flightDetailDate)||"Дата")}</b>${escHtml(f.flight_date)}</div><div><b>${escHtml((window.aviakassaTranslations&&window.aviakassaTranslations[window.aviakassaLang||"ru"]?.flightDetailTime)||"Время")}</b>${escHtml(f.flight_time)}</div><div><b>${escHtml((window.aviakassaTranslations&&window.aviakassaTranslations[window.aviakassaLang||"ru"]?.flightDetailAirline)||"Авиакомпания")}</b>${escHtml(f.airline)}</div><div><b>${escHtml((window.aviakassaTranslations&&window.aviakassaTranslations[window.aviakassaLang||"ru"]?.flightDetailBaggage)||"Багаж")}</b>${escHtml(f.baggage)}</div><div><b>${escHtml((window.aviakassaTranslations&&window.aviakassaTranslations[window.aviakassaLang||"ru"]?.flightDetailDeparture)||"Вылет")}</b>${escHtml(f.from_airport)} (${escHtml(f.from_airport_code)})</div><div><b>${escHtml((window.aviakassaTranslations&&window.aviakassaTranslations[window.aviakassaLang||"ru"]?.flightDetailArrival)||"Прилёт")}</b>${escHtml(f.to_airport)} (${escHtml(f.to_airport_code)})</div><div><b>${escHtml((window.aviakassaTranslations&&window.aviakassaTranslations[window.aviakassaLang||"ru"]?.flightDetailPrice)||"Цена")}</b>${escHtml(f.price)} ${escHtml(f.currency||"")}</div></div><div class="view-only-note">${escHtml((window.aviakassaTranslations&&window.aviakassaTranslations[window.aviakassaLang||"ru"]?.flightDetailNote)||"Информация о рейсе доступна для просмотра.")}</div>`;box.hidden=false}catch(err){}})})();
 </script>
 <script src="script.js"></script>
-<script>
-(function(){
-  const section=document.getElementById("flightResults");
-  const tickets=document.getElementById("tpwl-tickets");
-  if(!section||!tickets)return;
-  const reveal=()=>{
-    if(tickets.children.length>0 || tickets.textContent.trim()){
-      section.hidden=false;
-    }
-  };
-  reveal();
-  new MutationObserver(reveal).observe(tickets,{childList:true,subtree:true,characterData:true});
-})();
-</script>
 </body>
 </html>

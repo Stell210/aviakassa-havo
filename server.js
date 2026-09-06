@@ -209,12 +209,8 @@ async function api(req,res,url){
     const b=await parseBody(req), password=String(b.password||""), username=safe(b.username||"admin",80).toLowerCase()||"admin";
     let user=null;
     if(pool){
-      try{
-        const q=await pool.query(`SELECT id,name,username,password_hash,role,active,permissions FROM managers WHERE username=$1 LIMIT 1`,[username]);
-        if(q.rowCount && q.rows[0].active && verifyPassword(password,q.rows[0].password_hash)) user={id:q.rows[0].id,name:q.rows[0].name,username:q.rows[0].username,role:q.rows[0].role,permissions:Array.isArray(q.rows[0].permissions)?q.rows[0].permissions:[]};
-      }catch(e){
-        console.error("Admin login database check failed:",e.message);
-      }
+      const q=await pool.query(`SELECT id,name,username,password_hash,role,active,permissions FROM managers WHERE username=$1 LIMIT 1`,[username]);
+      if(q.rowCount && q.rows[0].active && verifyPassword(password,q.rows[0].password_hash)) user={id:q.rows[0].id,name:q.rows[0].name,username:q.rows[0].username,role:q.rows[0].role,permissions:Array.isArray(q.rows[0].permissions)?q.rows[0].permissions:[]};
     }
     if(!user && username==="admin" && ADMIN_PASSWORD && password===ADMIN_PASSWORD) user={id:null,name:"Главный администратор",username:"admin",role:"admin",permissions:ALL_PERMISSIONS};
     if(!user){countFailed(ip);return send(res,401,{ok:false,error:"INVALID_PASSWORD"});}
@@ -391,7 +387,13 @@ const server=http.createServer(async(req,res)=>{
     if(u.pathname==="/admin" || u.pathname==="/admin/") u.pathname="/admin.html";
     let p=u.pathname==="/"?path.join(publicDir,"index.html"):path.join(publicDir,u.pathname.replace(/^\/+/,""));
     if(!p.startsWith(publicDir))return send(res,403,{error:"FORBIDDEN"});
-    if(fs.existsSync(p)&&fs.statSync(p).isFile()){const ext=path.extname(p).toLowerCase();res.writeHead(200,{"Content-Type":mime[ext]||"application/octet-stream"});fs.createReadStream(p).pipe(res);return;}
+    if(fs.existsSync(p)&&fs.statSync(p).isFile()){
+      const ext=path.extname(p).toLowerCase();
+      const cacheable=[".css",".js",".png",".jpg",".jpeg",".svg",".json",".ico"].includes(ext);
+      res.writeHead(200,{"Content-Type":mime[ext]||"application/octet-stream","Cache-Control":cacheable?"public, max-age=3600":"no-cache"});
+      fs.createReadStream(p).pipe(res);
+      return;
+    }
     send(res,404,{error:"NOT_FOUND"});
   }catch(e){console.error(e);send(res,500,{error:"SERVER_ERROR"});}
 });
