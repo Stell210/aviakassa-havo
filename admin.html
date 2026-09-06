@@ -25,6 +25,45 @@ body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-se
 table{min-width:1050px}th{font-size:10px;letter-spacing:.6px}td{font-size:13px;padding:13px 10px}tbody tr:hover{background:#f8fbff}.badge{padding:6px 9px}.actions{gap:6px}.modal-card,.login-card{border-radius:20px}.modal-card{box-shadow:0 28px 80px rgba(0,0,0,.22)}.login{background:radial-gradient(circle at 30% 20%,#e7f0ff,#f7f9fc 55%)}.login-card{box-shadow:0 25px 70px rgba(16,27,50,.12);padding:30px}.permission-item{border-radius:11px}@media(max-width:1000px){.layout{grid-template-columns:1fr}.side{position:sticky;top:70px}.main{padding:18px}}
 @media(max-width:650px){.topbar{padding:0 13px}.brand{font-size:17px}.main{padding:12px}.page-title h1{font-size:25px}.stats{gap:9px}.stat{padding:14px;border-radius:15px}.stat .num{font-size:24px}}
 </style>
+<style>
+/* v56 — strict mobile no-horizontal-overflow admin layout */
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+.app,.layout,.main,.side,.topbar{min-width:0;max-width:100%}
+.main{overflow-x:hidden}
+@media(max-width:1000px){
+  .topbar{width:100%;height:auto;min-height:70px;flex-wrap:nowrap;gap:10px;padding:10px 14px}
+  .brand{min-width:0;flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .user{min-width:0;flex:0 0 auto}
+  .user .langs{flex:0 0 auto}
+  .side{width:100%;max-width:100%;overflow:hidden;padding:8px 0;position:sticky;top:70px}
+  .nav{width:100%;max-width:100%;display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;padding:0 8px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .nav::-webkit-scrollbar{display:none}
+  .nav button{flex:0 0 auto;white-space:nowrap}
+  .main{width:100%;max-width:100%;padding:18px;}
+  .page-title,.toolbar,.section-head{max-width:100%;min-width:0}
+  .stats,.cards,.grid2,.grid3,.form-grid,.detail-grid,.analytics-grid{min-width:0;max-width:100%}
+}
+@media(max-width:650px){
+  .topbar{padding:9px 10px;gap:7px}
+  .brand{font-size:16px;max-width:48vw}
+  .user{gap:5px}
+  .admin-langs{margin-left:0}
+  .admin-langs button{padding:5px 6px}
+  .user .btn{padding:9px 10px}
+  .side{top:64px}
+  .main{padding:12px}
+  .page-title{align-items:flex-start;flex-wrap:wrap}
+  .page-title>button,.page-title .btn{max-width:100%;}
+  .tools{min-width:0;width:100%}
+  .tools input{min-width:0;width:100%}
+  .table-wrap{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+}
+@media(max-width:430px){
+  .brand{font-size:15px;max-width:42vw}
+  .admin-langs button{padding:4px 5px;font-size:9px}
+  .user .btn{padding:8px 8px;font-size:12px}
+}
+</style>
 </head><body>
 <div id="login" class="login"><div class="login-card"><div class="brand">✈️ Aviakassa_<span>havo</span></div><h1>Админ-панель</h1><p>Вход администратора или менеджера.</p><div class="login-row"><input id="username" class="field" placeholder="Логин" value="admin"><input id="password" class="field" type="password" placeholder="Пароль"></div><button id="loginBtn" class="btn primary">Войти</button><div class="langs admin-langs"><button data-lang="ru" class="active">RU</button><button data-lang="tj">TJ</button><button data-lang="en">EN</button></div><div id="loginMsg" class="notice hidden"></div></div></div>
 <div id="app" class="app hidden"><header class="topbar"><div class="brand">✈️ Aviakassa_<span>havo</span></div><div class="user"><span id="userLabel">Менеджер</span><div id="avatar" class="avatar">A</div><div class="langs admin-langs"><button data-lang="ru" class="active">RU</button><button data-lang="tj">TJ</button><button data-lang="en">EN</button></div><button id="logout" class="btn light">Выйти</button></div></header><div class="layout"><aside class="side"><div class="nav"><small>Управление</small><button class="active" data-tab="bookings">📋 Заявки</button><button data-tab="flights" id="flightsNav">✈️ Рейсы</button><button data-tab="offers" id="offersNav">🔥 Акции</button><button data-tab="cities" id="citiesNav">🌍 Направления</button><small>Система</small><button data-tab="managers" id="managersNav">👥 Менеджеры</button><button data-tab="settings">🔐 Безопасность</button></div></aside><main class="main">

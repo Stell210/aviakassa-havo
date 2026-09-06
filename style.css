@@ -84,3 +84,71 @@ input:focus,select:focus{outline:3px solid #1687ff22;border-color:#1687ff}
 #tpwl-search, #tpwl-tickets{
   width:100%;
 }
+
+/* v57: search is the first main screen, without the previous hero promo panel */
+.search-hero{position:relative;overflow:hidden;background:linear-gradient(135deg,#0b49c7 0%,#1769ff 48%,#54a7ff 100%);color:#fff;padding:58px 20px 70px;min-height:520px}
+.search-hero-bg{position:absolute;inset:0;background:radial-gradient(circle at 82% 15%,rgba(255,255,255,.18),transparent 30%),linear-gradient(135deg,rgba(0,40,130,.25),transparent 60%);pointer-events:none}
+.search-hero-content{position:relative;z-index:2;max-width:1120px;margin:0 auto}
+.search-hero h1{font-size:clamp(38px,5vw,62px);line-height:1.02;letter-spacing:-2.8px;margin:18px 0 10px;color:#fff}
+.search-hero p{max-width:650px;font-size:16px;line-height:1.5;color:#edf5ff;margin:0 0 24px}
+.search-hero-card{background:#fff;border-radius:24px;padding:20px;box-shadow:0 22px 70px rgba(3,25,70,.28);color:#10233f;max-width:1120px}
+.search-hero-card #tpwl-search{min-height:90px}
+.search-results-section{padding-top:70px}
+@media(max-width:600px){.search-hero{padding:34px 10px 40px;min-height:0}.search-hero-content{width:100%}.search-hero h1{font-size:38px;letter-spacing:-2px}.search-hero p{font-size:14px;margin-bottom:18px}.search-hero-card{padding:10px;border-radius:18px}.search-results-section{padding-top:50px}}
+
+/* v58 — dedicated mobile flight-search UX, inspired by modern metasearch apps */
+html,body{max-width:100%;overflow-x:hidden}
+.search-hero-content,.search-hero-card,#tpwl-search,#tpwl-tickets{min-width:0;max-width:100%}
+@media (min-width:901px){
+  .search-hero{padding:46px 24px 64px;min-height:0;background:linear-gradient(180deg,#1769ff 0%,#2b7cff 100%)}
+  .search-hero-content{max-width:1180px}
+  .search-hero h1{font-size:54px;margin:14px 0 8px}
+  .search-hero p{margin-bottom:20px}
+  .search-hero-card{padding:18px 20px;border-radius:22px}
+}
+@media (max-width:900px){
+  .nav{height:64px;padding:0 14px;gap:10px}
+  .brand{font-size:17px;white-space:nowrap;min-width:0}
+  .brand span{white-space:nowrap}
+  .nav-right{margin-left:auto;flex-shrink:0}
+  .nav-right .wa{display:none}
+  .langs{padding:2px}
+  .langs button{padding:6px 6px;font-size:10px}
+  .search-hero{padding:20px 10px 18px;min-height:0;background:#f3f7fc;color:#10233f}
+  .search-hero-bg{background:linear-gradient(180deg,#eaf3ff 0%,#f3f7fc 75%)}
+  .search-hero-content{width:100%;max-width:700px;margin:0 auto}
+  .search-hero .badge{display:none}
+  .search-hero h1{font-size:30px;line-height:1.12;letter-spacing:-1px;color:#10233f;margin:2px 6px 6px}
+  .search-hero p{font-size:13px;line-height:1.4;color:#65758b;margin:0 6px 14px;max-width:none}
+  .search-hero-card{width:100%;padding:8px;background:#fff;border:1px solid #dce5ef;border-radius:18px;box-shadow:0 10px 30px rgba(18,52,90,.10);overflow:visible}
+  .search-hero-card #tpwl-search{min-height:0}
+  .search-results-section{padding:34px 10px 45px;margin:0;max-width:100%}
+  .search-results-section .head{margin:0 4px 16px}
+  .search-results-section .head h2{font-size:28px;letter-spacing:-1px}
+  .search-results-section .head p{font-size:12px}
+  .white-label-results-wrap{width:100%;max-width:100%;overflow:visible}
+  .section{width:100%;max-width:100%;padding-left:14px;padding-right:14px}
+}
+@media (max-width:600px){
+  .nav{padding:0 10px;height:60px}
+  .brand{font-size:15px}
+  .brand:first-letter{font-size:16px}
+  .nav-right{gap:3px}
+  .langs button{padding:5px 5px}
+  .search-hero{padding:14px 8px 12px}
+  .search-hero h1{font-size:26px;margin-left:4px}
+  .search-hero p{font-size:12px;margin-left:4px;margin-bottom:10px}
+  .search-hero-card{padding:6px;border-radius:16px}
+  .search-results-section{padding:28px 8px 40px}
+  .search-results-section .head{display:block;margin:0 5px 12px}
+  .search-results-section .head h2{font-size:25px}
+  .search-results-section .head p{font-size:11px;margin-top:5px}
+  .flight-card{padding:17px;border-radius:17px}
+  .flight-route{font-size:17px}
+  .flight-meta{gap:6px}
+  .flight-meta span{padding:7px 9px;font-size:11px}
+  .flight-price{font-size:23px}
+  footer{padding:18px 12px;font-size:11px}
+}
+/* Prevent any page-level horizontal scroll; inner data tables/widgets may scroll themselves. */
+img,iframe,video,canvas,svg{max-width:100%}

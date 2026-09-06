@@ -74,26 +74,20 @@ footer{background:#fff;padding:22px 5vw}
 </header>
 
 <main id="top">
-<section class="hero">
-  <div class="hero-shade"></div>
-  <div class="hero-content">
+<section class="search-hero" id="flightSearchResults">
+  <div class="search-hero-bg"></div>
+  <div class="search-hero-content">
     <div class="badge" data-i18n="badge">🌍 Душанбе → весь мир</div>
-    <h1 data-i18n-html="heroTitle">Летите туда,<br><span>куда мечтаете.</span></h1>
-    <p data-i18n="heroText">Подберём удобный авиарейс, объясним условия и поможем оформить билет.</p>
-    <div class="actions">
-      <a class="primary" data-i18n="findTicket" href="#flightSearchResults">Найти билет ✈️</a>
-      <a class="ghost" data-i18n="writeWhatsApp" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20авиабилет." target="_blank">Написать в WhatsApp</a>
+    <h1 data-i18n="searchTitle">Найти авиабилеты</h1>
+    <p data-i18n="searchIntro">Выберите маршрут и дату — результаты поиска появятся прямо на Aviakassa_havo.</p>
+    <div class="white-label-search-wrap search-hero-card">
+      <div id="tpwl-search"></div>
     </div>
   </div>
 </section>
 
-<section class="section search-results-section" id="flightSearchResults">
-  <div class="head"><div><span class="eyebrow" data-i18n="searchEyebrow">ПОИСК БИЛЕТОВ</span><h2 data-i18n="searchTitle">Найти билеты</h2></div><p data-i18n="searchIntro">Выберите маршрут и дату — результаты поиска появятся прямо на Aviakassa_havo.</p></div>
-
-  <div class="white-label-search-wrap">
-    <div id="tpwl-search"></div>
-  </div>
-
+<section class="section search-results-section" id="flightResults">
+  <div class="head"><div><span class="eyebrow" data-i18n="currentFlights">РЕЗУЛЬТАТЫ ПОИСКА</span><h2 data-i18n="navFlights">Билеты</h2></div><p data-i18n="currentFlightsIntro">Выберите подходящий вариант — затем перейдите к продавцу для покупки.</p></div>
   <div class="white-label-results-wrap">
     <div id="tpwl-tickets"></div>
   </div>
