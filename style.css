@@ -85,409 +85,59 @@ input:focus,select:focus{outline:3px solid #1687ff22;border-color:#1687ff}
   width:100%;
 }
 
-/* v57: search is the first main screen, without the previous hero promo panel */
-.search-hero{position:relative;overflow:hidden;background:linear-gradient(135deg,#0b49c7 0%,#1769ff 48%,#54a7ff 100%);color:#fff;padding:58px 20px 70px;min-height:520px}
-.search-hero-bg{position:absolute;inset:0;background:radial-gradient(circle at 82% 15%,rgba(255,255,255,.18),transparent 30%),linear-gradient(135deg,rgba(0,40,130,.25),transparent 60%);pointer-events:none}
-.search-hero-content{position:relative;z-index:2;max-width:1120px;margin:0 auto}
-.search-hero h1{font-size:clamp(38px,5vw,62px);line-height:1.02;letter-spacing:-2.8px;margin:18px 0 10px;color:#fff}
-.search-hero p{max-width:650px;font-size:16px;line-height:1.5;color:#edf5ff;margin:0 0 24px}
-.search-hero-card{background:#fff;border-radius:24px;padding:20px;box-shadow:0 22px 70px rgba(3,25,70,.28);color:#10233f;max-width:1120px}
-.search-hero-card #tpwl-search{min-height:90px}
-.search-results-section{padding-top:70px}
-@media(max-width:600px){.search-hero{padding:34px 10px 40px;min-height:0}.search-hero-content{width:100%}.search-hero h1{font-size:38px;letter-spacing:-2px}.search-hero p{font-size:14px;margin-bottom:18px}.search-hero-card{padding:10px;border-radius:18px}.search-results-section{padding-top:50px}}
 
-/* v58 — dedicated mobile flight-search UX, inspired by modern metasearch apps */
+/* FINAL CLEAN HERO — one authoritative first-screen layout */
 html,body{max-width:100%;overflow-x:hidden}
-.search-hero-content,.search-hero-card,#tpwl-search,#tpwl-tickets{min-width:0;max-width:100%}
-@media (min-width:901px){
-  .search-hero{padding:46px 24px 64px;min-height:0;background:linear-gradient(180deg,#1769ff 0%,#2b7cff 100%)}
-  .search-hero-content{max-width:1180px}
-  .search-hero h1{font-size:54px;margin:14px 0 8px}
-  .search-hero p{margin-bottom:20px}
-  .search-hero-card{padding:18px 20px;border-radius:22px}
-}
-@media (max-width:900px){
-  .nav{height:64px;padding:0 14px;gap:10px}
-  .brand{font-size:17px;white-space:nowrap;min-width:0}
-  .brand span{white-space:nowrap}
-  .nav-right{margin-left:auto;flex-shrink:0}
-  .nav-right .wa{display:none}
-  .langs{padding:2px}
-  .langs button{padding:6px 6px;font-size:10px}
-  .search-hero{padding:20px 10px 18px;min-height:0;background:#f3f7fc;color:#10233f}
-  .search-hero-bg{background:linear-gradient(180deg,#eaf3ff 0%,#f3f7fc 75%)}
-  .search-hero-content{width:100%;max-width:700px;margin:0 auto}
-  .search-hero .badge{display:none}
-  .search-hero h1{font-size:30px;line-height:1.12;letter-spacing:-1px;color:#10233f;margin:2px 6px 6px}
-  .search-hero p{font-size:13px;line-height:1.4;color:#65758b;margin:0 6px 14px;max-width:none}
-  .search-hero-card{width:100%;padding:8px;background:#fff;border:1px solid #dce5ef;border-radius:18px;box-shadow:0 10px 30px rgba(18,52,90,.10);overflow:visible}
-  .search-hero-card #tpwl-search{min-height:0}
-  .search-results-section{padding:34px 10px 45px;margin:0;max-width:100%}
-  .search-results-section .head{margin:0 4px 16px}
-  .search-results-section .head h2{font-size:28px;letter-spacing:-1px}
-  .search-results-section .head p{font-size:12px}
-  .white-label-results-wrap{width:100%;max-width:100%;overflow:visible}
-  .section{width:100%;max-width:100%;padding-left:14px;padding-right:14px}
-}
-@media (max-width:600px){
-  .nav{padding:0 10px;height:60px}
-  .brand{font-size:15px}
-  .brand:first-letter{font-size:16px}
-  .nav-right{gap:3px}
-  .langs button{padding:5px 5px}
-  .search-hero{padding:14px 8px 12px}
-  .search-hero h1{font-size:26px;margin-left:4px}
-  .search-hero p{font-size:12px;margin-left:4px;margin-bottom:10px}
-  .search-hero-card{padding:6px;border-radius:16px}
-  .search-results-section{padding:28px 8px 40px}
-  .search-results-section .head{display:block;margin:0 5px 12px}
-  .search-results-section .head h2{font-size:25px}
-  .search-results-section .head p{font-size:11px;margin-top:5px}
-  .flight-card{padding:17px;border-radius:17px}
-  .flight-route{font-size:17px}
-  .flight-meta{gap:6px}
-  .flight-meta span{padding:7px 9px;font-size:11px}
-  .flight-price{font-size:23px}
-  footer{padding:18px 12px;font-size:11px}
-}
-/* Prevent any page-level horizontal scroll; inner data tables/widgets may scroll themselves. */
-img,iframe,video,canvas,svg{max-width:100%}
+body{padding-top:72px}
+.nav{position:fixed !important;top:0 !important;left:0 !important;right:0 !important;z-index:99999 !important;height:72px !important;background:rgba(255,255,255,.98) !important;display:flex !important;align-items:center !important;gap:18px !important}
+.nav nav{display:flex !important;align-items:center !important;gap:20px !important;flex:1 1 auto !important;min-width:0 !important;overflow-x:auto !important;white-space:nowrap !important;scrollbar-width:none !important}
+.nav nav::-webkit-scrollbar{display:none}
+.nav nav a{flex:0 0 auto;white-space:nowrap}
+.nav-right{display:flex !important;align-items:center !important;gap:8px !important;flex:0 0 auto !important}
+.nav-right .wa{display:inline-flex !important;white-space:nowrap}
+.langs{flex:0 0 auto}
 
-/* Fixed navigation: always visible while scrolling */
-.nav{position:fixed !important;top:0 !important;left:0 !important;right:0 !important;z-index:1000 !important;}
-@media(max-width:850px){body{padding-top:64px}}
-@media(max-width:600px){body{padding-top:62px}}
-
-/* v61: fully pinned site header — brand, navigation, languages and WhatsApp stay visible while scrolling */
-.nav{position:fixed !important;top:0 !important;left:0 !important;right:0 !important;z-index:99999 !important;display:flex !important;align-items:center !important;gap:18px !important;box-sizing:border-box !important;}
-.nav nav{display:flex !important;align-items:center !important;gap:20px !important;flex:1 1 auto !important;min-width:0 !important;overflow-x:auto !important;white-space:nowrap !important;scrollbar-width:none !important;}
-.nav nav::-webkit-scrollbar{display:none !important;}
-.nav nav a{flex:0 0 auto !important;white-space:nowrap !important;}
-.nav-right{display:flex !important;align-items:center !important;gap:8px !important;flex:0 0 auto !important;}
-.nav-right .wa{display:inline-flex !important;white-space:nowrap !important;}
-.langs{flex:0 0 auto !important;}
-@media(max-width:1100px){
-  .nav{gap:10px !important;padding:0 14px !important;}
-  .nav nav{gap:14px !important;}
-  .nav nav a{font-size:12px !important;}
-  .nav-right .wa{padding:8px 10px !important;font-size:11px !important;}
-}
-@media(max-width:850px){
-  body{padding-top:64px !important;}
-  .nav{height:64px !important;overflow:hidden !important;}
-  .brand{flex:0 0 auto !important;}
-  .nav nav{display:flex !important;flex:1 1 auto !important;min-width:0 !important;overflow-x:auto !important;}
-  .nav-right{margin-left:0 !important;}
-  .nav-right .wa{display:inline-flex !important;}
-}
-@media(max-width:600px){
-  body{padding-top:60px !important;}
-  .nav{height:60px !important;padding:0 8px !important;gap:7px !important;}
-  .brand{font-size:14px !important;}
-  .brand span{display:inline !important;}
-  .nav nav{gap:12px !important;}
-  .nav nav a{font-size:11px !important;}
-  .nav-right{gap:4px !important;}
-  .langs button{padding:5px 4px !important;font-size:9px !important;}
-  .nav-right .wa{padding:7px 8px !important;font-size:10px !important;}
-}
-
-
-/* v62 — Dushanbe Tower hero: blue branded background with the real project photo on the right */
-.search-hero{
-  background:linear-gradient(110deg,#063fba 0%,#0868e8 48%,#168de9 100%) !important;
-  min-height:600px !important;
-  padding:76px 20px 96px !important;
-}
-.search-hero-bg{
-  position:absolute !important;
-  inset:0 !important;
-  overflow:hidden !important;
-  pointer-events:none !important;
-  background:
-    radial-gradient(circle at 77% 20%,rgba(123,205,255,.28),transparent 24%),
-    linear-gradient(90deg,rgba(4,61,170,.88) 0%,rgba(4,89,205,.62) 45%,rgba(8,116,226,.10) 78%),
-    linear-gradient(180deg,rgba(7,92,211,.12),rgba(0,48,145,.30)) !important;
-}
-.dushanbe-tower-art{
-  position:absolute;
-  right:-4%;
-  top:0;
-  width:59%;
-  height:100%;
-  background-image:url('aviakassa-dushanbe-aircraft.webp');
-  background-repeat:no-repeat;
-  background-position:center center;
-  background-size:cover;
-  filter:saturate(1.02) contrast(1.02);
-  opacity:.96;
-  -webkit-mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.28) 10%,#000 30%,#000 100%);
-  mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.28) 10%,#000 30%,#000 100%);
-}
-.tower-label{
-  position:absolute;
-  right:29%;
-  top:49%;
-  color:#fff;
-  font-size:14px;
-  line-height:1.25;
-  letter-spacing:.12em;
-  text-shadow:0 2px 12px rgba(0,35,100,.55);
-  font-weight:600;
-}
-.search-hero-content{max-width:1180px !important;}
-.search-hero h1{
-  max-width:720px;
-  font-size:clamp(44px,5.8vw,72px) !important;
-  letter-spacing:-3.2px !important;
-  text-shadow:0 3px 20px rgba(0,30,100,.16);
-}
-.search-hero p{font-size:18px !important;max-width:680px !important;}
-.search-hero-card{
-  position:relative;
-  z-index:4;
-  max-width:1000px !important;
-  margin-top:34px;
-  border-radius:22px !important;
-  box-shadow:0 24px 70px rgba(0,31,92,.30) !important;
-}
-.search-hero .badge{display:inline-flex !important;background:rgba(255,255,255,.13) !important;border:1px solid rgba(255,255,255,.28) !important;color:#fff !important;backdrop-filter:blur(8px);}
-@media(max-width:900px){
-  .search-hero{padding:58px 16px 68px !important;min-height:560px !important;}
-  .dushanbe-tower-art{width:78%;right:-26%;opacity:.48;background-position:center;}
-  .tower-label{right:9%;top:35%;font-size:11px;}
-  .search-hero-bg{background:linear-gradient(90deg,rgba(4,61,170,.94) 0%,rgba(4,93,211,.72) 58%,rgba(4,93,211,.35) 100%) !important;}
-}
-@media(max-width:600px){
-  .search-hero{padding:38px 10px 44px !important;min-height:520px !important;background:linear-gradient(180deg,#075bcf 0%,#147be7 100%) !important;}
-  .dushanbe-tower-art{width:112%;height:62%;right:-34%;top:auto;bottom:-5%;opacity:.34;background-size:cover;}
-  .tower-label{right:8%;top:auto;bottom:29%;font-size:9px;}
-  .search-hero-bg{background:linear-gradient(180deg,rgba(5,83,197,.30) 0%,rgba(5,83,197,.50) 100%) !important;}
-  .search-hero h1{font-size:39px !important;letter-spacing:-2.2px !important;max-width:100%;}
-  .search-hero p{font-size:14px !important;max-width:100% !important;}
-  .search-hero-card{margin-top:22px;padding:8px !important;}
-}
-
-/* === Aviakassa_havo visual hero: Burj Dushanbe reference layout === */
-body{padding-top:72px;background:#f3f7fc}
-.nav{height:72px;background:rgba(255,255,255,.98);position:fixed;top:0;left:0;right:0;z-index:1000}
-.search-hero{position:relative;min-height:735px;overflow:hidden;background:linear-gradient(115deg,#0753cf 0%,#0a68e8 47%,#1b91ef 100%);color:#fff}
-.search-hero-bg{position:absolute;inset:0;z-index:0;pointer-events:none}
-.tower-photo{position:absolute;right:0;top:0;width:57%;height:100%;background-image:url("aviakassa-dushanbe-aircraft.webp");background-size:cover;background-position:center 52%;filter:saturate(1.03) contrast(1.02)}
-.tower-fade{position:absolute;inset:0;background:linear-gradient(90deg,#0753cf 0%,rgba(7,83,207,.96) 25%,rgba(7,83,207,.45) 52%,rgba(7,83,207,.02) 76%),linear-gradient(0deg,rgba(3,54,145,.55),transparent 45%)}
-.tower-label{position:absolute;right:31%;top:43%;font-size:15px;line-height:1.2;letter-spacing:.5px;font-weight:500;text-align:left;text-shadow:0 2px 8px rgba(0,0,0,.2)}
-.search-hero-content{position:relative;z-index:2;max-width:1410px;margin:0 auto;padding:60px 4.1vw 30px}
-.hero-copy{max-width:760px}
-.hero-kicker{font-size:12px;letter-spacing:5px;color:rgba(255,255,255,.58);font-weight:500;margin:3px 0 19px}
-.hero-copy h1{font-size:clamp(50px,5.6vw,78px);line-height:.98;letter-spacing:-3.5px;margin:0 0 20px;font-weight:800;color:#fff}
-.hero-copy h1 span{color:#7eeaff}
-.hero-copy p{font-size:21px;line-height:1.45;max-width:700px;margin:0;color:rgba(255,255,255,.78)}
-.hero-benefits{display:flex;gap:38px;margin-top:31px;align-items:center}
-.hero-benefits>div{display:flex;align-items:center;gap:12px;min-width:135px}
-.hero-benefits b{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);font-size:25px;color:#fff}
-.hero-benefits span{font-size:13px;line-height:1.25;font-weight:700;color:#fff}
-.search-hero-card{position:relative;z-index:3;margin-top:46px;max-width:1000px;background:#fff;border-radius:18px;padding:19px 26px 14px;box-shadow:0 18px 55px rgba(0,35,105,.24);border:0}
-#tpwl-search{min-height:85px}
-.hero-stats{display:flex;align-items:center;gap:48px;max-width:1000px;margin-top:35px;padding:17px 27px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);border-radius:17px;backdrop-filter:blur(5px)}
-.hero-stats>div{display:flex;align-items:center;gap:13px;min-width:150px}
-.hero-stats>div>b{font-size:29px;color:#fff;font-weight:700}
-.hero-stats span{display:flex;flex-direction:column;line-height:1.1}
-.hero-stats strong{font-size:22px;color:#fff}
-.hero-stats small{font-size:12px;color:rgba(255,255,255,.82);margin-top:4px}
-.hero-motto{position:absolute;right:4.2vw;bottom:34px;font-size:18px;line-height:1.25;font-style:italic;color:#fff;transform:rotate(-4deg);max-width:190px;text-align:left}
-.search-results-section{margin-top:0;padding-top:0}
-@media(max-width:1100px){
- .nav nav{gap:16px}
- .search-hero-content{padding-top:48px}
- .hero-benefits{gap:20px}
- .hero-stats{gap:22px}
- .tower-label{right:27%}
-}
-@media(max-width:900px){
- .nav nav{display:none}
- .search-hero{min-height:760px}
- .tower-photo{width:72%;height:48%;top:auto;bottom:0;background-position:center bottom;opacity:.95}
- .tower-fade{background:linear-gradient(180deg,#0753cf 0%,rgba(7,83,207,.9) 23%,rgba(7,83,207,.15) 63%,rgba(7,83,207,.45) 100%)}
- .tower-label{right:8%;top:auto;bottom:220px;font-size:12px}
- .search-hero-content{padding:45px 6vw 28px}
- .hero-copy h1{font-size:54px}
- .hero-copy p{font-size:17px}
- .hero-benefits{flex-wrap:wrap;gap:16px 25px}
- .hero-benefits>div{min-width:125px}
- .search-hero-card{margin-top:30px;padding:12px 12px 8px}
- .hero-stats{gap:15px;overflow:hidden;max-width:100%;padding:14px 15px}
- .hero-stats>div{min-width:125px}
- .hero-stats>div:nth-child(3),.hero-stats>div:nth-child(4){display:none}
- .hero-motto{display:none}
-}
-@media(max-width:600px){
- body{padding-top:62px}
- .nav{height:62px;padding:0 14px}
- .brand{font-size:16px}
- .nav-right{gap:5px}
- .langs button{padding:6px 7px}
- .wa.small{padding:9px 10px;font-size:12px}
- .search-hero{min-height:690px}
- .search-hero-content{padding:34px 18px 22px}
- .hero-kicker{font-size:9px;letter-spacing:3px;margin-bottom:14px}
- .hero-copy h1{font-size:42px;letter-spacing:-2px;line-height:1.02}
- .hero-copy p{font-size:15px}
- .hero-benefits{margin-top:21px;gap:10px 12px}
- .hero-benefits>div{min-width:calc(50% - 6px);gap:8px}
- .hero-benefits b{width:35px;height:35px;font-size:18px}
- .hero-benefits span{font-size:10px}
- .search-hero-card{margin-top:23px;border-radius:15px;padding:7px}
- .hero-stats{margin-top:18px;padding:11px;border-radius:14px;gap:9px}
- .hero-stats>div{min-width:105px;gap:7px}
- .hero-stats>div>b{font-size:20px}
- .hero-stats strong{font-size:16px}
- .hero-stats small{font-size:9px}
- .tower-photo{width:100%;height:44%;background-size:cover}
- .tower-fade{background:linear-gradient(180deg,#0753cf 0%,#0753cf 32%,rgba(7,83,207,.25) 68%,rgba(7,83,207,.55) 100%)}
- .tower-label{bottom:150px;right:7%;font-size:10px}
-}
-
-
-/* FINAL HERO — faithful to the approved Burj Dushanbe reference */
-.search-hero{
-  position:relative !important;
-  overflow:hidden !important;
-  min-height:760px !important;
-  padding:0 !important;
-  background:#0869df !important;
-  color:#fff !important;
-}
-.search-hero-bg{
-  position:absolute !important;
-  inset:0 !important;
-  z-index:0 !important;
-  pointer-events:none !important;
-  background:linear-gradient(90deg,#0753cf 0%,#075fd8 35%,rgba(9,111,226,.60) 57%,rgba(20,137,235,.08) 82%),linear-gradient(180deg,rgba(4,61,160,.05),rgba(3,54,145,.30)) !important;
-}
-.tower-photo-img{
-  position:absolute !important;
-  right:0 !important;
-  top:0 !important;
-  width:57% !important;
-  height:100% !important;
-  object-fit:cover !important;
-  object-position:center 52% !important;
-  opacity:1 !important;
-  filter:saturate(1.04) contrast(1.02) !important;
-  z-index:0 !important;
-}
-.tower-fade{
-  position:absolute !important;
-  inset:0 !important;
-  z-index:1 !important;
-  background:linear-gradient(90deg,#0753cf 0%,rgba(7,83,207,.98) 19%,rgba(7,83,207,.82) 34%,rgba(7,83,207,.40) 53%,rgba(7,83,207,.06) 76%),linear-gradient(0deg,rgba(3,54,145,.46),transparent 44%) !important;
-}
-.tower-label{
-  z-index:2 !important;
-  right:30% !important;
-  top:43% !important;
-  font-size:15px !important;
-  line-height:1.18 !important;
-  letter-spacing:.06em !important;
-  color:#fff !important;
-  text-shadow:0 2px 10px rgba(0,25,80,.45) !important;
-}
-.search-hero-content{
-  position:relative !important;
-  z-index:3 !important;
-  max-width:1410px !important;
-  min-height:760px !important;
-  margin:0 auto !important;
-  padding:64px 4.1vw 34px !important;
-}
+.search-hero{position:relative !important;overflow:hidden !important;min-height:760px !important;padding:0 !important;background:#0869df !important;color:#fff !important}
+.search-hero-bg{position:absolute !important;inset:0 !important;z-index:0 !important;pointer-events:none !important;background:linear-gradient(90deg,#0753cf 0%,#075fd8 35%,rgba(9,111,226,.58) 58%,rgba(20,137,235,.08) 82%) !important}
+.tower-photo-img{position:absolute !important;right:0 !important;top:0 !important;width:61% !important;height:100% !important;object-fit:cover !important;object-position:center center !important;opacity:1 !important;filter:saturate(1.04) contrast(1.03) !important;-webkit-mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.32) 12%,#000 34%,#000 100%);mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.32) 12%,#000 34%,#000 100%)}
+.tower-fade{position:absolute !important;inset:0 !important;z-index:1 !important;background:linear-gradient(90deg,#0753cf 0%,rgba(7,83,207,.98) 18%,rgba(7,83,207,.80) 34%,rgba(7,83,207,.35) 53%,rgba(7,83,207,.04) 78%),linear-gradient(0deg,rgba(3,54,145,.48),transparent 48%) !important}
+.tower-label{position:absolute !important;z-index:2 !important;right:29% !important;top:43% !important;color:#fff !important;font-size:15px !important;line-height:1.18 !important;letter-spacing:.06em !important;font-weight:600 !important;text-shadow:0 2px 10px rgba(0,25,80,.45) !important}
+.search-hero-content{position:relative !important;z-index:3 !important;max-width:1410px !important;min-height:760px !important;margin:0 auto !important;padding:62px 4.1vw 34px !important}
 .hero-copy{max-width:760px !important}
-.hero-kicker{
-  font-size:12px !important;
-  letter-spacing:5px !important;
-  color:rgba(255,255,255,.62) !important;
-  margin:2px 0 18px !important;
-}
-.hero-copy h1{
-  font-size:clamp(52px,5.65vw,80px) !important;
-  line-height:.98 !important;
-  letter-spacing:-3.8px !important;
-  margin:0 0 18px !important;
-  font-weight:800 !important;
-  color:#fff !important;
-}
+.hero-kicker{font-size:12px !important;letter-spacing:5px !important;color:rgba(255,255,255,.62) !important;font-weight:500 !important;margin:2px 0 18px !important}
+.hero-copy h1{font-size:clamp(52px,5.65vw,80px) !important;line-height:.98 !important;letter-spacing:-3.8px !important;margin:0 0 18px !important;font-weight:800 !important;color:#fff !important;text-shadow:0 3px 20px rgba(0,30,100,.16) !important}
 .hero-copy h1 span{color:#79eaff !important}
-.hero-copy p{
-  font-size:20px !important;
-  line-height:1.45 !important;
-  max-width:700px !important;
-  margin:0 !important;
-  color:rgba(255,255,255,.82) !important;
-}
-.hero-benefits{
-  display:flex !important;
-  align-items:center !important;
-  gap:30px !important;
-  margin-top:30px !important;
-}
-.hero-benefits>div{min-width:135px !important;gap:11px !important}
-.hero-benefits b{
-  width:46px !important;height:46px !important;
-  flex:0 0 46px !important;
-  border-radius:50% !important;
-  display:grid !important;place-items:center !important;
-  background:rgba(255,255,255,.11) !important;
-  border:1px solid rgba(255,255,255,.18) !important;
-  font-size:24px !important;
-}
-.hero-benefits span{font-size:13px !important;line-height:1.25 !important;font-weight:700 !important}
-.search-hero-card{
-  position:relative !important;
-  z-index:4 !important;
-  max-width:1000px !important;
-  margin-top:44px !important;
-  padding:18px 26px 13px !important;
-  background:#fff !important;
-  border:0 !important;
-  border-radius:18px !important;
-  box-shadow:0 22px 60px rgba(0,35,105,.28) !important;
-}
-#tpwl-search{min-height:85px !important}
-.hero-stats{
-  display:flex !important;
-  align-items:center !important;
-  gap:42px !important;
-  max-width:1000px !important;
-  margin-top:34px !important;
-  padding:16px 27px !important;
-  border:1px solid rgba(255,255,255,.20) !important;
-  background:rgba(255,255,255,.08) !important;
-  border-radius:17px !important;
-  backdrop-filter:blur(5px) !important;
-}
-.hero-stats>div{min-width:150px !important;gap:12px !important}
-.hero-stats>div>b{font-size:29px !important;color:#fff !important}
+.hero-copy p{font-size:20px !important;line-height:1.45 !important;max-width:700px !important;margin:0 !important;color:rgba(255,255,255,.82) !important}
+.hero-benefits{display:flex !important;align-items:center !important;gap:30px !important;margin-top:30px !important}
+.hero-benefits>div{display:flex !important;align-items:center !important;gap:11px !important;min-width:135px !important}
+.hero-benefits b{width:46px !important;height:46px !important;flex:0 0 46px !important;border-radius:50% !important;display:grid !important;place-items:center !important;background:rgba(255,255,255,.11) !important;border:1px solid rgba(255,255,255,.18) !important;font-size:24px !important;color:#fff !important}
+.hero-benefits span{font-size:13px !important;line-height:1.25 !important;font-weight:700 !important;color:#fff !important}
+.search-hero-card{position:relative !important;z-index:4 !important;max-width:1000px !important;margin-top:44px !important;padding:18px 26px 13px !important;background:#fff !important;border:0 !important;border-radius:18px !important;box-shadow:0 22px 60px rgba(0,35,105,.28) !important;color:#10233f !important}
+#tpwl-search{width:100% !important;min-height:85px !important}
+.hero-stats{display:flex !important;align-items:center !important;gap:42px !important;max-width:1000px !important;margin-top:34px !important;padding:16px 27px !important;border:1px solid rgba(255,255,255,.20) !important;background:rgba(255,255,255,.08) !important;border-radius:17px !important;backdrop-filter:blur(5px) !important}
+.hero-stats>div{display:flex !important;align-items:center !important;gap:12px !important;min-width:150px !important}
+.hero-stats>div>b{font-size:29px !important;color:#fff !important;font-weight:700 !important}
+.hero-stats span{display:flex !important;flex-direction:column !important;line-height:1.1 !important}
 .hero-stats strong{font-size:22px !important;color:#fff !important}
-.hero-stats small{font-size:12px !important;color:rgba(255,255,255,.84) !important}
-.hero-motto{
-  position:absolute !important;
-  right:3.5vw !important;
-  bottom:38px !important;
-  z-index:3 !important;
-  font-size:18px !important;
-  line-height:1.25 !important;
-  font-style:italic !important;
-  color:#fff !important;
-  transform:rotate(-4deg) !important;
-  max-width:190px !important;
-}
+.hero-stats small{font-size:12px !important;color:rgba(255,255,255,.84) !important;margin-top:4px !important}
+.hero-motto{position:absolute !important;right:3.5vw !important;bottom:38px !important;z-index:3 !important;font-size:18px !important;line-height:1.25 !important;font-style:italic !important;color:#fff !important;transform:rotate(-4deg) !important;max-width:190px !important}
+.search-results-section{margin-top:0 !important;padding-top:0 !important}
+
 @media(max-width:1100px){
+  .nav{gap:10px !important;padding:0 14px !important}
+  .nav nav{gap:14px !important}
+  .nav nav a{font-size:12px !important}
+  .nav-right .wa{padding:8px 10px !important;font-size:11px !important}
   .search-hero-content{padding-left:5vw !important;padding-right:5vw !important}
   .hero-benefits{gap:18px !important}
   .hero-stats{gap:20px !important}
-  .tower-photo-img{width:58% !important}
-  .tower-label{right:26% !important}
+  .tower-photo-img{width:61% !important}
+  .tower-label{right:25% !important}
 }
 @media(max-width:900px){
+  body{padding-top:64px !important}
+  .nav{height:64px !important;overflow:hidden !important}
+  .nav nav{display:flex !important;overflow-x:auto !important}
   .search-hero{min-height:850px !important}
   .search-hero-content{min-height:850px !important;padding:46px 6vw 28px !important}
   .tower-photo-img{width:100% !important;height:48% !important;top:auto !important;bottom:0 !important;object-position:center bottom !important;opacity:.78 !important}
@@ -504,14 +154,24 @@ body{padding-top:72px;background:#f3f7fc}
   .hero-motto{display:none !important}
 }
 @media(max-width:600px){
+  body{padding-top:60px !important}
+  .nav{height:60px !important;padding:0 8px !important;gap:7px !important}
+  .brand{font-size:14px !important}
+  .nav nav{gap:12px !important}
+  .nav nav a{font-size:11px !important}
+  .nav-right{gap:4px !important}
+  .langs button{padding:5px 4px !important;font-size:9px !important}
+  .nav-right .wa{padding:7px 8px !important;font-size:10px !important}
   .search-hero{min-height:720px !important}
   .search-hero-content{min-height:720px !important;padding:32px 10px 20px !important}
-  .tower-photo-img{height:42% !important;opacity:.58 !important}
-  .hero-kicker{font-size:9px !important;letter-spacing:3px !important}
-  .hero-copy h1{font-size:39px !important;letter-spacing:-2px !important}
+  .tower-photo-img{width:92% !important;height:50% !important;right:0 !important;top:auto !important;bottom:0 !important;opacity:.72 !important;object-position:center center !important}
+  .tower-fade{background:linear-gradient(180deg,#0753cf 0%,#0753cf 32%,rgba(7,83,207,.25) 68%,rgba(7,83,207,.55) 100%) !important}
+  .tower-label{bottom:150px !important;right:7% !important;font-size:10px !important}
+  .hero-kicker{font-size:9px !important;letter-spacing:3px !important;margin-bottom:14px !important}
+  .hero-copy h1{font-size:39px !important;letter-spacing:-2px !important;line-height:1.02 !important}
   .hero-copy p{font-size:14px !important}
   .hero-benefits{gap:12px 16px !important;margin-top:20px !important}
-  .hero-benefits>div{min-width:135px !important}
+  .hero-benefits>div{min-width:calc(50% - 8px) !important}
   .hero-benefits b{width:38px !important;height:38px !important;flex-basis:38px !important;font-size:19px !important}
   .hero-benefits span{font-size:11px !important}
   .search-hero-card{margin-top:22px !important;padding:7px !important;border-radius:16px !important}
@@ -520,32 +180,4 @@ body{padding-top:72px;background:#f3f7fc}
   .hero-stats>div:nth-child(3),.hero-stats>div:nth-child(4){display:flex !important}
   .hero-stats strong{font-size:17px !important}
   .hero-stats small{font-size:10px !important}
-}
-
-
-/* Final visual hero image: generated Dushanbe/Aviakassahavo campaign artwork */
-.tower-photo-img{
-  position:absolute;
-  right:0;
-  top:0;
-  width:62%;
-  height:100%;
-  object-fit:cover;
-  object-position:center center;
-  filter:saturate(1.04) contrast(1.03);
-  opacity:1;
-  -webkit-mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.35) 12%,#000 34%,#000 100%);
-  mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.35) 12%,#000 34%,#000 100%);
-}
-.search-hero-bg .tower-fade{
-  z-index:2;
-}
-.search-hero-bg .tower-label{
-  z-index:3;
-}
-@media(max-width:900px){
-  .tower-photo-img{width:78%;right:-10%;opacity:.62;object-position:center center;}
-}
-@media(max-width:600px){
-  .tower-photo-img{width:112%;height:62%;right:-34%;top:auto;bottom:-5%;opacity:.40;object-position:center center;}
 }

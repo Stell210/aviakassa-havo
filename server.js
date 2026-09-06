@@ -230,9 +230,13 @@ async function api(req,res,url){
 
   if(url.pathname.startsWith("/api/admin/")){
     const user=authorized(req); if(!user) return send(res,401,{ok:false,error:"UNAUTHORIZED"});
-    if(!pool) return send(res,503,{ok:false,error:"DATABASE_NOT_CONFIGURED"});
 
+    // Session validation must not depend on PostgreSQL. The master admin can
+    // authenticate with Render's ADMIN_PASSWORD even when the database is
+    // temporarily unavailable. Database-backed admin data still requires pool.
     if(req.method==="GET" && url.pathname==="/api/admin/me") return send(res,200,{ok:true,user:{id:user.id,name:user.name,username:user.username,role:user.role,permissions:user.permissions||[]}});
+
+    if(!pool) return send(res,503,{ok:false,error:"DATABASE_NOT_CONFIGURED",message:"DATABASE_URL is not configured or the database is unavailable."});
 
     if(req.method==="GET" && url.pathname==="/api/admin/bookings"){
       if(!hasPermission(user,"bookings_view")) return send(res,403,{ok:false,error:"FORBIDDEN"});

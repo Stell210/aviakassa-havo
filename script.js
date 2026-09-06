@@ -117,9 +117,9 @@ Object.assign(translations.tj,{navPopular:"Машҳур",heroKicker:"— БЕШ�
 function setLang(l){
  const t=translations[l]||translations.ru, x=extraTranslations[l]||extraTranslations.ru;
  lang=l; localStorage.setItem("aviakassa_lang",l); window.aviakassaLang=l; document.documentElement.lang=l; document.title=t.siteTitle||document.title;
- document.querySelectorAll("[data-i18n]").forEach(el=>{const k=el.dataset.i18n;if(t[k]!==undefined)el.textContent=t[k]});
- document.querySelectorAll("[data-i18n-html]").forEach(el=>{const k=el.dataset.i18nHtml;if(t[k]!==undefined)el.innerHTML=t[k]});
- document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{const k=el.dataset.i18nPlaceholder;if(x[k]!==undefined)el.placeholder=x[k]}); document.querySelectorAll("[data-i18n-aria]").forEach(el=>{const k=el.dataset.i18nAria;if(k==="clear")el.setAttribute("aria-label",l==="en"?"Clear":l==="tj"?"Тоза кардан":"Очистить")}); document.querySelectorAll("[data-i18n]").forEach(el=>{const k=el.dataset.i18n;if(t[k]!==undefined)el.textContent=t[k];else if(x[k]!==undefined)el.textContent=x[k]});
+ document.querySelectorAll("[data-i18n]").forEach(el=>{const k=el.dataset.i18n;if(t[k]!==undefined)el.textContent=t[k];else if(x[k]!==undefined)el.textContent=x[k]});
+ document.querySelectorAll("[data-i18n-html]").forEach(el=>{const k=el.dataset.i18nHtml;if(t[k]!==undefined)el.innerHTML=t[k];else if(x[k]!==undefined)el.innerHTML=x[k]});
+ document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{const k=el.dataset.i18nPlaceholder;if(x[k]!==undefined)el.placeholder=x[k]}); document.querySelectorAll("[data-i18n-aria]").forEach(el=>{const k=el.dataset.i18nAria;if(k==="clear")el.setAttribute("aria-label",l==="en"?"Clear":l==="tj"?"Тоза кардан":"Очистить")});
  document.querySelectorAll("[data-lang]").forEach(b=>b.classList.toggle("active",b.dataset.lang===l));
  document.querySelectorAll("[data-i18n-aria]").forEach(el=>{const k=el.dataset.i18nAria;if(k==="whatsapp")el.setAttribute("aria-label","WhatsApp");if(k==="clear")el.setAttribute("aria-label",l==="en"?"Clear":l==="tj"?"Тоза кардан":"Очистить")});
  const sl={airline:document.getElementById("sfAirline"),airport:document.getElementById("sfAirport"),stops:document.getElementById("sfStops"),sort:document.getElementById("sfSort")};
