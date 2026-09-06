@@ -86,8 +86,8 @@ function updateCityList(l){
 }
 
 function setLang(l){
- const t=translations[l]||translations.ru, x=extraTranslations[l]||extraTranslations.ru;
  lang=l; localStorage.setItem("aviakassa_lang",l); window.aviakassaLang=l; document.documentElement.lang=l; document.title=t.siteTitle||document.title;
+ const t=translations[l]||translations.ru, x=extraTranslations[l]||extraTranslations.ru;
  document.querySelectorAll("[data-i18n]").forEach(el=>{const k=el.dataset.i18n;if(t[k]!==undefined)el.textContent=t[k]});
  document.querySelectorAll("[data-i18n-html]").forEach(el=>{const k=el.dataset.i18nHtml;if(t[k]!==undefined)el.innerHTML=t[k]});
  document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{const k=el.dataset.i18nPlaceholder;if(x[k]!==undefined)el.placeholder=x[k]}); document.querySelectorAll("[data-i18n-aria]").forEach(el=>{const k=el.dataset.i18nAria;if(k==="clear")el.setAttribute("aria-label",l==="en"?"Clear":l==="tj"?"Тоза кардан":"Очистить")}); document.querySelectorAll("[data-i18n]").forEach(el=>{const k=el.dataset.i18n;if(t[k]!==undefined)el.textContent=t[k];else if(x[k]!==undefined)el.textContent=x[k]});
@@ -195,8 +195,8 @@ window.addEventListener("aviakassa-language-change",()=>{const x=extraTranslatio
   }
   async function loadPublicContent(){
     try{
-      // Do not compete with the Travelpayouts flight-search widget during first paint/search.
-      const [or,dr]=await Promise.all([fetch("/api/offers"),fetch("/api/directions")]);
+      const [fr,or,dr]=await Promise.all([fetch("/api/flights"),fetch("/api/offers"),fetch("/api/directions")]);
+      if(fr.ok){const data=await fr.json(); renderPublicFlights(data.flights||[]);}
       if(or.ok){const data=await or.json(); renderPublicOffers(data.offers||[]);}
       if(dr.ok){const data=await dr.json(); renderPublicDirections(data.directions||[]);}
     }catch(e){console.warn("Public content load failed",e);}
@@ -250,9 +250,7 @@ window.addEventListener("aviakassa-language-change",()=>{const x=extraTranslatio
     const y=$("year"); if(y)y.textContent=new Date().getFullYear();
     // Apply the saved language after all handlers are installed.
     setLang(lang);
-    // Load secondary content only when the browser is idle so the ticket search starts first.
-    const idle=window.requestIdleCallback||function(cb){setTimeout(cb,1800)};
-    idle(()=>loadPublicContent());
+    loadPublicContent();
     // Keep the current language active visually.
     document.querySelectorAll("[data-lang]").forEach(b=>b.classList.toggle("active",b.dataset.lang===lang));
   }
