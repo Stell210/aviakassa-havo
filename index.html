@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Aviakassa_havo — авиабилеты и подбор рейсов из Душанбе и других городов.">
+<title>Aviakassa_havo — Авиабилеты</title>
+<link rel="stylesheet" href="style.css">
+
+<!-- Travelpayouts White Label Web widget -->
+<script nowprocket data-noptimize="1" data-cfasync="false" data-wpfc-render="false" seraph-accel-crit="1" data-no-defer="1">
+  (function () {
+        // White Label Widget: explicitly keep search results on this page.
+        window.TPWL_CONFIGURATION = {
+          ...(window.TPWL_CONFIGURATION || {}),
+          resultsURL: window.location.origin + window.location.pathname
+        };
+        var script = document.createElement("script");
+        script.async = 1;
+        script.type = "module";
+        script.src = "https://tpemb.com/wl_web/main.js?wl_id=21705";
+        document.head.appendChild(script);
+      })();
+</script>
+
+<!-- Travelpayouts Drive intentionally disabled on the public page. -->
+<style>
+/* v52 — Aviakassa_havo modern flight-search redesign (Aviasales-inspired UX, original branding) */
+:root{--ah-blue:#1769ff;--ah-blue-dark:#0b45c5;--ah-ink:#172033;--ah-muted:#6f7b91;--ah-bg:#f4f7fb;--ah-card:#fff;--ah-line:#e3e9f2;--ah-yellow:#ffd21f}
+body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--ah-bg);color:var(--ah-ink)}
+.nav{height:68px;padding:0 max(22px,5vw);background:rgba(255,255,255,.96);backdrop-filter:blur(14px);border-bottom:1px solid #e8edf4;box-shadow:0 2px 14px rgba(20,35,60,.04)}
+.brand{font-size:20px;letter-spacing:-.4px;color:#15213a}.brand:first-letter{font-size:21px}
+.nav nav{gap:22px;font-size:13px}.nav nav a{transition:.18s;color:#59677c}.nav nav a:hover{color:var(--ah-blue)}
+.nav-right{gap:8px}.langs{background:#f2f5f9;border-radius:12px}.langs button{padding:7px 8px}.langs button.active{color:var(--ah-blue)}
+.wa{background:#18243a;border-radius:12px;padding:10px 14px}
+.hero{min-height:560px;background:radial-gradient(circle at 78% 25%,rgba(74,137,255,.35),transparent 30%),linear-gradient(135deg,#0b49c7 0%,#1769ff 46%,#54a7ff 100%);}
+.hero:before{content:"";position:absolute;width:620px;height:620px;right:-170px;top:-180px;border-radius:50%;border:1px solid rgba(255,255,255,.18);box-shadow:0 0 0 80px rgba(255,255,255,.035),0 0 0 160px rgba(255,255,255,.025)}
+.hero:after{content:"✈";position:absolute;right:8%;bottom:70px;font-size:150px;line-height:1;color:rgba(255,255,255,.11);transform:rotate(-13deg)}
+.hero-shade{background:linear-gradient(90deg,rgba(7,49,139,.42),rgba(7,49,139,.02))}
+.hero-content{max-width:1120px;margin:auto;padding:88px 5vw 155px}.badge{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.3);padding:8px 12px}.hero h1{font-size:clamp(44px,6.4vw,72px);letter-spacing:-3.5px;line-height:1.02;margin:20px 0 16px}.hero h1 span{color:#fff}.hero p{font-size:17px;max-width:570px;color:#f1f6ff}.actions{margin-top:24px}.primary{background:var(--ah-yellow);color:#172033;border-radius:12px;padding:14px 21px;box-shadow:0 7px 18px rgba(0,0,0,.12)}.ghost{border-radius:12px;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.42);padding:14px 20px}
+.search-results-section{max-width:1180px;padding:0 24px 72px;position:relative;margin-top:-92px;z-index:5}.search-results-section .head{background:#fff;border:1px solid var(--ah-line);border-bottom:0;border-radius:24px 24px 0 0;padding:28px 30px 8px;margin:0}.search-results-section .head h2{font-size:32px;margin:5px 0}.search-results-section .head p{font-size:13px}.white-label-search-wrap{background:#fff;border:1px solid var(--ah-line);border-top:0;padding:10px 26px 26px;border-radius:0 0 24px 24px;box-shadow:0 22px 55px rgba(20,45,90,.13)}
+.white-label-results-wrap{margin-top:22px;background:transparent}.white-label-results-wrap:empty{display:none}
+.section{max-width:1180px;padding:76px 5vw}.section .head h2,.step-inner h2{font-size:38px;letter-spacing:-1.7px}.eyebrow{color:var(--ah-blue);font-size:10px;letter-spacing:1.6px}
+.dynamic-section{padding-top:25px}.flight-card,.route,.offer,.benefit-grid>div,.mini-grid>div,.faq-list details,.contact-box{border-color:var(--ah-line);box-shadow:0 8px 25px rgba(16,35,63,.045);border-radius:18px}.flight-card:hover,.route:hover,.offer:hover{box-shadow:0 15px 34px rgba(16,35,63,.08)}
+.routes{grid-template-columns:repeat(3,1fr)}.route{padding:19px}.route b{font-size:16px}.route i{color:var(--ah-blue)}
+.offer-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.offer{padding:18px}.benefit-grid{gap:18px}.benefit-grid>div{padding:25px}.mini-grid>div{padding:22px}
+.steps{background:linear-gradient(135deg,#101d35,#173866)}.step-inner{max-width:1180px;padding:78px 5vw}.step-grid>div{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.13)}
+.social-card,.early-card{border-radius:22px;box-shadow:0 15px 40px rgba(16,35,63,.12)}.social-card{background:linear-gradient(135deg,#0e51cf,#1973ff)}
+.info-card{border-radius:20px}.floating-wa{background:#25d366;box-shadow:0 10px 28px rgba(10,100,70,.22)}
+.contact{padding:70px 5vw}.contact-box{padding:54px 25px}.contact-box h2{font-size:38px}.dark{background:#17243b}
+footer{background:#fff;padding:22px 5vw}
+/* Keep the embedded Travelpayouts search visually inside the new shell without changing its functionality. */
+#tpwl-search{min-height:86px}.white-label-search-wrap iframe{max-width:100%}
+@media(max-width:900px){.nav nav{display:none}.hero{min-height:520px}.hero-content{padding:70px 6vw 140px}.search-results-section{padding:0 12px 55px;margin-top:-78px}.search-results-section .head{padding:23px 20px 4px}.white-label-search-wrap{padding:8px 16px 18px}.routes{grid-template-columns:1fr 1fr}.offer-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.nav{height:62px;padding:0 14px}.brand{font-size:16px}.hero{min-height:500px}.hero:after{font-size:90px;right:4%;bottom:90px}.hero-content{padding:62px 6vw 125px}.hero h1{font-size:45px;letter-spacing:-2.4px}.hero p{font-size:15px}.hero .actions{display:grid;grid-template-columns:1fr}.search-results-section{margin-top:-66px;padding-left:8px;padding-right:8px}.search-results-section .head{border-radius:20px 20px 0 0}.search-results-section .head h2{font-size:28px}.white-label-search-wrap{border-radius:0 0 20px 20px;padding:7px 10px 14px}.section{padding:58px 5vw}.section .head h2,.step-inner h2{font-size:31px}.routes,.offer-grid{grid-template-columns:1fr}.contact-box h2{font-size:31px}.nav-right .langs{display:none}}
+</style>
+</head>
+<body>
+<header class="nav">
+  <a class="brand" href="#top">✈️ <span>Aviakassa_havo</span></a>
+  <nav>
+    <a data-i18n="navSearch" href="#flightSearchResults">Найти билет</a>
+    <a data-i18n="navFlights" href="#flights">Рейсы</a><a data-i18n="navRoutes" href="#routes">Направления</a><a data-i18n="navOffers" href="#offers">Акции</a>
+    <a data-i18n="navHow" href="#steps">Как это работает</a><a data-i18n="navFaq" href="#faq">FAQ</a>
+  </nav>
+  <div class="nav-right">
+    <div class="langs" aria-label="Language">
+      <button data-lang="ru" class="active">RU</button>
+      <button data-lang="tj">TJ</button>
+      <button data-lang="en">EN</button>
+    </div>
+    <a class="wa small" data-i18n="whatsapp" href="https://wa.me/992753582002" target="_blank">WhatsApp</a>
+  </div>
+</header>
+
+<main id="top">
+<section class="search-hero" id="flightSearchResults">
+  <div class="search-hero-bg"></div>
+  <div class="search-hero-content">
+    <div class="badge" data-i18n="badge">🌍 Душанбе → весь мир</div>
+    <h1 data-i18n="searchTitle">Найти авиабилеты</h1>
+    <p data-i18n="searchIntro">Выберите маршрут и дату — результаты поиска появятся прямо на Aviakassa_havo.</p>
+    <div class="white-label-search-wrap search-hero-card">
+      <div id="tpwl-search"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section search-results-section" id="flightResults">
+  <div class="head"><div><span class="eyebrow" data-i18n="currentFlights">РЕЗУЛЬТАТЫ ПОИСКА</span><h2 data-i18n="navFlights">Билеты</h2></div><p data-i18n="currentFlightsIntro">Выберите подходящий вариант — затем перейдите к продавцу для покупки.</p></div>
+  <div class="white-label-results-wrap">
+    <div id="tpwl-tickets"></div>
+  </div>
+</section>
+
+<section class="section dynamic-section" id="flights">
+  <div class="head"><div><span class="eyebrow" data-i18n="currentFlights">АКТУАЛЬНЫЕ РЕЙСЫ</span><h2 data-i18n="navFlights">Рейсы</h2></div><p data-i18n="currentFlightsIntro">Поиск рейсов прямо на Aviakassa_havo.</p></div>
+  <div id="publicFlights" class="flight-grid"></div>
+</section>
+
+<section class="section hot" id="offers">
+  <div class="head"><div><span class="eyebrow" data-i18n="offersEyebrow">АКЦИИ</span><h2 data-i18n="offersTitle">Специальные предложения</h2></div><p data-i18n="offersIntro">Акции и выгодные предложения от Aviakassa_havo.</p></div>
+  <div id="publicOffers" class="offer-grid"></div>
+</section>
+
+<section class="section" id="routes">
+  <div class="head"><div><span class="eyebrow" data-i18n="popular">ПОПУЛЯРНЫЕ НАПРАВЛЕНИЯ</span><h2 data-i18n="chooseCity">Выберите город</h2></div><p data-i18n="routeIntro">Нажмите на направление — и отправьте запрос менеджеру.</p></div>
+  <div id="publicDirections" class="routes"></div>
+</section>
+
+
+
+
+<section class="section benefits">
+  <div class="head"><div><span class="eyebrow" data-i18n="whyUs">ПОЧЕМУ МЫ</span><h2 data-i18n="simple">Всё проще, чем кажется</h2></div></div>
+  <div class="benefit-grid">
+    <div><strong>🎫</strong><h3 data-i18n="b1t">Подбор билета</h3><p data-i18n="b1p">Поможем найти подходящий вариант по вашему маршруту и дате.</p></div>
+    <div><strong>💬</strong><h3 data-i18n="b2t">Быстрая связь</h3><p data-i18n="b2p">Задайте вопрос в WhatsApp или Direct и получите консультацию.</p></div>
+    <div><strong>🧳</strong><h3 data-i18n="b3t">Условия поездки</h3><p data-i18n="b3p">Поможем разобраться с багажом, ручной кладью и условиями рейса.</p></div>
+  </div>
+</section>
+
+<section class="section mini-steps">
+  <div class="head"><div><span class="eyebrow" data-i18n="miniEyebrow">ВСЁ ПРОСТО</span><h2 data-i18n="miniTitle">Как получить билет</h2></div></div>
+  <div class="mini-grid">
+    <div><b>1</b><h3 data-i18n="mini1Title">Заполните запрос</h3><p data-i18n="mini1Text">Укажите маршрут, дату и пассажиров.</p></div>
+    <div><b>2</b><h3 data-i18n="mini2Title">Получите варианты</h3><p data-i18n="mini2Text">Нажмите кнопку и отправьте заявку в WhatsApp.</p></div>
+    <div><b>3</b><h3 data-i18n="mini3Title">Выберите рейс</h3><p data-i18n="mini3Text">Менеджер поможет сравнить подходящие варианты.</p></div>
+  </div>
+</section>
+
+<section class="section baggage-info">
+  <div class="info-card"><div><span class="eyebrow" data-i18n="bagEyebrow">БАГАЖ</span><h2 data-i18n="bagTitle">Что взять с собой?</h2><p data-i18n="bagText">Условия багажа зависят от выбранного тарифа. Мы поможем уточнить условия перед оформлением.</p></div><div class="bag-items"><span>🧳 <b>23 кг</b> <small data-i18n="checkedBag">багаж</small></span><span>🎒 <b>10 кг</b> <small data-i18n="handBag">ручная кладь</small></span></div></div>
+</section>
+
+<section class="steps" id="steps">
+  <div class="step-inner">
+    <span class="eyebrow" data-i18n="threeSteps">3 ПРОСТЫХ ШАГА</span><h2 data-i18n="fromMsg">От сообщения до путешествия</h2>
+    <div class="step-grid">
+      <div><span>01</span><h3 data-i18n="s1t">Отправьте маршрут</h3><p data-i18n="s1p">Город вылета, город прилёта и дату.</p></div>
+      <div><span>02</span><h3 data-i18n="s2t">Выберите вариант</h3><p data-i18n="s2p">Мы поможем сравнить подходящие рейсы.</p></div>
+      <div><span>03</span><h3 data-i18n="s3t">Путешествуйте</h3><p data-i18n="s3p">Получите оформленный билет и готовьтесь к поездке.</p></div>
+    </div>
+  </div>
+</section>
+
+
+<section class="section social-trust">
+  <div class="social-card">
+    <div>
+      <span class="eyebrow" data-i18n="socialEyebrow">МЫ В INSTAGRAM</span>
+      <h2 data-i18n="socialTitle">Следите за новыми рейсами</h2>
+      <p data-i18n="socialText">Актуальные направления, полезные советы и предложения для путешествий.</p>
+    </div>
+    <a class="primary" href="https://www.instagram.com/aviakassa_havo/" target="_blank" rel="noopener" data-i18n="socialButton">Открыть Instagram</a>
+  </div>
+</section>
+
+<section class="section faq" id="faq">
+  <div class="head">
+    <div><span class="eyebrow" data-i18n="faqEyebrow">ЧАСТЫЕ ВОПРОСЫ</span><h2 data-i18n="faqTitle">Есть вопросы?</h2></div>
+    <p data-i18n="faqIntro">Здесь собрали самые частые вопросы клиентов.</p>
+  </div>
+  <div class="faq-list">
+    <details><summary data-i18n="faq1q">Как заказать авиабилет?</summary><p data-i18n="faq1a">Заполните маршрут и дату на сайте и нажмите «Получить варианты». Заявка откроется в WhatsApp.</p></details>
+    <details><summary data-i18n="faq2q">Можно ли подобрать билет с багажом?</summary><p data-i18n="faq2a">Да. Напишите менеджеру, какой багаж вам нужен, и мы подберём подходящие варианты.</p></details>
+    <details><summary data-i18n="faq3q">Можно ли купить билет для другого человека?</summary><p data-i18n="faq3a">Да. Менеджер подскажет, какие данные пассажира нужны для оформления.</p></details>
+    <details><summary data-i18n="faq4q">Почему лучше покупать заранее?</summary><p data-i18n="faq4a">Стоимость и наличие мест могут меняться. Поэтому лучше подобрать билет заранее.</p></details>
+  </div>
+</section>
+
+
+<section class="section early">
+  <div class="early-card">
+    <div><span class="eyebrow" data-i18n="earlyEyebrow">СОВЕТ ПУТЕШЕСТВЕННИКУ</span>
+    <h2 data-i18n="earlyTitle">Покупайте билеты заранее</h2>
+    <p data-i18n="earlyText">Чем раньше вы начнёте искать подходящий рейс, тем больше вариантов можно сравнить. Не откладывайте поездку на последний момент.</p></div>
+    <a class="primary" href="https://wa.me/992753582002" target="_blank" data-i18n="earlyButton">Подобрать билет</a>
+  </div>
+</section>
+
+<section class="contact">
+  <div class="contact-box">
+    <span class="eyebrow">AVIAKASSA_HAVO</span>
+    <h2 data-i18n="ready">Готовы к следующему путешествию?</h2>
+    <p data-i18n="location">Душанбе, Таджикистан · Direct / WhatsApp</p>
+    <a class="primary dark" data-i18n="phone" href="https://wa.me/992753582002" target="_blank">📲 +992753582002</a>
+    <small data-i18n="motto">💙 Ваше путешествие — наша ответственность.</small>
+  </div>
+</section>
+<a class="floating-wa" data-i18n-aria="whatsapp" aria-label="WhatsApp" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20авиабилет." target="_blank" aria-label="WhatsApp">💬 <span>WhatsApp</span></a>
+</main>
+<footer><b>✈️ Aviakassa_havo</b><span data-i18n="footerLoc">Душанбе · Таджикистан</span><a class="admin-link" href="/admin" data-i18n="adminPanelLink">🔐 Панель управления</a><span>© <span id="year"></span></span></footer>
+
+<div id="flightDetailModal" class="site-modal" hidden><div class="site-modal-card"><button id="closeFlightDetail" class="site-modal-close">×</button><div id="flightDetailBody"></div></div></div>
+<script>
+(function(){const box=document.getElementById("flightDetailModal"),body=document.getElementById("flightDetailBody"),close=document.getElementById("closeFlightDetail");if(!box)return;close.onclick=()=>box.hidden=true;document.addEventListener("click",async e=>{const a=e.target.closest("[data-flight-detail]");if(!a)return;e.preventDefault();try{const r=await fetch("/api/flight?id="+encodeURIComponent(a.dataset.flightDetail));const d=await r.json();if(!d.ok)throw Error();const f=d.flight;body.innerHTML=`<h2>${escHtml(f.from_city)} → ${escHtml(f.to_city)}</h2><div class="site-detail-grid"><div><b>Дата</b>${escHtml(f.flight_date)}</div><div><b>Время</b>${escHtml(f.flight_time)}</div><div><b>Авиакомпания</b>${escHtml(f.airline)}</div><div><b>Багаж</b>${escHtml(f.baggage)}</div><div><b>Вылет</b>${escHtml(f.from_airport)} (${escHtml(f.from_airport_code)})</div><div><b>Прилёт</b>${escHtml(f.to_airport)} (${escHtml(f.to_airport_code)})</div><div><b>Цена</b>${escHtml(f.price)} ${escHtml(f.currency||"")}</div></div><div class="view-only-note">Информация о рейсе доступна для просмотра.</div>`;box.hidden=false}catch(err){}})})();
+</script>
+<script src="script.js"></script>
+</body>
+</html>
