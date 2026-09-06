@@ -181,3 +181,43 @@ body{padding-top:72px}
   .hero-stats strong{font-size:17px !important}
   .hero-stats small{font-size:10px !important}
 }
+
+
+/* HERO LEFT-BALANCED LAYOUT */
+@media (min-width:901px){
+  .search-hero-content{
+    max-width:1500px !important;
+    padding-left:4.5vw !important;
+    padding-right:4.5vw !important;
+  }
+  .hero-copy{
+    width:52% !important;
+    max-width:720px !important;
+  }
+  .hero-copy h1{
+    max-width:690px !important;
+  }
+  .hero-benefits{
+    width:58% !important;
+    max-width:760px !important;
+    gap:22px !important;
+  }
+  .hero-benefits>div{
+    min-width:0 !important;
+    flex:1 1 0 !important;
+  }
+  .search-hero-card{
+    width:64% !important;
+    max-width:920px !important;
+    margin-left:0 !important;
+    margin-right:auto !important;
+    margin-top:38px !important;
+  }
+  .hero-stats{
+    width:64% !important;
+    max-width:920px !important;
+    margin-left:0 !important;
+    margin-right:auto !important;
+    gap:26px !important;
+  }
+}

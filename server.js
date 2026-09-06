@@ -208,19 +208,12 @@ async function api(req,res,url){
     if(rateLimited(ip)) return send(res,429,{ok:false,error:"TOO_MANY_ATTEMPTS"});
     const b=await parseBody(req), password=String(b.password||""), username=safe(b.username||"admin",80).toLowerCase()||"admin";
     let user=null;
-    // ADMIN_PASSWORD is the master admin credential configured in Render.
-    // Check it first so a stale PostgreSQL hash cannot block the configured admin.
-    if(username==="admin" && ADMIN_PASSWORD && password===ADMIN_PASSWORD){
-      user={id:null,name:"Главный администратор",username:"admin",role:"admin",permissions:ALL_PERMISSIONS};
+    if(pool){
+      const q=await pool.query(`SELECT id,name,username,password_hash,role,active,permissions FROM managers WHERE username=$1 LIMIT 1`,[username]);
+      if(q.rowCount && q.rows[0].active && verifyPassword(password,q.rows[0].password_hash)) user={id:q.rows[0].id,name:q.rows[0].name,username:q.rows[0].username,role:q.rows[0].role,permissions:Array.isArray(q.rows[0].permissions)?q.rows[0].permissions:[]};
     }
-    // Existing manager accounts continue to work with their database passwords.
-    if(!user && pool){
-      try{
-        const q=await pool.query(`SELECT id,name,username,password_hash,role,active,permissions FROM managers WHERE username=$1 LIMIT 1`,[username]);
-        if(q.rowCount && q.rows[0].active && verifyPassword(password,q.rows[0].password_hash)) user={id:q.rows[0].id,name:q.rows[0].name,username:q.rows[0].username,role:q.rows[0].role,permissions:Array.isArray(q.rows[0].permissions)?q.rows[0].permissions:[]};
-      }catch(e){ console.error("admin login DB lookup error:",e.message); }
-    }
-    if(!user){countFailed(ip);if(username==="admin" && !ADMIN_PASSWORD && !pool)return send(res,503,{ok:false,error:"ADMIN_NOT_CONFIGURED",message:"ADMIN_PASSWORD is not configured and DATABASE_URL is unavailable."});return send(res,401,{ok:false,error:"INVALID_PASSWORD"});}
+    if(!user && username==="admin" && ADMIN_PASSWORD && password===ADMIN_PASSWORD) user={id:null,name:"Главный администратор",username:"admin",role:"admin",permissions:ALL_PERMISSIONS};
+    if(!user){countFailed(ip);return send(res,401,{ok:false,error:"INVALID_PASSWORD"});}
     clearFailed(ip); return send(res,200,{ok:true,token:issueSession(user),user:{id:user.id,name:user.name,username:user.username,role:user.role,permissions:user.permissions||[]}});
   }
   if(req.method==="POST" && url.pathname==="/api/admin/logout"){
@@ -230,13 +223,9 @@ async function api(req,res,url){
 
   if(url.pathname.startsWith("/api/admin/")){
     const user=authorized(req); if(!user) return send(res,401,{ok:false,error:"UNAUTHORIZED"});
+    if(!pool) return send(res,503,{ok:false,error:"DATABASE_NOT_CONFIGURED"});
 
-    // Session validation must not depend on PostgreSQL. The master admin can
-    // authenticate with Render's ADMIN_PASSWORD even when the database is
-    // temporarily unavailable. Database-backed admin data still requires pool.
     if(req.method==="GET" && url.pathname==="/api/admin/me") return send(res,200,{ok:true,user:{id:user.id,name:user.name,username:user.username,role:user.role,permissions:user.permissions||[]}});
-
-    if(!pool) return send(res,503,{ok:false,error:"DATABASE_NOT_CONFIGURED",message:"DATABASE_URL is not configured or the database is unavailable."});
 
     if(req.method==="GET" && url.pathname==="/api/admin/bookings"){
       if(!hasPermission(user,"bookings_view")) return send(res,403,{ok:false,error:"FORBIDDEN"});
@@ -398,13 +387,7 @@ const server=http.createServer(async(req,res)=>{
     if(u.pathname==="/admin" || u.pathname==="/admin/") u.pathname="/admin.html";
     let p=u.pathname==="/"?path.join(publicDir,"index.html"):path.join(publicDir,u.pathname.replace(/^\/+/,""));
     if(!p.startsWith(publicDir))return send(res,403,{error:"FORBIDDEN"});
-    if(fs.existsSync(p)&&fs.statSync(p).isFile()){
-      const ext=path.extname(p).toLowerCase();
-      const cacheable=[".css",".js",".png",".jpg",".jpeg",".svg",".json",".ico"].includes(ext);
-      res.writeHead(200,{"Content-Type":mime[ext]||"application/octet-stream","Cache-Control":cacheable?"public, max-age=3600":"no-cache"});
-      fs.createReadStream(p).pipe(res);
-      return;
-    }
+    if(fs.existsSync(p)&&fs.statSync(p).isFile()){const ext=path.extname(p).toLowerCase();res.writeHead(200,{"Content-Type":mime[ext]||"application/octet-stream"});fs.createReadStream(p).pipe(res);return;}
     send(res,404,{error:"NOT_FOUND"});
   }catch(e){console.error(e);send(res,500,{error:"SERVER_ERROR"});}
 });
