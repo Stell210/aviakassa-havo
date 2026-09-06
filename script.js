@@ -117,9 +117,19 @@ function setLang(l){
 
 
 
+window.setLang = setLang;
+
 window.addEventListener("aviakassa-language-change",()=>{const x=extraTranslations[lang]||extraTranslations.ru;document.querySelectorAll("[data-search-i18n]").forEach(el=>{const k=el.dataset.searchI18n;if(x[k]!==undefined)el.textContent=x[k]});document.querySelectorAll("[data-search-i18n-attr]").forEach(el=>{const k=el.dataset.searchI18nAttr;if(x[k]!==undefined)el.setAttribute("data-current-text",x[k])})});
 
 // ===== Functional controls / language / request form =====
+// Handle language buttons at capture phase so embedded widgets cannot swallow the click.
+document.addEventListener("click",function(e){
+  const btn=e.target.closest?.("[data-lang]");
+  if(!btn)return;
+  e.preventDefault();
+  e.stopPropagation();
+  if(typeof window.setLang==="function") window.setLang(btn.dataset.lang);
+},true);
 (function(){
   function $(id){ return document.getElementById(id); }
 

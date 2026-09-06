@@ -191,3 +191,79 @@ img,iframe,video,canvas,svg{max-width:100%}
   .langs button{padding:5px 4px !important;font-size:9px !important;}
   .nav-right .wa{padding:7px 8px !important;font-size:10px !important;}
 }
+
+
+/* v62 — Dushanbe Tower hero: blue branded background with the real project photo on the right */
+.search-hero{
+  background:linear-gradient(110deg,#063fba 0%,#0868e8 48%,#168de9 100%) !important;
+  min-height:600px !important;
+  padding:76px 20px 96px !important;
+}
+.search-hero-bg{
+  position:absolute !important;
+  inset:0 !important;
+  overflow:hidden !important;
+  pointer-events:none !important;
+  background:
+    radial-gradient(circle at 77% 20%,rgba(123,205,255,.28),transparent 24%),
+    linear-gradient(90deg,rgba(4,61,170,.88) 0%,rgba(4,89,205,.62) 45%,rgba(8,116,226,.10) 78%),
+    linear-gradient(180deg,rgba(7,92,211,.12),rgba(0,48,145,.30)) !important;
+}
+.dushanbe-tower-art{
+  position:absolute;
+  right:-4%;
+  top:0;
+  width:59%;
+  height:100%;
+  background-image:url('dushanbe-tower.jpeg');
+  background-repeat:no-repeat;
+  background-position:center center;
+  background-size:cover;
+  filter:saturate(1.02) contrast(1.02);
+  opacity:.96;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.28) 10%,#000 30%,#000 100%);
+  mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.28) 10%,#000 30%,#000 100%);
+}
+.tower-label{
+  position:absolute;
+  right:29%;
+  top:49%;
+  color:#fff;
+  font-size:14px;
+  line-height:1.25;
+  letter-spacing:.12em;
+  text-shadow:0 2px 12px rgba(0,35,100,.55);
+  font-weight:600;
+}
+.search-hero-content{max-width:1180px !important;}
+.search-hero h1{
+  max-width:720px;
+  font-size:clamp(44px,5.8vw,72px) !important;
+  letter-spacing:-3.2px !important;
+  text-shadow:0 3px 20px rgba(0,30,100,.16);
+}
+.search-hero p{font-size:18px !important;max-width:680px !important;}
+.search-hero-card{
+  position:relative;
+  z-index:4;
+  max-width:1000px !important;
+  margin-top:34px;
+  border-radius:22px !important;
+  box-shadow:0 24px 70px rgba(0,31,92,.30) !important;
+}
+.search-hero .badge{display:inline-flex !important;background:rgba(255,255,255,.13) !important;border:1px solid rgba(255,255,255,.28) !important;color:#fff !important;backdrop-filter:blur(8px);}
+@media(max-width:900px){
+  .search-hero{padding:58px 16px 68px !important;min-height:560px !important;}
+  .dushanbe-tower-art{width:78%;right:-26%;opacity:.48;background-position:center;}
+  .tower-label{right:9%;top:35%;font-size:11px;}
+  .search-hero-bg{background:linear-gradient(90deg,rgba(4,61,170,.94) 0%,rgba(4,93,211,.72) 58%,rgba(4,93,211,.35) 100%) !important;}
+}
+@media(max-width:600px){
+  .search-hero{padding:38px 10px 44px !important;min-height:520px !important;background:linear-gradient(180deg,#075bcf 0%,#147be7 100%) !important;}
+  .dushanbe-tower-art{width:112%;height:62%;right:-34%;top:auto;bottom:-5%;opacity:.34;background-size:cover;}
+  .tower-label{right:8%;top:auto;bottom:29%;font-size:9px;}
+  .search-hero-bg{background:linear-gradient(180deg,rgba(5,83,197,.30) 0%,rgba(5,83,197,.50) 100%) !important;}
+  .search-hero h1{font-size:39px !important;letter-spacing:-2.2px !important;max-width:100%;}
+  .search-hero p{font-size:14px !important;max-width:100% !important;}
+  .search-hero-card{margin-top:22px;padding:8px !important;}
+}
