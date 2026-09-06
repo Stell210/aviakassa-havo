@@ -116,7 +116,6 @@ function setLang(l){
 }
 
 
-window.aviakassaSetLang=setLang;
 
 window.addEventListener("aviakassa-language-change",()=>{const x=extraTranslations[lang]||extraTranslations.ru;document.querySelectorAll("[data-search-i18n]").forEach(el=>{const k=el.dataset.searchI18n;if(x[k]!==undefined)el.textContent=x[k]});document.querySelectorAll("[data-search-i18n-attr]").forEach(el=>{const k=el.dataset.searchI18nAttr;if(x[k]!==undefined)el.setAttribute("data-current-text",x[k])})});
 
@@ -196,8 +195,8 @@ window.addEventListener("aviakassa-language-change",()=>{const x=extraTranslatio
   }
   async function loadPublicContent(){
     try{
-      const [fr,or,dr]=await Promise.all([fetch("/api/flights"),fetch("/api/offers"),fetch("/api/directions")]);
-      if(fr.ok){const data=await fr.json(); renderPublicFlights(data.flights||[]);}
+      // Do not compete with the Travelpayouts flight-search widget during first paint/search.
+      const [or,dr]=await Promise.all([fetch("/api/offers"),fetch("/api/directions")]);
       if(or.ok){const data=await or.json(); renderPublicOffers(data.offers||[]);}
       if(dr.ok){const data=await dr.json(); renderPublicDirections(data.directions||[]);}
     }catch(e){console.warn("Public content load failed",e);}
@@ -251,7 +250,9 @@ window.addEventListener("aviakassa-language-change",()=>{const x=extraTranslatio
     const y=$("year"); if(y)y.textContent=new Date().getFullYear();
     // Apply the saved language after all handlers are installed.
     setLang(lang);
-    loadPublicContent();
+    // Load secondary content only when the browser is idle so the ticket search starts first.
+    const idle=window.requestIdleCallback||function(cb){setTimeout(cb,1800)};
+    idle(()=>loadPublicContent());
     // Keep the current language active visually.
     document.querySelectorAll("[data-lang]").forEach(b=>b.classList.toggle("active",b.dataset.lang===lang));
   }
