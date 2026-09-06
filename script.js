@@ -69,13 +69,13 @@ cities:["Moscow","Saint Petersburg","Dubai","Istanbul"],routes:["Dushanbe → Mo
 let lang=localStorage.getItem("aviakassa_lang")||"ru";
 const extraTranslations={
 ru:{namePlaceholder:"Имя",phonePlaceholder:"+992...",toPlaceholder:"Москва",airportPlaceholder:"Город или аэропорт",requestSaving:"Сохраняем заявку…",requestAccepted:"Заявка принята. Открываем WhatsApp…",whatsAppGreeting:"Здравствуйте! Хочу подобрать авиабилет.",offerAction:"Узнать варианты →",flightAction:"Узнать / оформить в WhatsApp",until:"До",noFlights:"Сейчас нет опубликованных рейсов. Следите за обновлениями.",noOffers:"Сейчас нет активных акций.",noDirections:"Сейчас нет опубликованных направлений.",citiesAll:["Душанбе, Таджикистан","Москва, Россия","Казань, Россия","Санкт-Петербург, Россия","Дубай, ОАЭ","Стамбул, Турция"],cityNames:["Москва","Санкт-Петербург","Дубай","Стамбул"],routeNames:["Душанбе → Москва","Душанбе → Санкт-Петербург","Душанбе → Дубай","Душанбе → Стамбул"],
-searchIntro:"Выберите маршрут и дату — результаты поиска появятся прямо на Aviakassa_havo.",airportPlaceholder:"Город или аэропорт",allAirlines:"Все авиакомпании",allAirports:"Все аэропорты",allFlights:"Все рейсы",directOnly:"Только прямые",withConnection:"С пересадкой",sortCheap:"Сначала дешёвые",sortTime:"По времени вылета",searchButton:"🔎 Найти билеты",currentFlights:"АКТУАЛЬНЫЕ РЕЙСЫ",currentFlightsIntro:"Поиск рейсов прямо на Aviakassa_havo",searching:"Ищем актуальные предложения…",fillSearch:"Укажите город вылета, город прилёта и дату",noSearchResults:"На эту дату актуальных предложений не найдено",searchError:"Не удалось получить актуальные предложения. Проверьте настройки Travelport TripServices.",direct:"Прямой",withConnectionCard:"С пересадкой",transferVia:"Пересадка: через",transfersOne:"пересадка",transfersMany:"пересадки",transferUnknown:"город пересадки не указан в данных",carryOn:"Ручная кладь",checkedBaggage:"Багаж",clarify:"Уточняется",details:"Подробнее",askFlight:"Здравствуйте! Хочу узнать подробнее о рейсе",
+searchIntro:"Выберите маршрут и дату — результаты поиска появятся прямо на Aviakassa_havo.",airportPlaceholder:"Город или аэропорт",allAirlines:"Все авиакомпании",allAirports:"Все аэропорты",allFlights:"Все рейсы",directOnly:"Только прямые",withConnection:"С пересадкой",sortCheap:"Сначала дешёвые",sortTime:"По времени вылета",searchButton:"🔎 Найти билеты",currentFlights:"АКТУАЛЬНЫЕ РЕЙСЫ",currentFlightsIntro:"Поиск рейсов прямо на Aviakassa_havo",searching:"Ищем актуальные предложения…",fillSearch:"Укажите город вылета, город прилёта и дату",noSearchResults:"На эту дату актуальных предложений не найдено",searchError:"Не удалось получить результаты поиска. Проверьте настройки Travelpayouts White Label.",direct:"Прямой",withConnectionCard:"С пересадкой",transferVia:"Пересадка: через",transfersOne:"пересадка",transfersMany:"пересадки",transferUnknown:"город пересадки не указан в данных",carryOn:"Ручная кладь",checkedBaggage:"Багаж",clarify:"Уточняется",details:"Подробнее",askFlight:"Здравствуйте! Хочу узнать подробнее о рейсе",
 },
 tj:{namePlaceholder:"Ном",phonePlaceholder:"+992...",toPlaceholder:"Москва",airportPlaceholder:"Шаҳр ё фурудгоҳ",requestSaving:"Дархостро нигоҳ медорем…",requestAccepted:"Дархост қабул шуд. WhatsApp кушода мешавад…",whatsAppGreeting:"Салом! Ман мехоҳам чиптаи ҳавопаймо интихоб кунам.",offerAction:"Вариантҳоро дидан →",flightAction:"Пурсидан / фармоиш дар WhatsApp",until:"То",noFlights:"Ҳоло парвози нашршуда нест. Навсозиҳоро пайгирӣ кунед.",noOffers:"Ҳоло аксияи фаъол нест.",noDirections:"Ҳоло самти нашршуда нест.",citiesAll:["Душанбе, Тоҷикистон","Москва, Россия","Қазон, Россия","Санкт-Петербург, Россия","Дубай, АМА","Истанбул, Туркия"],cityNames:["Москва","Санкт-Петербург","Дубай","Истанбул"],routeNames:["Душанбе → Москва","Душанбе → Санкт-Петербург","Душанбе → Дубай","Душанбе → Истанбул"],
-searchIntro:"Масир ва санаро интихоб кунед — натиҷаи ҷустуҷӯ дар Aviakassa_havo нишон дода мешавад.",airportPlaceholder:"Шаҳр ё фурудгоҳ",allAirlines:"Ҳамаи ширкатҳои ҳавопаймоӣ",allAirports:"Ҳамаи фурудгоҳҳо",allFlights:"Ҳамаи парвозҳо",directOnly:"Танҳо мустақим",withConnection:"Бо таваққуф",sortCheap:"Аввал арзонҳо",sortTime:"Аз рӯи вақти парвоз",searchButton:"🔎 Ҷустуҷӯи чиптаҳо",currentFlights:"ПАРВОЗҲОИ МАВҶУДА",currentFlightsIntro:"Ҷустуҷӯи парвозҳо дар Aviakassa_havo.",offersEyebrow:"АКСИЯҲО",offersTitle:"Пешниҳодҳои махсус",offersIntro:"Аксияҳо ва пешниҳодҳои муфид аз Aviakassa_havo.",searching:"Пешниҳодҳои дастрасро меҷӯем…",fillSearch:"Шаҳри парвоз, шаҳри расидан ва санаро нишон диҳед",noSearchResults:"Барои ин сана пешниҳоди дастрас ёфт нашуд",searchError:"Пешниҳодҳоро гирифтан муяссар нашуд. Танзимоти Travelport TripServices-ро санҷед.",direct:"Мустақим",withConnectionCard:"Бо таваққуф",transferVia:"Таваққуф: тавассути",transfersOne:"таваққуф",transfersMany:"таваққуф",transferUnknown:"шаҳри таваққуф дар маълумот нишон дода нашудааст",carryOn:"Бори дастӣ",checkedBaggage:"Бағоҷ",clarify:"Муайян карда мешавад",details:"Муфассал",askFlight:"Салом! Ман мехоҳам дар бораи парвоз маълумоти бештар гирам",
+searchIntro:"Масир ва санаро интихоб кунед — натиҷаи ҷустуҷӯ дар Aviakassa_havo нишон дода мешавад.",airportPlaceholder:"Шаҳр ё фурудгоҳ",allAirlines:"Ҳамаи ширкатҳои ҳавопаймоӣ",allAirports:"Ҳамаи фурудгоҳҳо",allFlights:"Ҳамаи парвозҳо",directOnly:"Танҳо мустақим",withConnection:"Бо таваққуф",sortCheap:"Аввал арзонҳо",sortTime:"Аз рӯи вақти парвоз",searchButton:"🔎 Ҷустуҷӯи чиптаҳо",currentFlights:"ПАРВОЗҲОИ МАВҶУДА",currentFlightsIntro:"Ҷустуҷӯи парвозҳо дар Aviakassa_havo.",offersEyebrow:"АКСИЯҲО",offersTitle:"Пешниҳодҳои махсус",offersIntro:"Аксияҳо ва пешниҳодҳои муфид аз Aviakassa_havo.",searching:"Пешниҳодҳои дастрасро меҷӯем…",fillSearch:"Шаҳри парвоз, шаҳри расидан ва санаро нишон диҳед",noSearchResults:"Барои ин сана пешниҳоди дастрас ёфт нашуд",searchError:"Пешниҳодҳоро гирифтан муяссар нашуд. Танзимоти Travelpayouts White Label-ро санҷед.",direct:"Мустақим",withConnectionCard:"Бо таваққуф",transferVia:"Таваққуф: тавассути",transfersOne:"таваққуф",transfersMany:"таваққуф",transferUnknown:"шаҳри таваққуф дар маълумот нишон дода нашудааст",carryOn:"Бори дастӣ",checkedBaggage:"Бағоҷ",clarify:"Муайян карда мешавад",details:"Муфассал",askFlight:"Салом! Ман мехоҳам дар бораи парвоз маълумоти бештар гирам",
 },
 en:{namePlaceholder:"Name",phonePlaceholder:"+992...",toPlaceholder:"Moscow",airportPlaceholder:"City or airport",requestSaving:"Saving your request…",requestAccepted:"Request received. Opening WhatsApp…",whatsAppGreeting:"Hello! I would like to find a flight.",offerAction:"See options →",flightAction:"Ask / book via WhatsApp",until:"Until",noFlights:"There are no published flights yet. Follow updates.",noOffers:"There are no active offers.",noDirections:"There are no published destinations.",citiesAll:["Dushanbe, Tajikistan","Moscow, Russia","Kazan, Russia","Saint Petersburg, Russia","Dubai, UAE","Istanbul, Turkey"],cityNames:["Moscow","Saint Petersburg","Dubai","Istanbul"],routeNames:["Dushanbe → Moscow","Dushanbe → Saint Petersburg","Dushanbe → Dubai","Dushanbe → Istanbul"],
-searchIntro:"Choose a route and date — search results will appear directly on Aviakassa_havo.",airportPlaceholder:"City or airport",allAirlines:"All airlines",allAirports:"All airports",allFlights:"All flights",directOnly:"Direct only",withConnection:"With connection",sortCheap:"Cheapest first",sortTime:"Departure time",searchButton:"🔎 Search flights",currentFlights:"CURRENT FLIGHTS",currentFlightsIntro:"Search flights directly on Aviakassa_havo.",offersEyebrow:"OFFERS",offersTitle:"Special offers",offersIntro:"Deals and special offers from Aviakassa_havo.",searching:"Searching current offers…",fillSearch:"Enter departure city, arrival city and date",noSearchResults:"No current offers found for this date",searchError:"Could not get current offers. Check Travelport TripServices settings.",direct:"Direct",withConnectionCard:"With connection",transferVia:"Connection via",transfersOne:"connection",transfersMany:"connections",transferUnknown:"transfer city not provided in the data",carryOn:"Carry-on",checkedBaggage:"Baggage",clarify:"To be confirmed",details:"Details",askFlight:"Hello! I would like more information about the flight",
+searchIntro:"Choose a route and date — search results will appear directly on Aviakassa_havo.",airportPlaceholder:"City or airport",allAirlines:"All airlines",allAirports:"All airports",allFlights:"All flights",directOnly:"Direct only",withConnection:"With connection",sortCheap:"Cheapest first",sortTime:"Departure time",searchButton:"🔎 Search flights",currentFlights:"CURRENT FLIGHTS",currentFlightsIntro:"Search flights directly on Aviakassa_havo.",offersEyebrow:"OFFERS",offersTitle:"Special offers",offersIntro:"Deals and special offers from Aviakassa_havo.",searching:"Searching current offers…",fillSearch:"Enter departure city, arrival city and date",noSearchResults:"No current offers found for this date",searchError:"Could not get search results. Check Travelpayouts White Label settings.",direct:"Direct",withConnectionCard:"With connection",transferVia:"Connection via",transfersOne:"connection",transfersMany:"connections",transferUnknown:"transfer city not provided in the data",carryOn:"Carry-on",checkedBaggage:"Baggage",clarify:"To be confirmed",details:"Details",askFlight:"Hello! I would like more information about the flight",
 }
 };
 
@@ -359,85 +359,4 @@ function setupAirportPicker(id){
 ["sfFrom","sfTo"].forEach(setupAirportPicker);
 document.addEventListener("click",e=>{document.querySelectorAll(".airport-field").forEach(f=>{if(!f.contains(e.target)){const l=f.querySelector(".airport-suggestions"),i=f.querySelector("input");if(l){l.hidden=true;i?.setAttribute("aria-expanded","false")}}})});
 
-(function(){
- const ss=document.getElementById("smartSearch"); if(!ss)return;
- const box=document.getElementById("searchResults"), section=document.getElementById("flightSearchResults");
- const money2=v=>{const n=Number(v);return Number.isFinite(n)?new Intl.NumberFormat("ru-RU").format(n):String(v||"")};
- const moneyWithCurrency=(v,c)=>{const n=Number(v);if(!Number.isFinite(n))return String(v||"");const cc=String(c||"RUB").toUpperCase();return `${money2(n)} ${cc}`};
- const fmtTime=v=>{try{return new Intl.DateTimeFormat("ru-RU",{hour:"2-digit",minute:"2-digit"}).format(new Date(v))}catch{return ""}};
- const fmtDate=v=>{try{return new Intl.DateTimeFormat("ru-RU",{day:"2-digit",month:"2-digit",year:"numeric"}).format(new Date(v))}catch{return String(v||"")}};
- const fmtDuration=m=>{m=Number(m||0);if(!m)return "";const h=Math.floor(m/60),mm=m%60;return h?`${h}ч ${mm}м`:`${mm}м`};
- async function run(){
-   const from=document.getElementById("sfFrom")?.value.trim(), to=document.getElementById("sfTo")?.value.trim(), date=document.getElementById("sfDate")?.value;
-   if(!from||!to||!date){box.innerHTML=publicEmpty((extraTranslations[lang]||extraTranslations.ru).fillSearch);section.hidden=false;return;}
-   const p=new URLSearchParams({from,to,date,direct:"false",currency:"rub"});
-   const selectedAirlineBeforeSearch=document.getElementById("sfAirline")?.value||"";
-   if(selectedAirlineBeforeSearch) p.set("airline", selectedAirlineBeforeSearch);
-   section.hidden=false;box.innerHTML=publicEmpty((extraTranslations[lang]||extraTranslations.ru).searching);
-   try{
-     const r=await fetch("/api/live-search-flights?"+p.toString());
-     const d=await r.json();
-     if(!r.ok||!d.ok){
-       const status=d?.diagnostics?.httpStatus||r.status;
-       if(status===401||d?.error==="TRAVELPORT_API_ERROR"){
-         const detail=typeof d?.details==="string"?d.details:(Array.isArray(d?.details)?d.details.map(x=>x?.Message||x?.message||x?.StatusCode||JSON.stringify(x)).join("; "):d?.details?.Message||d?.details?.message||"");
-         throw new Error(`Travelport HTTP ${status}${detail?` — ${detail}`:""}`);
-       }
-       throw new Error(d.message||d.error||"API_ERROR");
-     }
-     let a=d.flights||[];
-     const airlineSelect=document.getElementById("sfAirline");
-     const stopsSelect=document.getElementById("sfStops");
-     const airportSelect=document.getElementById("sfAirport");
-     const selectedAirline=selectedAirlineBeforeSearch;
-     const selectedStops=stopsSelect?.value||"";
-     const selectedAirport=airportSelect?.value||"";
-     const knownAirlines={SU:"Аэрофлот",S7:"S7 Airlines",U6:"Уральские авиалинии",UT:"ЮТэйр",SZ:"Somon Air",DP:"Победа",TK:"Turkish Airlines",EK:"Emirates",FZ:"flydubai",HY:"Uzbekistan Airways",KC:"Air Astana",A4:"Азимут",WZ:"Red Wings","5N":"Smartavia",I8:"ИрАэро",N4:"Nordwind Airlines",R3:"Якутия",YC:"Ямал",EO:"Pegas Fly",ZF:"Azur Air",FV:"Россия",B2:"Белавиа",J2:"Azerbaijan Airlines",HY:"Uzbekistan Airways",CZ:"China Southern",MU:"China Eastern",CA:"Air China",QR:"Qatar Airways",GF:"Gulf Air",WY:"Oman Air",G9:"Air Arabia",XY:"flynas",RJ:"Royal Jordanian",MS:"EgyptAir",EY:"Etihad Airways",PC:"Pegasus Airlines",JU:"Air Serbia",LO:"LOT",LH:"Lufthansa",AF:"Air France",KL:"KLM",OS:"Austrian Airlines",AY:"Finnair",AZ:"ITA Airways",LX:"SWISS",BA:"British Airways",IB:"Iberia",SU:"Аэрофлот",SAS:"SAS"};
-     const airlineNames=[...new Set([...Object.values(knownAirlines),...a.map(x=>x.airline).filter(Boolean)])].sort((x,y)=>x.localeCompare(y,"ru"));
-     if(airlineSelect){airlineSelect.innerHTML='<option value="">Все авиакомпании</option>'+airlineNames.map(n=>`<option value="${escHtml(n)}">${escHtml(n)}</option>`).join("");airlineSelect.value=selectedAirline;}
-     const airportNames=[...new Set(a.flatMap(x=>[x.from_airport_code,x.to_airport_code]).filter(Boolean))].sort();
-     if(airportSelect){airportSelect.innerHTML='<option value="">Все аэропорты</option>'+airportNames.map(n=>`<option value="${escHtml(n)}">${escHtml(n)}</option>`).join("");airportSelect.value=selectedAirport;}
-     if(selectedAirline)a=a.filter(x=>String(x.airline||"")===selectedAirline);
-     if(selectedStops==="0")a=a.filter(x=>Number(x.transfers||0)===0);
-     if(selectedStops==="1")a=a.filter(x=>Number(x.transfers||0)>0);
-     if(selectedAirport)a=a.filter(x=>String(x.from_airport_code||x.from_iata||"")===selectedAirport||String(x.to_airport_code||x.to_iata||"")===selectedAirport);
-     const sort=document.getElementById("sfSort")?.value||"price";
-     if(sort==="time")a.sort((x,y)=>String(x.departure_at).localeCompare(String(y.departure_at)));
-     else a.sort((x,y)=>Number(x.price)-Number(y.price));
-     box.innerHTML=a.length?a.map(x=>{
-       const direct=Number(x.transfers||0)===0;
-       const transferCodes=Array.isArray(x.transfer_airports)?x.transfer_airports.map(v=>typeof v==="string"?v:(v?.code||v?.iata||v?.airport)).filter(Boolean):[];
-       const transferCities=Array.isArray(x.transfer_cities)?x.transfer_cities.map(v=>typeof v==="string"?v:(v?.city||v?.name)).filter(Boolean):[];
-       const transferNames=[...new Set([...transferCities,...transferCodes.map(code=>AIRPORT_BY_CODE[code]?.city||code)])];
-       const transferHtml=!direct?(transferNames.length? `<span>🔄 <span data-search-i18n="transferVia">${escHtml((extraTranslations[lang]||extraTranslations.ru).transferVia)}</span>: ${transferNames.map(escHtml).join(", ")}</span>`:`<span>🔄 ${Number(x.transfers||0)} <span data-search-i18n="${Number(x.transfers||0)===1?"transfersOne":"transfersMany"}">${escHtml(Number(x.transfers||0)===1?(extraTranslations[lang]||extraTranslations.ru).transfersOne:(extraTranslations[lang]||extraTranslations.ru).transfersMany)}</span> · <span data-search-i18n="transferUnknown">${escHtml((extraTranslations[lang]||extraTranslations.ru).transferUnknown)}</span></span>`):"";
-       const fromCode=x.from_airport_code||x.from_iata||"";
-       const toCode=x.to_airport_code||x.to_iata||"";
-       const fromPlace=AIRPORT_BY_CODE[fromCode]||AIRPORT_BY_CODE[x.from_iata]||null;
-       const toPlace=AIRPORT_BY_CODE[toCode]||AIRPORT_BY_CODE[x.to_iata]||null;
-       const placeHtml=(p,code,cls="")=>p?`<div class="flight-place ${cls}"><strong>${escHtml(p.city)}</strong><span>${escHtml(p.airport)} · ${escHtml(code)}</span></div>`:`<div class="flight-place ${cls}"><strong>${escHtml(code)}</strong></div>`;
-       return `<article class="flight-card">
-         <div class="flight-route-detail">${placeHtml(fromPlace,fromCode)}<div class="arrow">→</div>${placeHtml(toPlace,toCode,"right")}</div>
-         <div class="flight-meta">
-           <span>📅 ${escHtml(fmtDate(x.departure_at))}</span>
-           <span>🕐 ${escHtml(fmtTime(x.departure_at))}</span>
-           <span>✈️ ${escHtml(x.airline||"")}${x.flight_number?" "+escHtml(x.flight_number):""}</span>
-           <span>${direct?`<span data-search-i18n="direct">${escHtml((extraTranslations[lang]||extraTranslations.ru).direct)}</span>`:`<span data-search-i18n="withConnectionCard">${escHtml((extraTranslations[lang]||extraTranslations.ru).withConnectionCard)}</span>`}${x.duration_to?" · "+escHtml(fmtDuration(x.duration_to)):""}</span>
-           ${transferHtml}
-           <span>🎒 <span data-search-i18n="carryOn">${escHtml((extraTranslations[lang]||extraTranslations.ru).carryOn)}</span>: ${escHtml(x.hand_baggage||(extraTranslations[lang]||extraTranslations.ru).clarify)}</span>
-           <span>🧳 <span data-search-i18n="checkedBaggage">${escHtml((extraTranslations[lang]||extraTranslations.ru).checkedBaggage)}</span>: ${escHtml(x.baggage||(extraTranslations[lang]||extraTranslations.ru).clarify)}</span>
-         </div>
-         <div class="flight-price">${moneyWithCurrency(x.price,x.currency)}</div>
-       </article>`;
-     }).join(""):publicEmpty((extraTranslations[lang]||extraTranslations.ru).noSearchResults);
-   }catch(e){
-     const msg=String(e?.message||"");
-     const friendly=msg.startsWith("Travelport HTTP 401")
-       ? (lang==="tj"?"Travelport: дастрасӣ ба ҷустуҷӯи парвозҳо иҷозат дода нашудааст. Танзимоти TripServices/PCC-ро санҷед.":lang==="en"?"Travelport: Air Search access was not authorized. Check TripServices/PCC provisioning.":"Travelport: доступ к Air Search не авторизован. Проверьте provisioning TripServices/PCC.")
-       : msg.startsWith("Travelport HTTP") ? msg : (extraTranslations[lang]||extraTranslations.ru).searchError;
-     box.innerHTML=publicEmpty(friendly);
-   }
- }
- ["sfAirline","sfAirport","sfStops","sfSort"].forEach(id=>document.getElementById(id)?.addEventListener("change",run));
- ss.addEventListener("submit",e=>{e.preventDefault();run()});
-})();
 })();

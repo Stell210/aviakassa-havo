@@ -1,43 +1,18 @@
-Aviakassa_havo v46 — White Label + Drive — Travelport TripServices + full RU/TJ/EN interface localization
+Aviakassa_havo v55 — Travelpayouts White Label
 
-Changes from v38:
-- Kept Travelport TripServices as the only flight search provider. Aviasales Data API remains removed from application code.
-- Completed RU / TJ / EN localization of the public interface.
-- Added translations for search form labels, filters, sorting, offers section, current flights section, status texts, empty/error states and dynamic flight-card labels.
-- Language selection is preserved in localStorage.
-- Admin panel keeps RU / TJ / EN and now translates additional dynamic notifications and API errors.
-- No changes to Travelport credentials or search API configuration.
+- Flight search and ticket results on the public site use Travelpayouts White Label Web.
+- White Label ID: 21705 (can be overridden by TRAVELPAYOUTS_WHITE_LABEL_ID in Render).
+- Optional TRAVELPAYOUTS_API_TOKEN is kept server-side and is never exposed in the browser.
+- Legacy flight-provider integration has been removed from this version.
+- The former social-video generator UI has been removed.
+- Travelpayouts Drive is disabled on the public page.
+- White Label containers: #tpwl-search and #tpwl-tickets.
+- The public page sets resultsURL to the current page so search results stay on Aviakassa_havo.
 
 Render environment variables:
-TRAVELPORT_CLIENT_ID
-TRAVELPORT_CLIENT_SECRET
-TRAVELPORT_USERNAME
-TRAVELPORT_PASSWORD
-TRAVELPORT_PCC
-TRAVELPORT_AUTH_URL (optional; trial page may use https://auth.pp.travelport.com/oauth/token)
-TRAVELPORT_API_URL (optional; pre-production API: https://api.pp.travelport.net/11/air/catalog/search/catalogproductofferings)
-TRAVELPORT_CONTENT_SOURCES (optional; default GDS,NDC)
-FLIGHT_MARKUP_RUB (optional; default 500)
+DATABASE_URL
+ADMIN_PASSWORD
+TRAVELPAYOUTS_API_TOKEN (optional)
+TRAVELPAYOUTS_WHITE_LABEL_ID (optional; default 21705)
 
-Important: do not put credentials into GitHub or frontend code. Keep them in Render environment variables.
-
-
-Version v43 fix: Travelport post-migration authentication uses auth.pp.travelport.net and application/x-www-form-urlencoded. Legacy .com auth URLs are normalized to .net automatically. Air API remains api.pp.travelport.net.
-
-
-White Label Web widget:
-- Main script: https://tpemb.com/wl_web/main.js?wl_id=21705
-- Search container: #tpwl-search
-- Results container: #tpwl-tickets
-
-Travelpayouts Drive:
-- Drive script enabled on the public site using the supplied Travelpayouts Drive code.
-
-
-VIEW-ONLY FIX v49
-- Restored the complete public Aviakassa_havo page layout from v46.
-- Travelpayouts White Label Widget remains on the same page with #tpwl-search and #tpwl-tickets.
-- Travelpayouts Drive remains disabled on the public page to avoid click interception/redirect behavior.
-- Added a DOM-level safety layer that hides and blocks ordinary booking CTA elements such as “Выбрать билет”, “Купить”, “Забронировать”, “Book”, etc.
-- Important limitation: Travelpayouts White Label does not allow changing its displayed ticket price or adding a surcharge. The admin markup value therefore is NOT artificially added to White Label prices. Showing +500/+600 on top of a White Label price would be misleading because checkout uses the original provider price.
-- To implement a real source price + admin markup, replace the White Label result rendering with an approved flight-search API and apply markup server-side.
+Do not put secret credentials into GitHub or frontend code.

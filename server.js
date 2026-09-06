@@ -8,14 +8,8 @@ const XLSX = require("xlsx");
 const PORT = process.env.PORT || 10000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 const DATABASE_URL = process.env.DATABASE_URL || "";
-const TRAVELPORT_CLIENT_ID = process.env.TRAVELPORT_CLIENT_ID || "";
-const TRAVELPORT_CLIENT_SECRET = process.env.TRAVELPORT_CLIENT_SECRET || "";
-const TRAVELPORT_USERNAME = process.env.TRAVELPORT_USERNAME || "";
-const TRAVELPORT_PASSWORD = process.env.TRAVELPORT_PASSWORD || "";
-const TRAVELPORT_PCC = process.env.TRAVELPORT_PCC || "";
-const TRAVELPORT_AUTH_URL = String(process.env.TRAVELPORT_AUTH_URL || "https://auth.pp.travelport.net/oauth/token").replace("auth.pp.travelport.com", "auth.pp.travelport.net").replace("auth.travelport.com", "auth.travelport.net");
-const TRAVELPORT_API_URL = String(process.env.TRAVELPORT_API_URL || "https://api.pp.travelport.net/11/air/catalog/search/catalogproductofferings").replace("api.pp.travelport.com", "api.pp.travelport.net").replace("api.travelport.com", "api.travelport.net");
-const TRAVELPORT_CONTENT_SOURCES = String(process.env.TRAVELPORT_CONTENT_SOURCES || "GDS").split(",").map(x=>x.trim().toUpperCase()).filter(Boolean);
+const TRAVELPAYOUTS_API_TOKEN = process.env.TRAVELPAYOUTS_API_TOKEN || "";
+const TRAVELPAYOUTS_WHITE_LABEL_ID = process.env.TRAVELPAYOUTS_WHITE_LABEL_ID || "21705";
 const DEFAULT_FLIGHT_MARKUP_RUB = Number.isFinite(Number(process.env.FLIGHT_MARKUP_RUB)) ? Math.max(0, Number(process.env.FLIGHT_MARKUP_RUB)) : 500;
 const publicDir = __dirname;
 const pool = DATABASE_URL ? new Pool({
@@ -355,232 +349,19 @@ async function api(req,res,url){
 
   if(req.method==="GET" && url.pathname==="/api/admin/supplier/status"){
     const user=authorized(req); if(!user)return send(res,401,{ok:false,error:"UNAUTHORIZED"}); if(user.role!=="admin")return send(res,403,{ok:false,error:"ADMIN_ONLY"});
-    const configured=!!(TRAVELPORT_CLIENT_ID&&TRAVELPORT_CLIENT_SECRET&&TRAVELPORT_USERNAME&&TRAVELPORT_PASSWORD&&TRAVELPORT_PCC);
-    return send(res,200,{ok:true,configured,provider:"Travelport TripServices",message:configured?"Travelport credentials настроены в Render.":"Добавьте TRAVELPORT_CLIENT_ID, TRAVELPORT_CLIENT_SECRET, TRAVELPORT_USERNAME, TRAVELPORT_PASSWORD и TRAVELPORT_PCC в Render Environment."});
+    const configured=!!TRAVELPAYOUTS_WHITE_LABEL_ID;
+    return send(res,200,{ok:true,configured,provider:"Travelpayouts White Label",whiteLabelId:TRAVELPAYOUTS_WHITE_LABEL_ID,apiTokenConfigured:!!TRAVELPAYOUTS_API_TOKEN,message:configured?"Travelpayouts White Label настроен.":"White Label ID не настроен."});
   }
   if(req.method==="POST" && url.pathname==="/api/admin/supplier/sync"){
     const user=authorized(req); if(!user)return send(res,401,{ok:false,error:"UNAUTHORIZED"}); if(user.role!=="admin")return send(res,403,{ok:false,error:"ADMIN_ONLY"});
-    const configured=!!(TRAVELPORT_CLIENT_ID&&TRAVELPORT_CLIENT_SECRET&&TRAVELPORT_USERNAME&&TRAVELPORT_PASSWORD&&TRAVELPORT_PCC);
-    if(!configured)return send(res,503,{ok:false,error:"TRAVELPORT_CREDENTIALS_NOT_SET"});
-    return send(res,200,{ok:true,provider:"Travelport TripServices",message:"Travelport настроен. Поиск выполняется через /api/live-search-flights."});
+    const configured=!!TRAVELPAYOUTS_WHITE_LABEL_ID;
+    if(!configured)return send(res,503,{ok:false,error:"TRAVELPAYOUTS_WHITE_LABEL_NOT_SET",message:"White Label ID не настроен."});
+    return send(res,200,{ok:true,provider:"Travelpayouts White Label",whiteLabelId:TRAVELPAYOUTS_WHITE_LABEL_ID,message:"White Label доступен. Поиск и результаты подключаются через виджет Travelpayouts."});
   }
   // Public lists for future site integrations.
   if(req.method==="GET" && url.pathname==="/api/directions" && pool){const q=await pool.query(`SELECT id,city,country,code FROM directions WHERE active=true ORDER BY city`);return send(res,200,{ok:true,directions:q.rows});}
   if(req.method==="GET" && url.pathname==="/api/flights" && pool){const q=await pool.query(`SELECT * FROM flights WHERE active=true AND flight_date>=CURRENT_DATE ORDER BY flight_date,flight_time LIMIT 500`);return send(res,200,{ok:true,flights:q.rows});}
   if(req.method==="GET" && url.pathname==="/api/offers" && pool){const q=await pool.query(`SELECT * FROM offers WHERE active=true AND (valid_until IS NULL OR valid_until>=CURRENT_DATE) ORDER BY created_at DESC`);return send(res,200,{ok:true,offers:q.rows});}
-  if(req.method==="GET" && url.pathname==="/api/live-search-flights"){
-    const from=safe(url.searchParams.get("from"),120);
-    const to=safe(url.searchParams.get("to"),120);
-    const date=safe(url.searchParams.get("date"),20);
-    const currency=(safe(url.searchParams.get("currency"),8)||"rub").toUpperCase();
-    const requestedAirline=safe(url.searchParams.get("airline"),120);
-    const directParam=url.searchParams.get("direct");
-
-    const cityIata = {
-      "душанбе":"DYU","dushanbe":"DYU","москва":"MOW","moscow":"MOW",
-      "санкт-петербург":"LED","saint petersburg":"LED","казань":"KZN","kazan":"KZN",
-      "екатеринбург":"SVX","yekaterinburg":"SVX","новосибирск":"OVB","novosibirsk":"OVB",
-      "самара":"KUF","samara":"KUF","уфа":"UFA","ufa":"UFA","красноярск":"KJA","krasnoyarsk":"KJA",
-      "ростов-на-дону":"ROV","rostov-on-don":"ROV","тюмень":"TJM","tyumen":"TJM","сургут":"SGC","surgut":"SGC",
-      "минеральные воды":"MRV","mineralnye vody":"MRV","дубай":"DXB","dubai":"DXB","стамбул":"IST","istanbul":"IST",
-      "пекин":"PEK","beijing":"PEK","алматы":"ALA","almaty":"ALA","астана":"NQZ","astana":"NQZ",
-      "ташкент":"TAS","tashkent":"TAS","самарканд":"SKD","samarkand":"SKD","бишкек":"FRU","bishkek":"FRU",
-      "баку":"GYD","baku":"GYD","тегеран":"IKA","tehran":"IKA","дели":"DEL","delhi":"DEL",
-      "абу-даби":"AUH","abu dhabi":"AUH","доха":"DOH","doha":"DOH","анталья":"AYT","antalya":"AYT",
-      "тбилиси":"TBS","tbilisi":"TBS"
-    };
-    function extractIata(value){
-      const raw=String(value||"").trim();
-      const paren=raw.match(/\(([A-Za-z]{3})\)/); if(paren) return paren[1].toUpperCase();
-      if(/^[A-Za-z]{3}$/.test(raw)) return raw.toUpperCase();
-      const city=raw.split(",")[0].trim().toLowerCase(); return cityIata[city] || null;
-    }
-    function asArray(v){ return Array.isArray(v)?v:(v?[v]:[]); }
-    function firstDefined(...vals){ return vals.find(v=>v!==undefined&&v!==null&&v!==""); }
-    function deepFindAll(node,predicate,out=[]){
-      if(!node || typeof node!=="object") return out;
-      if(predicate(node)) out.push(node);
-      if(Array.isArray(node)){ for(const x of node) deepFindAll(x,predicate,out); }
-      else for(const v of Object.values(node)) deepFindAll(v,predicate,out);
-      return out;
-    }
-    function durationMinutes(v){
-      if(typeof v==="number") return v;
-      const s=String(v||""); const m=s.match(/P(?:0D)?T(?:(\d+)H)?(?:(\d+)M)?/i); if(m)return Number(m[1]||0)*60+Number(m[2]||0);
-      return Number(s)||0;
-    }
-    function isoDuration(v){ return durationMinutes(v); }
-    function findCurrency(price){ return firstDefined(price?.CurrencyCode?.value,price?.currencyCode,price?.currency); }
-    function findTotal(price){ return Number(firstDefined(price?.TotalPrice,price?.Total,price?.Amount?.Total,price?.Amount?.value,price?.value)); }
-    function normalizeBrandText(brand){
-      if(!brand) return "";
-      const attrs=asArray(brand.BrandAttribute);
-      const add=asArray(brand.AdditionalBrandAttribute);
-      const all=[...attrs,...add];
-      const checked=all.filter(a=>/CheckedBag|CarryOn|PersonalItem/i.test(String(a?.classification||a?.Classification||"")));
-      return checked.map(a=>`${a.classification||a.Classification}: ${a.inclusion||a.Inclusion}`).join("; ");
-    }
-
-    if(!date || !validDate(date)) return send(res,400,{ok:false,error:"INVALID_DATE"});
-    const origin=extractIata(from), destination=extractIata(to);
-    if(!origin || !destination) return send(res,400,{ok:false,error:"UNKNOWN_CITY_IATA",message:"Не удалось определить IATA-код города. Используйте город из списка или аэропорт с кодом IATA."});
-    if(!TRAVELPORT_PCC) {
-      console.error(`[Travelport] CONFIG ERROR: TRAVELPORT_PCC is not set | ${origin} -> ${destination} | ${date}`);
-      return send(res,503,{ok:false,error:"TRAVELPORT_PCC_NOT_SET"});
-    }
-    if(!(TRAVELPORT_CLIENT_ID&&TRAVELPORT_CLIENT_SECRET&&TRAVELPORT_USERNAME&&TRAVELPORT_PASSWORD)) {
-      console.error(`[Travelport] CONFIG ERROR: credentials incomplete | ${origin} -> ${destination} | ${date}`);
-      return send(res,503,{ok:false,error:"TRAVELPORT_CREDENTIALS_NOT_SET"});
-    }
-
-    console.log(`[Travelport] SEARCH START | ${origin} -> ${destination} | date=${date} | airline=${requestedAirline||"ALL"} | direct=${directParam||"ALL"}`);
-
-    try{
-      if(!global.__travelportToken || global.__travelportToken.expiresAt < Date.now()+60000){
-        const authBody=new URLSearchParams({username:TRAVELPORT_USERNAME,password:TRAVELPORT_PASSWORD,client_id:TRAVELPORT_CLIENT_ID,client_secret:TRAVELPORT_CLIENT_SECRET,grant_type:"password"}).toString();
-        const ar=await fetch(TRAVELPORT_AUTH_URL,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded","Accept":"application/json"},body:authBody});
-        const aj=await ar.json().catch(()=>({}));
-        console.log(`[Travelport] AUTH | HTTP ${ar.status} | token=${aj?.access_token?"OK":"MISSING"}`);
-        if(!ar.ok || !aj.access_token) {
-          console.error(`[Travelport] AUTH ERROR | HTTP ${ar.status} | ${aj?.error_description||aj?.error||"NO_TOKEN"}`);
-          return send(res,502,{ok:false,error:"TRAVELPORT_AUTH_ERROR",details:aj?.error_description||aj?.error||`HTTP_${ar.status}`});
-        }
-        global.__travelportToken={value:aj.access_token,expiresAt:Date.now()+Math.max(300,Number(aj.expires_in||86400)-120)*1000};
-      }
-      const body={
-        "@type":"CatalogProductOfferingsQueryRequest",
-        "CatalogProductOfferingsRequest":{
-          "@type":"CatalogProductOfferingsRequestAir",
-          "maxNumberOfUpsellsToReturn":4,
-          "offersPerPage":50,
-          "contentSourceList":TRAVELPORT_CONTENT_SOURCES,
-          "PassengerCriteria":[{"@type":"PassengerCriteria","number":1,"passengerTypeCode":"ADT"}],
-          "SearchCriteriaFlight":[{"@type":"SearchCriteriaFlight","departureDate":date,"From":{"value":origin},"To":{"value":destination}}]
-        }
-      };
-      if(requestedAirline){
-        const map={"аэрофлот":"SU","aeroflot":"SU","s7 airlines":"S7","s7":"S7","уральские авиалинии":"U6","ural airlines":"U6","ютийр":"UT","utair":"UT","somon air":"SZ","somonair":"SZ","узбекистан эйрвейс":"HY","uzbekistan airways":"HY","turkish airlines":"TK","emirates":"EK","flydubai":"FZ","победа":"DP","pобеда":"DP"};
-        const code=/^[A-Za-z0-9]{2,3}$/.test(requestedAirline)?requestedAirline.toUpperCase():map[requestedAirline.toLowerCase()];
-        if(code) body.CatalogProductOfferingsRequest.SearchModifiersAir={"@type":"SearchModifiersAir","CarrierPreference":[{"@type":"CarrierPreference","preferenceType":"Permitted","carriers":[code]}]};
-      }
-      const makeTpHeaders=()=>({"Accept-Encoding":"gzip, deflate","Authorization":`Bearer ${global.__travelportToken.value}`,"Content-Type":"application/json","TVP-PCC-Core":TRAVELPORT_PCC,"Accept":"application/json","Accept-Version":"11","Content-Version":"11","Cache-Control":"no-cache","TraceId":`Aviakassa_${origin}_${destination}`});
-      let tpHeaders=makeTpHeaders();
-      console.log(`[Travelport] API REQUEST | endpoint=${TRAVELPORT_API_URL} | PCC=${TRAVELPORT_PCC} | sources=${body.CatalogProductOfferingsRequest.contentSourceList.join(",")}`);
-      let rr=await fetch(TRAVELPORT_API_URL,{method:"POST",headers:tpHeaders,body:JSON.stringify(body)});
-      let e2e=rr.headers.get("E2ETrackingID")||rr.headers.get("e2etrackingid")||null;
-      let contentType=rr.headers.get("content-type")||"";
-      let raw=await rr.json().catch(()=>null);
-      if(!raw) {
-        const text=await rr.text().catch(()=>"");
-        raw={__nonJson:text.slice(0,1000)};
-      }
-      console.log(`[Travelport] API RESPONSE | HTTP ${rr.status} | E2E=${e2e||"none"} | content-type=${contentType||"unknown"}`);
-      // A stale/invalid cached token can cause a 401. Refresh once and retry the exact request.
-      // This does not mask provisioning errors: if the fresh token also gets 401, we return it clearly.
-      if(rr.status===401){
-        console.warn(`[Travelport] API 401 | refreshing OAuth token and retrying once`);
-        global.__travelportToken=null;
-        const authBody2=new URLSearchParams({username:TRAVELPORT_USERNAME,password:TRAVELPORT_PASSWORD,client_id:TRAVELPORT_CLIENT_ID,client_secret:TRAVELPORT_CLIENT_SECRET,grant_type:"password"}).toString();
-        const ar2=await fetch(TRAVELPORT_AUTH_URL,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded","Accept":"application/json"},body:authBody2});
-        const aj2=await ar2.json().catch(()=>({}));
-        if(ar2.ok && aj2.access_token){
-          global.__travelportToken={value:aj2.access_token,expiresAt:Date.now()+Math.max(300,Number(aj2.expires_in||86400)-120)*1000};
-          tpHeaders=makeTpHeaders();
-          rr=await fetch(TRAVELPORT_API_URL,{method:"POST",headers:tpHeaders,body:JSON.stringify(body)});
-          e2e=rr.headers.get("E2ETrackingID")||rr.headers.get("e2etrackingid")||null;
-          contentType=rr.headers.get("content-type")||"";
-          raw=await rr.json().catch(()=>null);
-        } else {
-          raw=aj2;
-        }
-      }
-      // NDC is available only for customers provisioned for NDC. If a trial account
-      // rejects an aggregated GDS+NDC request, retry safely with GDS only.
-      if(!rr.ok && body.CatalogProductOfferingsRequest.contentSourceList.includes("NDC")){
-        body.CatalogProductOfferingsRequest.contentSourceList=["GDS"];
-        tpHeaders=makeTpHeaders();
-        rr=await fetch(TRAVELPORT_API_URL,{method:"POST",headers:tpHeaders,body:JSON.stringify(body)});
-        raw=await rr.json().catch(()=>({}));
-      }
-      if(!rr.ok) {
-        const details=raw?.Result?.Error||raw?.error||raw?.Result?.Warning||raw?.__nonJson||`HTTP_${rr.status}`;
-        console.error(`[Travelport] API ERROR | HTTP ${rr.status} | ${JSON.stringify(details).slice(0,4000)}`);
-        return send(res,502,{ok:false,error:"TRAVELPORT_API_ERROR",details,diagnostics:{httpStatus:rr.status,e2eTrackingId:e2e,contentSources:body.CatalogProductOfferingsRequest.contentSourceList}});
-      }
-
-      const root=raw?.CatalogProductOfferingsResponse||raw;
-      const resultBlock=root?.Result||{};
-      if(Array.isArray(resultBlock?.Error) && resultBlock.Error.length){
-        console.error(`[Travelport] SEARCH ERROR | HTTP ${rr.status} | ${JSON.stringify(resultBlock.Error).slice(0,6000)}`);
-        return send(res,502,{ok:false,error:"TRAVELPORT_SEARCH_ERROR",details:resultBlock.Error,warnings:resultBlock.Warning||[],diagnostics:{httpStatus:rr.status,e2eTrackingId:e2e,transactionId:root?.transactionId||null,traceId:root?.traceId||null,contentSources:body.CatalogProductOfferingsRequest.contentSourceList}});
-      }
-
-      const cpo=root?.CatalogProductOfferings||{};
-      const offers=asArray(cpo?.CatalogProductOffering);
-      const references=asArray(root?.ReferenceList);
-      console.log(`[Travelport] SEARCH DATA | offers=${offers.length} | referenceLists=${references.length} | status=${resultBlock?.status||"unknown"} | transaction=${root?.transactionId||"none"} | trace=${root?.traceId||"none"}`);
-      if(!offers.length) console.warn(`[Travelport] ZERO OFFERS | ${origin} -> ${destination} | ${date} | warnings=${JSON.stringify(resultBlock?.Warning||[]).slice(0,4000)}`);
-      const flightRefs={}; const productRefs={}; const brands={}; const terms={};
-      for(const rl of references){
-        for(const f of asArray(rl?.Flight)) if(f?.id) flightRefs[f.id]=f;
-        for(const p of asArray(rl?.Product)) if(p?.id) productRefs[p.id]=p;
-        for(const b of asArray(rl?.Brand)) if(b?.id) brands[b.id]=b;
-        for(const t of asArray(rl?.TermsAndConditions)) if(t?.id) terms[t.id]=t;
-      }
-      const markup=await getFlightMarkup();
-      const airlineNames={SU:"Аэрофлот",S7:"S7 Airlines",U6:"Уральские авиалинии",UT:"ЮТэйр",SZ:"Somon Air",DP:"Победа",TK:"Turkish Airlines",EK:"Emirates",FZ:"flydubai",HY:"Uzbekistan Airways",KC:"Air Astana",A4:"Азимут",WZ:"Red Wings","5N":"Smartavia",I8:"ИрАэро",N4:"Nordwind Airlines",R3:"Якутия",YC:"Ямал",EO:"Pegas Fly",ZF:"Azur Air",FV:"Россия",B2:"Белавиа",J2:"Azerbaijan Airlines",CZ:"China Southern",MU:"China Eastern",CA:"Air China",QR:"Qatar Airways",GF:"Gulf Air",WY:"Oman Air",G9:"Air Arabia",XY:"flynas",RJ:"Royal Jordanian",MS:"EgyptAir",EY:"Etihad Airways",PC:"Pegasus Airlines",JU:"Air Serbia",LO:"LOT",LH:"Lufthansa",AF:"Air France",KL:"KLM",OS:"Austrian Airlines",AY:"Finnair",AZ:"ITA Airways",LX:"SWISS",BA:"British Airways",IB:"Iberia"};
-      const flights=[];
-      for(const offer of offers){
-        const pbo=asArray(offer?.ProductBrandOptions);
-        for(const opt of pbo){
-          const refs=asArray(opt?.flightRefs);
-          const pOffer=asArray(opt?.ProductBrandOffering)[0]; if(!pOffer) continue;
-          const priceObj=pOffer?.BestCombinablePrice||pOffer?.Price||{};
-          const basePrice=findTotal(priceObj); if(!Number.isFinite(basePrice)||basePrice<=0) continue;
-          const currencyCode=findCurrency(priceObj)||currency;
-          const flightList=refs.map(id=>flightRefs[id]).filter(Boolean);
-          const productList=asArray(pOffer?.Product).map(x=>productRefs[x?.productRef]).filter(Boolean);
-          const productFlights=productList.flatMap(p=>asArray(p?.FlightRef||p?.FlightRefs)).map(x=>typeof x==="string"?flightRefs[x]:flightRefs[x?.FlightRef||x?.value]).filter(Boolean);
-          const flightObjects=flightList.length?flightList:productFlights;
-          // Travelport keeps the actual departure/arrival/marketing details inside
-          // ReferenceListFlight -> Flight -> FlightSegment. The previous version
-          // treated the Flight object itself as a segment, which caused valid
-          // offers to be returned without usable times/airports and then filtered
-          // out by the frontend.
-          const allSegs=flightObjects.flatMap(f=>asArray(f?.FlightSegment||f?.Segment||f));
-          const first=allSegs[0]||{}; const last=allSegs[allSegs.length-1]||{};
-          const firstFlight=flightObjects[0]||{};
-          const marketing=first?.MarketingCarrier?.airlineCode||first?.MarketingCarrier?.code||first?.carrier||first?.carrierCode||first?.AirSegment?.MarketingCarrier?.code||firstFlight?.carrier||firstFlight?.MarketingCarrier?.airlineCode||firstFlight?.carrierCode;
-          const flightNumber=first?.FlightNumber||first?.flightNumber||first?.number||first?.AirSegment?.FlightNumber||firstFlight?.flightNumber||firstFlight?.FlightNumber;
-          const dep=first?.Departure?.dateTime||first?.Departure?.DateTime||first?.departureDateTime||first?.departureTime||first?.AirSegment?.Departure?.dateTime;
-          const arr=last?.Arrival?.dateTime||last?.Arrival?.DateTime||last?.arrivalDateTime||last?.arrivalTime||last?.AirSegment?.Arrival?.dateTime;
-          const fromCode=first?.Departure?.location||first?.Departure?.airport||first?.Departure?.value||first?.departure||offer?.Departure||origin;
-          const toCode=last?.Arrival?.location||last?.Arrival?.airport||last?.Arrival?.value||last?.arrival||offer?.Arrival||destination;
-          const intermediate=allSegs.slice(0,-1).map(s=>s?.Arrival?.location||s?.Arrival?.airport||s?.Arrival?.value).filter(Boolean).filter((v,i,a)=>i===0||v!==a[i-1]);
-          const termsRef=pOffer?.TermsAndConditions?.termsAndConditionsRef; const tc=terms[termsRef]||{};
-          const brandRef=pOffer?.Brand?.BrandRef; const brand=brands[brandRef]||{};
-          const attrs=normalizeBrandText(brand);
-          const baggageParts=[]; for(const b of asArray(tc?.BaggageAllowance)){ if(b?.BaggageAllowanceType||b?.BaggageType||b?.Quantity||b?.Weight) baggageParts.push(JSON.stringify(b)); }
-          const direct=allSegs.length<=1;
-          const duration=dep&&arr?Math.max(0,Math.round((new Date(arr)-new Date(dep))/60000)):durationMinutes(first?.duration||first?.FlightTime);
-          const id=`tp-${offer?.id||"offer"}-${brandRef||"base"}-${flightNumber||Math.random().toString(36).slice(2,8)}`;
-          flights.push({id,source:"travelport-tripservices",from_iata:origin,to_iata:destination,from_airport_code:fromCode,to_airport_code:toCode,airline_code:marketing||null,airline:airlineNames[marketing]||marketing||brand?.name||"Авиакомпания",flight_number:flightNumber||null,departure_at:dep||null,arrival_at:arr||null,return_at:null,transfers:Math.max(0,allSegs.length-1),duration_to:duration,transfer_airports:intermediate,transfer_cities:[],price:basePrice+markup,currency:currencyCode,source_price:basePrice,markup,baggage:attrs||baggageParts.join(";")||null,hand_baggage:null,baggage_note:attrs?null:"Условия багажа уточняются",link:null,content_source:pOffer?.ContentSource||null,brand:brand?.name||null,raw_offer_id:offer?.id||null});
-        }
-      }
-      const unique=new Map(); for(const f of flights){ const k=[f.airline_code,f.flight_number,f.departure_at,f.price,f.from_airport_code,f.to_airport_code].join("|"); if(!unique.has(k)) unique.set(k,f); }
-      let result=[...unique.values()];
-      if(requestedAirline){ const q=requestedAirline.toLowerCase(); result=result.filter(f=>String(f.airline||"").toLowerCase()===q || String(f.airline_code||"").toLowerCase()===q); }
-      if(directParam==="true") result=result.filter(f=>Number(f.transfers||0)===0);
-      if(directParam==="false") { /* all offers */ }
-      result.sort((a,b)=>Number(a.price)-Number(b.price));
-      console.log(`[Travelport] SEARCH DONE | offers=${offers.length} | parsed=${flights.length} | unique=${result.length} | ${origin} -> ${destination} | ${date}`);
-      return send(res,200,{ok:true,source:"Travelport TripServices",requested:{origin,destination,date,currency,airline:requestedAirline||null,direct:directParam},flights:result,warnings:root?.Result?.Warning||[],diagnostics:{contentSources:body.CatalogProductOfferingsRequest.contentSourceList,offersReceived:offers.length,parsedFlights:flights.length,uniqueFlights:result.length,e2eTrackingId:e2e,transactionId:root?.transactionId||null,traceId:root?.traceId||null}});
-    }catch(e){
-      console.error(`[Travelport] REQUEST FAILED | ${origin} -> ${destination} | ${date} | ${e?.name||"Error"}: ${e?.message||e}`);
-      return send(res,502,{ok:false,error:"TRAVELPORT_REQUEST_FAILED",message:e.message,diagnostics:{origin,destination,date}});
-    }
-  }
-
   if(req.method==="GET" && url.pathname==="/api/search-flights" && pool){
     const from=safe(url.searchParams.get("from"),120), to=safe(url.searchParams.get("to"),120), date=safe(url.searchParams.get("date"),20), airline=safe(url.searchParams.get("airline"),120), airport=safe(url.searchParams.get("airport"),20), direct=url.searchParams.get("direct");
     const args=[], where=["active=true","flight_date>=CURRENT_DATE"];

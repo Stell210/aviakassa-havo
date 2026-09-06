@@ -10,6 +10,11 @@
 <!-- Travelpayouts White Label Web widget -->
 <script nowprocket data-noptimize="1" data-cfasync="false" data-wpfc-render="false" seraph-accel-crit="1" data-no-defer="1">
   (function () {
+        // White Label Widget: explicitly keep search results on this page.
+        window.TPWL_CONFIGURATION = {
+          ...(window.TPWL_CONFIGURATION || {}),
+          resultsURL: window.location.origin + window.location.pathname
+        };
         var script = document.createElement("script");
         script.async = 1;
         script.type = "module";
@@ -19,6 +24,36 @@
 </script>
 
 <!-- Travelpayouts Drive intentionally disabled on the public page. -->
+<style>
+/* v52 — Aviakassa_havo modern flight-search redesign (Aviasales-inspired UX, original branding) */
+:root{--ah-blue:#1769ff;--ah-blue-dark:#0b45c5;--ah-ink:#172033;--ah-muted:#6f7b91;--ah-bg:#f4f7fb;--ah-card:#fff;--ah-line:#e3e9f2;--ah-yellow:#ffd21f}
+body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--ah-bg);color:var(--ah-ink)}
+.nav{height:68px;padding:0 max(22px,5vw);background:rgba(255,255,255,.96);backdrop-filter:blur(14px);border-bottom:1px solid #e8edf4;box-shadow:0 2px 14px rgba(20,35,60,.04)}
+.brand{font-size:20px;letter-spacing:-.4px;color:#15213a}.brand:first-letter{font-size:21px}
+.nav nav{gap:22px;font-size:13px}.nav nav a{transition:.18s;color:#59677c}.nav nav a:hover{color:var(--ah-blue)}
+.nav-right{gap:8px}.langs{background:#f2f5f9;border-radius:12px}.langs button{padding:7px 8px}.langs button.active{color:var(--ah-blue)}
+.wa{background:#18243a;border-radius:12px;padding:10px 14px}
+.hero{min-height:560px;background:radial-gradient(circle at 78% 25%,rgba(74,137,255,.35),transparent 30%),linear-gradient(135deg,#0b49c7 0%,#1769ff 46%,#54a7ff 100%);}
+.hero:before{content:"";position:absolute;width:620px;height:620px;right:-170px;top:-180px;border-radius:50%;border:1px solid rgba(255,255,255,.18);box-shadow:0 0 0 80px rgba(255,255,255,.035),0 0 0 160px rgba(255,255,255,.025)}
+.hero:after{content:"✈";position:absolute;right:8%;bottom:70px;font-size:150px;line-height:1;color:rgba(255,255,255,.11);transform:rotate(-13deg)}
+.hero-shade{background:linear-gradient(90deg,rgba(7,49,139,.42),rgba(7,49,139,.02))}
+.hero-content{max-width:1120px;margin:auto;padding:88px 5vw 155px}.badge{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.3);padding:8px 12px}.hero h1{font-size:clamp(44px,6.4vw,72px);letter-spacing:-3.5px;line-height:1.02;margin:20px 0 16px}.hero h1 span{color:#fff}.hero p{font-size:17px;max-width:570px;color:#f1f6ff}.actions{margin-top:24px}.primary{background:var(--ah-yellow);color:#172033;border-radius:12px;padding:14px 21px;box-shadow:0 7px 18px rgba(0,0,0,.12)}.ghost{border-radius:12px;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.42);padding:14px 20px}
+.search-results-section{max-width:1180px;padding:0 24px 72px;position:relative;margin-top:-92px;z-index:5}.search-results-section .head{background:#fff;border:1px solid var(--ah-line);border-bottom:0;border-radius:24px 24px 0 0;padding:28px 30px 8px;margin:0}.search-results-section .head h2{font-size:32px;margin:5px 0}.search-results-section .head p{font-size:13px}.white-label-search-wrap{background:#fff;border:1px solid var(--ah-line);border-top:0;padding:10px 26px 26px;border-radius:0 0 24px 24px;box-shadow:0 22px 55px rgba(20,45,90,.13)}
+.white-label-results-wrap{margin-top:22px;background:transparent}.white-label-results-wrap:empty{display:none}
+.section{max-width:1180px;padding:76px 5vw}.section .head h2,.step-inner h2{font-size:38px;letter-spacing:-1.7px}.eyebrow{color:var(--ah-blue);font-size:10px;letter-spacing:1.6px}
+.dynamic-section{padding-top:25px}.flight-card,.route,.offer,.benefit-grid>div,.mini-grid>div,.faq-list details,.contact-box{border-color:var(--ah-line);box-shadow:0 8px 25px rgba(16,35,63,.045);border-radius:18px}.flight-card:hover,.route:hover,.offer:hover{box-shadow:0 15px 34px rgba(16,35,63,.08)}
+.routes{grid-template-columns:repeat(3,1fr)}.route{padding:19px}.route b{font-size:16px}.route i{color:var(--ah-blue)}
+.offer-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.offer{padding:18px}.benefit-grid{gap:18px}.benefit-grid>div{padding:25px}.mini-grid>div{padding:22px}
+.steps{background:linear-gradient(135deg,#101d35,#173866)}.step-inner{max-width:1180px;padding:78px 5vw}.step-grid>div{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.13)}
+.social-card,.early-card{border-radius:22px;box-shadow:0 15px 40px rgba(16,35,63,.12)}.social-card{background:linear-gradient(135deg,#0e51cf,#1973ff)}
+.info-card{border-radius:20px}.floating-wa{background:#25d366;box-shadow:0 10px 28px rgba(10,100,70,.22)}
+.contact{padding:70px 5vw}.contact-box{padding:54px 25px}.contact-box h2{font-size:38px}.dark{background:#17243b}
+footer{background:#fff;padding:22px 5vw}
+/* Keep the embedded Travelpayouts search visually inside the new shell without changing its functionality. */
+#tpwl-search{min-height:86px}.white-label-search-wrap iframe{max-width:100%}
+@media(max-width:900px){.nav nav{display:none}.hero{min-height:520px}.hero-content{padding:70px 6vw 140px}.search-results-section{padding:0 12px 55px;margin-top:-78px}.search-results-section .head{padding:23px 20px 4px}.white-label-search-wrap{padding:8px 16px 18px}.routes{grid-template-columns:1fr 1fr}.offer-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.nav{height:62px;padding:0 14px}.brand{font-size:16px}.hero{min-height:500px}.hero:after{font-size:90px;right:4%;bottom:90px}.hero-content{padding:62px 6vw 125px}.hero h1{font-size:45px;letter-spacing:-2.4px}.hero p{font-size:15px}.hero .actions{display:grid;grid-template-columns:1fr}.search-results-section{margin-top:-66px;padding-left:8px;padding-right:8px}.search-results-section .head{border-radius:20px 20px 0 0}.search-results-section .head h2{font-size:28px}.white-label-search-wrap{border-radius:0 0 20px 20px;padding:7px 10px 14px}.section{padding:58px 5vw}.section .head h2,.step-inner h2{font-size:31px}.routes,.offer-grid{grid-template-columns:1fr}.contact-box h2{font-size:31px}.nav-right .langs{display:none}}
+</style>
 </head>
 <body>
 <header class="nav">
