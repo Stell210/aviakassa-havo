@@ -86,8 +86,8 @@ function updateCityList(l){
 }
 
 function setLang(l){
- lang=l; localStorage.setItem("aviakassa_lang",l); window.aviakassaLang=l; document.documentElement.lang=l; document.title=t.siteTitle||document.title;
  const t=translations[l]||translations.ru, x=extraTranslations[l]||extraTranslations.ru;
+ lang=l; localStorage.setItem("aviakassa_lang",l); window.aviakassaLang=l; document.documentElement.lang=l; document.title=t.siteTitle||document.title;
  document.querySelectorAll("[data-i18n]").forEach(el=>{const k=el.dataset.i18n;if(t[k]!==undefined)el.textContent=t[k]});
  document.querySelectorAll("[data-i18n-html]").forEach(el=>{const k=el.dataset.i18nHtml;if(t[k]!==undefined)el.innerHTML=t[k]});
  document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{const k=el.dataset.i18nPlaceholder;if(x[k]!==undefined)el.placeholder=x[k]}); document.querySelectorAll("[data-i18n-aria]").forEach(el=>{const k=el.dataset.i18nAria;if(k==="clear")el.setAttribute("aria-label",l==="en"?"Clear":l==="tj"?"Тоза кардан":"Очистить")}); document.querySelectorAll("[data-i18n]").forEach(el=>{const k=el.dataset.i18n;if(t[k]!==undefined)el.textContent=t[k];else if(x[k]!==undefined)el.textContent=x[k]});
