@@ -4,7 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Aviakassa_havo — авиабилеты и подбор рейсов из Душанбе и других городов.">
-<title>Aviakassa_havo — Авиабилеты</title>
+<title data-i18n="siteTitle">Aviakassa_havo — Авиабилеты</title>
+<link rel="preconnect" href="https://tpemb.com" crossorigin>
+<link rel="dns-prefetch" href="//tpemb.com">
 <link rel="stylesheet" href="style.css">
 
 <!-- Travelpayouts White Label Web widget -->
@@ -52,7 +54,7 @@ footer{background:#fff;padding:22px 5vw}
 /* Keep the embedded Travelpayouts search visually inside the new shell without changing its functionality. */
 #tpwl-search{min-height:86px}.white-label-search-wrap iframe{max-width:100%}
 @media(max-width:900px){.nav nav{display:none}.hero{min-height:520px}.hero-content{padding:70px 6vw 140px}.search-results-section{padding:0 12px 55px;margin-top:-78px}.search-results-section .head{padding:23px 20px 4px}.white-label-search-wrap{padding:8px 16px 18px}.routes{grid-template-columns:1fr 1fr}.offer-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:600px){.nav{height:62px;padding:0 14px}.brand{font-size:16px}.hero{min-height:500px}.hero:after{font-size:90px;right:4%;bottom:90px}.hero-content{padding:62px 6vw 125px}.hero h1{font-size:45px;letter-spacing:-2.4px}.hero p{font-size:15px}.hero .actions{display:grid;grid-template-columns:1fr}.search-results-section{margin-top:-66px;padding-left:8px;padding-right:8px}.search-results-section .head{border-radius:20px 20px 0 0}.search-results-section .head h2{font-size:28px}.white-label-search-wrap{border-radius:0 0 20px 20px;padding:7px 10px 14px}.section{padding:58px 5vw}.section .head h2,.step-inner h2{font-size:31px}.routes,.offer-grid{grid-template-columns:1fr}.contact-box h2{font-size:31px}.nav-right .langs{display:none}}
+@media(max-width:600px){.nav{height:62px;padding:0 14px}.brand{font-size:16px}.hero{min-height:500px}.hero:after{font-size:90px;right:4%;bottom:90px}.hero-content{padding:62px 6vw 125px}.hero h1{font-size:45px;letter-spacing:-2.4px}.hero p{font-size:15px}.hero .actions{display:grid;grid-template-columns:1fr}.search-results-section{margin-top:-66px;padding-left:8px;padding-right:8px}.search-results-section .head{border-radius:20px 20px 0 0}.search-results-section .head h2{font-size:28px}.white-label-search-wrap{border-radius:0 0 20px 20px;padding:7px 10px 14px}.section{padding:58px 5vw}.section .head h2,.step-inner h2{font-size:31px}.routes,.offer-grid{grid-template-columns:1fr}.contact-box h2{font-size:31px}.nav-right .langs{display:flex}}
 </style>
 </head>
 <body>
@@ -60,7 +62,7 @@ footer{background:#fff;padding:22px 5vw}
   <a class="brand" href="#top">✈️ <span>Aviakassa_havo</span></a>
   <nav>
     <a data-i18n="navSearch" href="#flightSearchResults">Найти билет</a>
-    <a data-i18n="navFlights" href="#flights">Рейсы</a><a data-i18n="navRoutes" href="#routes">Направления</a><a data-i18n="navOffers" href="#offers">Акции</a>
+    <a data-i18n="navRoutes" href="#routes">Направления</a><a data-i18n="navOffers" href="#offers">Акции</a>
     <a data-i18n="navHow" href="#steps">Как это работает</a><a data-i18n="navFaq" href="#faq">FAQ</a>
   </nav>
   <div class="nav-right">
@@ -91,11 +93,6 @@ footer{background:#fff;padding:22px 5vw}
   <div class="white-label-results-wrap">
     <div id="tpwl-tickets"></div>
   </div>
-</section>
-
-<section class="section dynamic-section" id="flights">
-  <div class="head"><div><span class="eyebrow" data-i18n="currentFlights">АКТУАЛЬНЫЕ РЕЙСЫ</span><h2 data-i18n="navFlights">Рейсы</h2></div><p data-i18n="currentFlightsIntro">Поиск рейсов прямо на Aviakassa_havo.</p></div>
-  <div id="publicFlights" class="flight-grid"></div>
 </section>
 
 <section class="section hot" id="offers">
@@ -194,7 +191,7 @@ footer{background:#fff;padding:22px 5vw}
 
 <div id="flightDetailModal" class="site-modal" hidden><div class="site-modal-card"><button id="closeFlightDetail" class="site-modal-close">×</button><div id="flightDetailBody"></div></div></div>
 <script>
-(function(){const box=document.getElementById("flightDetailModal"),body=document.getElementById("flightDetailBody"),close=document.getElementById("closeFlightDetail");if(!box)return;close.onclick=()=>box.hidden=true;document.addEventListener("click",async e=>{const a=e.target.closest("[data-flight-detail]");if(!a)return;e.preventDefault();try{const r=await fetch("/api/flight?id="+encodeURIComponent(a.dataset.flightDetail));const d=await r.json();if(!d.ok)throw Error();const f=d.flight;body.innerHTML=`<h2>${escHtml(f.from_city)} → ${escHtml(f.to_city)}</h2><div class="site-detail-grid"><div><b>Дата</b>${escHtml(f.flight_date)}</div><div><b>Время</b>${escHtml(f.flight_time)}</div><div><b>Авиакомпания</b>${escHtml(f.airline)}</div><div><b>Багаж</b>${escHtml(f.baggage)}</div><div><b>Вылет</b>${escHtml(f.from_airport)} (${escHtml(f.from_airport_code)})</div><div><b>Прилёт</b>${escHtml(f.to_airport)} (${escHtml(f.to_airport_code)})</div><div><b>Цена</b>${escHtml(f.price)} ${escHtml(f.currency||"")}</div></div><div class="view-only-note">Информация о рейсе доступна для просмотра.</div>`;box.hidden=false}catch(err){}})})();
+(function(){const box=document.getElementById("flightDetailModal"),body=document.getElementById("flightDetailBody"),close=document.getElementById("closeFlightDetail");if(!box)return;close.onclick=()=>box.hidden=true;document.addEventListener("click",async e=>{const a=e.target.closest("[data-flight-detail]");if(!a)return;e.preventDefault();try{const r=await fetch("/api/flight?id="+encodeURIComponent(a.dataset.flightDetail));const d=await r.json();if(!d.ok)throw Error();const f=d.flight;body.innerHTML=`<h2>${escHtml(f.from_city)} → ${escHtml(f.to_city)}</h2><div class="site-detail-grid"><div><b>${escHtml((window.aviakassaTranslations&&window.aviakassaTranslations[window.aviakassaLang||"ru"]?.flightDetailDate)||"Дата")}</b>${escHtml(f.flight_date)}</div><div><b>${escHtml((window.aviakassaTranslations&&window.aviakassaTranslations[window.aviakassaLang||"ru"]?.flightDetailTime)||"Время")}</b>${escHtml(f.flight_time)}</div><div><b>${escHtml((window.aviakassaTranslations&&window.aviakassaTranslations[window.aviakassaLang||"ru"]?.flightDetailAirline)||"Авиакомпания")}</b>${escHtml(f.airline)}</div><div><b>${escHtml((window.aviakassaTranslations&&window.aviakassaTranslations[window.aviakassaLang||"ru"]?.flightDetailBaggage)||"Багаж")}</b>${escHtml(f.baggage)}</div><div><b>${escHtml((window.aviakassaTranslations&&window.aviakassaTranslations[window.aviakassaLang||"ru"]?.flightDetailDeparture)||"Вылет")}</b>${escHtml(f.from_airport)} (${escHtml(f.from_airport_code)})</div><div><b>${escHtml((window.aviakassaTranslations&&window.aviakassaTranslations[window.aviakassaLang||"ru"]?.flightDetailArrival)||"Прилёт")}</b>${escHtml(f.to_airport)} (${escHtml(f.to_airport_code)})</div><div><b>${escHtml((window.aviakassaTranslations&&window.aviakassaTranslations[window.aviakassaLang||"ru"]?.flightDetailPrice)||"Цена")}</b>${escHtml(f.price)} ${escHtml(f.currency||"")}</div></div><div class="view-only-note">${escHtml((window.aviakassaTranslations&&window.aviakassaTranslations[window.aviakassaLang||"ru"]?.flightDetailNote)||"Информация о рейсе доступна для просмотра.")}</div>`;box.hidden=false}catch(err){}})})();
 </script>
 <script src="script.js"></script>
 </body>

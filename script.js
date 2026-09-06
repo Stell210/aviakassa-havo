@@ -32,7 +32,7 @@ faq2q:"Можно ли подобрать билет с багажом?",faq2a:"
 faq3q:"Можно ли купить билет для другого человека?",faq3a:"Да. Менеджер подскажет, какие данные пассажира нужны для оформления.",
 faq4q:"Почему лучше покупать заранее?",faq4a:"Стоимость и наличие мест могут меняться. Поэтому лучше подобрать билет заранее.",
 earlyEyebrow:"СОВЕТ ПУТЕШЕСТВЕННИКУ",earlyTitle:"Покупайте билеты заранее",earlyText:"Чем раньше вы начнёте искать подходящий рейс, тем больше вариантов можно сравнить. Не откладывайте поездку на последний момент.",earlyButton:"Подобрать билет",
-cities:["Москва","Санкт-Петербург","Дубай","Стамбул"],routes:["Душанбе → Москва","Душанбе → Санкт-Петербург","Душанбе → Дубай","Душанбе → Стамбул"]
+siteTitle:"Aviakassa_havo — Авиабилеты",adminPanelLink:"🔐 Панель управления",flightDetailDate:"Дата",flightDetailTime:"Время",flightDetailAirline:"Авиакомпания",flightDetailBaggage:"Багаж",flightDetailDeparture:"Вылет",flightDetailArrival:"Прилёт",flightDetailPrice:"Цена",flightDetailNote:"Информация о рейсе доступна для просмотра.",cities:["Москва","Санкт-Петербург","Дубай","Стамбул"],routes:["Душанбе → Москва","Душанбе → Санкт-Петербург","Душанбе → Дубай","Душанбе → Стамбул"]
 },
 tj:{oneWay:"Ба як тараф",roundTrip:"Рафту баргашт",returnDateLabel:"Санаи бозгашт",baggageLabel:"Бағоҷ",bag23:"23 кг + 10 кг бағоҷи дастӣ",bagOnlyHand:"Танҳо бағоҷи дастӣ",bagAsk:"Шартҳоро пурсидан",hotEyebrow:"САФАРҲОИ МАШҲУР",hotTitle:"Ба куҷо бисёр парвоз мекунанд",hotIntro:"Самтро интихоб кунед — дархост дар WhatsApp кушода мешавад.",bagEyebrow:"БАҒОҶ",bagTitle:"Чиро бо худ гирифтан?",bagText:"Шартҳои бағоҷ аз тарифи интихобшуда вобастаанд. Пеш аз расмӣ кардан мо шартҳоро мефаҳмонем.",checkedBag:"бағоҷ",handBag:"бағоҷи дастӣ",
 navSearch:"Найти билет",navFlights:"Рейсы",navOffers:"Акции",whatsapp:"WhatsApp",searchIntro:"Масир ва санаро интихоб кунед — натиҷаи ҷустуҷӯ дар Aviakassa_havo нишон дода мешавад.",fromLabel:"Аз куҷо",toLabel:"Ба куҷо",searchButton:"🔎 Ҷустуҷӯи чиптаҳо",currentFlights:"ПАРВОЗҲОИ МАВҶУДА",currentFlightsIntro:"Ҷустуҷӯи парвозҳо дар Aviakassa_havo.",offersEyebrow:"АКСИЯҲО",offersTitle:"Пешниҳодҳои махсус",offersIntro:"Аксияҳо ва пешниҳодҳои муфид аз Aviakassa_havo.",navSearch:"Чипта ёфтан",navRoutes:"Самтҳо",navHow:"Чӣ тавр кор мекунад",badge:"🌍 Душанбе → тамоми ҷаҳон",
@@ -48,7 +48,7 @@ faq2q:"Оё чипта бо бағоҷ интихоб кардан мумкин 
 faq3q:"Оё барои шахси дигар чипта харидан мумкин аст?",faq3a:"Бале. Менеҷер маълумоти заруриро барои расмӣ кардани чипта мегӯяд.",
 faq4q:"Чаро чиптаро пешакӣ харидан беҳтар аст?",faq4a:"Нарх ва ҷойҳои дастрас метавонанд тағйир ёбанд. Беҳтар аст чиптаро пешакӣ интихоб кунед.",
 earlyEyebrow:"МАСЛИҲАТИ САФАР",earlyTitle:"Чиптаро пешакӣ харед",earlyText:"Ҳар қадар барвақт ҷустуҷӯ кунед, ҳамон қадар вариантҳои бештарро муқоиса карда метавонед.",earlyButton:"Интихоби чипта",
-cities:["Москва","Санкт-Петербург","Дубай","Истанбул"],routes:["Душанбе → Москва","Душанбе → Санкт-Петербург","Душанбе → Дубай","Душанбе → Истанбул"]
+siteTitle:"Aviakassa_havo — Чиптаҳои ҳавопаймо",adminPanelLink:"🔐 Панели идоракунӣ",flightDetailDate:"Сана",flightDetailTime:"Вақт",flightDetailAirline:"Ширкати ҳавопаймоӣ",flightDetailBaggage:"Бағоҷ",flightDetailDeparture:"Парвоз аз",flightDetailArrival:"Расидан",flightDetailPrice:"Нарх",flightDetailNote:"Маълумот дар бораи парвоз барои дидан дастрас аст.",cities:["Москва","Санкт-Петербург","Дубай","Истанбул"],routes:["Душанбе → Москва","Душанбе → Санкт-Петербург","Душанбе → Дубай","Душанбе → Истанбул"]
 },
 en:{oneWay:"One way",roundTrip:"Round trip",returnDateLabel:"Return date",baggageLabel:"Baggage",bag23:"23 kg + 10 kg hand luggage",bagOnlyHand:"Hand luggage only",bagAsk:"Ask about baggage",hotEyebrow:"POPULAR REQUESTS",hotTitle:"Popular destinations",hotIntro:"Choose a destination — the request will open in WhatsApp.",bagEyebrow:"BAGGAGE",bagTitle:"What can I take?",bagText:"Baggage conditions depend on the selected fare. We will help confirm the conditions before booking.",checkedBag:"checked baggage",handBag:"hand luggage",
 navSearch:"Find a ticket",navFlights:"Flights",navOffers:"Offers",whatsapp:"WhatsApp",searchIntro:"Choose a route and date — search results will appear directly on Aviakassa_havo.",fromLabel:"From",toLabel:"To",searchButton:"🔎 Search flights",currentFlights:"CURRENT FLIGHTS",currentFlightsIntro:"Search flights directly on Aviakassa_havo.",offersEyebrow:"OFFERS",offersTitle:"Special offers",offersIntro:"Deals and special offers from Aviakassa_havo.",navRoutes:"Destinations",navHow:"How it works",badge:"🌍 Dushanbe → the world",
@@ -64,9 +64,9 @@ faq2q:"Can I choose a ticket with baggage?",faq2a:"Yes. Tell our manager what ba
 faq3q:"Can I buy a ticket for someone else?",faq3a:"Yes. Our manager will tell you which passenger details are needed.",
 faq4q:"Why is it better to buy in advance?",faq4a:"Prices and seat availability can change. It is better to choose your ticket in advance.",
 earlyEyebrow:"TRAVEL TIP",earlyTitle:"Buy your ticket in advance",earlyText:"The earlier you search, the more options you can compare. Don’t leave your trip until the last minute.",earlyButton:"Find a ticket",
-cities:["Moscow","Saint Petersburg","Dubai","Istanbul"],routes:["Dushanbe → Moscow","Dushanbe → Saint Petersburg","Dushanbe → Dubai","Dushanbe → Istanbul"]
+siteTitle:"Aviakassa_havo — Flights",adminPanelLink:"🔐 Admin panel",flightDetailDate:"Date",flightDetailTime:"Time",flightDetailAirline:"Airline",flightDetailBaggage:"Baggage",flightDetailDeparture:"Departure",flightDetailArrival:"Arrival",flightDetailPrice:"Price",flightDetailNote:"Flight information is available for viewing.",cities:["Moscow","Saint Petersburg","Dubai","Istanbul"],routes:["Dushanbe → Moscow","Dushanbe → Saint Petersburg","Dushanbe → Dubai","Dushanbe → Istanbul"]
 }};
-let lang=localStorage.getItem("aviakassa_lang")||"ru";
+let lang=localStorage.getItem("aviakassa_lang")||"ru"; window.aviakassaLang=lang; window.aviakassaTranslations=translations;
 const extraTranslations={
 ru:{namePlaceholder:"Имя",phonePlaceholder:"+992...",toPlaceholder:"Москва",airportPlaceholder:"Город или аэропорт",requestSaving:"Сохраняем заявку…",requestAccepted:"Заявка принята. Открываем WhatsApp…",whatsAppGreeting:"Здравствуйте! Хочу подобрать авиабилет.",offerAction:"Узнать варианты →",flightAction:"Узнать / оформить в WhatsApp",until:"До",noFlights:"Сейчас нет опубликованных рейсов. Следите за обновлениями.",noOffers:"Сейчас нет активных акций.",noDirections:"Сейчас нет опубликованных направлений.",citiesAll:["Душанбе, Таджикистан","Москва, Россия","Казань, Россия","Санкт-Петербург, Россия","Дубай, ОАЭ","Стамбул, Турция"],cityNames:["Москва","Санкт-Петербург","Дубай","Стамбул"],routeNames:["Душанбе → Москва","Душанбе → Санкт-Петербург","Душанбе → Дубай","Душанбе → Стамбул"],
 searchIntro:"Выберите маршрут и дату — результаты поиска появятся прямо на Aviakassa_havo.",airportPlaceholder:"Город или аэропорт",allAirlines:"Все авиакомпании",allAirports:"Все аэропорты",allFlights:"Все рейсы",directOnly:"Только прямые",withConnection:"С пересадкой",sortCheap:"Сначала дешёвые",sortTime:"По времени вылета",searchButton:"🔎 Найти билеты",currentFlights:"АКТУАЛЬНЫЕ РЕЙСЫ",currentFlightsIntro:"Поиск рейсов прямо на Aviakassa_havo",searching:"Ищем актуальные предложения…",fillSearch:"Укажите город вылета, город прилёта и дату",noSearchResults:"На эту дату актуальных предложений не найдено",searchError:"Не удалось получить результаты поиска. Проверьте настройки Travelpayouts White Label.",direct:"Прямой",withConnectionCard:"С пересадкой",transferVia:"Пересадка: через",transfersOne:"пересадка",transfersMany:"пересадки",transferUnknown:"город пересадки не указан в данных",carryOn:"Ручная кладь",checkedBaggage:"Багаж",clarify:"Уточняется",details:"Подробнее",askFlight:"Здравствуйте! Хочу узнать подробнее о рейсе",
@@ -86,7 +86,7 @@ function updateCityList(l){
 }
 
 function setLang(l){
- lang=l; localStorage.setItem("aviakassa_lang",l); document.documentElement.lang=l;
+ lang=l; localStorage.setItem("aviakassa_lang",l); window.aviakassaLang=l; document.documentElement.lang=l; document.title=t.siteTitle||document.title;
  const t=translations[l]||translations.ru, x=extraTranslations[l]||extraTranslations.ru;
  document.querySelectorAll("[data-i18n]").forEach(el=>{const k=el.dataset.i18n;if(t[k]!==undefined)el.textContent=t[k]});
  document.querySelectorAll("[data-i18n-html]").forEach(el=>{const k=el.dataset.i18nHtml;if(t[k]!==undefined)el.innerHTML=t[k]});
@@ -195,8 +195,8 @@ window.addEventListener("aviakassa-language-change",()=>{const x=extraTranslatio
   }
   async function loadPublicContent(){
     try{
-      const [fr,or,dr]=await Promise.all([fetch("/api/flights"),fetch("/api/offers"),fetch("/api/directions")]);
-      if(fr.ok){const data=await fr.json(); renderPublicFlights(data.flights||[]);}
+      // Do not compete with the Travelpayouts flight-search widget during first paint/search.
+      const [or,dr]=await Promise.all([fetch("/api/offers"),fetch("/api/directions")]);
       if(or.ok){const data=await or.json(); renderPublicOffers(data.offers||[]);}
       if(dr.ok){const data=await dr.json(); renderPublicDirections(data.directions||[]);}
     }catch(e){console.warn("Public content load failed",e);}
@@ -250,7 +250,9 @@ window.addEventListener("aviakassa-language-change",()=>{const x=extraTranslatio
     const y=$("year"); if(y)y.textContent=new Date().getFullYear();
     // Apply the saved language after all handlers are installed.
     setLang(lang);
-    loadPublicContent();
+    // Load secondary content only when the browser is idle so the ticket search starts first.
+    const idle=window.requestIdleCallback||function(cb){setTimeout(cb,1800)};
+    idle(()=>loadPublicContent());
     // Keep the current language active visually.
     document.querySelectorAll("[data-lang]").forEach(b=>b.classList.toggle("active",b.dataset.lang===lang));
   }
