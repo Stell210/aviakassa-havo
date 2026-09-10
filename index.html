@@ -12,11 +12,8 @@
 <!-- Travelpayouts White Label Web widget -->
 <script nowprocket data-noptimize="1" data-cfasync="false" data-wpfc-render="false" seraph-accel-crit="1" data-no-defer="1">
   (function () {
-        // White Label Widget: explicitly keep search results on this page.
-        window.TPWL_CONFIGURATION = {
-          ...(window.TPWL_CONFIGURATION || {}),
-          resultsURL: window.location.origin + window.location.pathname
-        };
+        // White Label Widget: Widget mode already shows results on this same page.
+        // Do not set resultsURL here — that option is only needed when results belong on another page.
         var script = document.createElement("script");
         script.async = 1;
         script.type = "module";

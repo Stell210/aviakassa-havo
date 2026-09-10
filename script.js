@@ -393,60 +393,82 @@ function setupAirportPicker(id){
 document.addEventListener("click",e=>{document.querySelectorAll(".airport-field").forEach(f=>{if(!f.contains(e.target)){const l=f.querySelector(".airport-suggestions"),i=f.querySelector("input");if(l){l.hidden=true;i?.setAttribute("aria-expanded","false")}}})});
 
 
-/* Aviakassa_havo: after Search is pressed, move the page to the results area.
-   Travelpayouts may render the search form in a cross-origin iframe, so the
-   parent page cannot listen to the button click directly. We handle both the
-   normal DOM case and iframe focus as a fallback. */
-(function setupWhiteLabelImmediateScroll(){
-  const host = document.getElementById("tpwl-search");
+/* White Label: move to the results area as soon as the Travelpayouts search is submitted.
+   The search UI is cross-origin, so normal DOM click handlers cannot see the button inside it.
+   We combine iframe focus/load/message detection with a safe submit-button zone fallback. */
+(function setupWhiteLabelResultsAutoScroll(){
+  const searchHost = document.getElementById("tpwl-search");
   const resultsSection = document.getElementById("flightResults");
   const results = document.getElementById("tpwl-tickets");
-  if(!host || !resultsSection) return;
+  if(!searchHost || !resultsSection || !results) return;
 
-  let lastScroll = 0;
+  let firstIframeLoadIgnored = false;
+  let lastPointer = null;
+  let scrollLockUntil = 0;
+  let lastHref = location.href;
+
   function scrollToResults(){
     const now = Date.now();
-    if(now - lastScroll < 700) return;
-    lastScroll = now;
-    const top = Math.max(0, resultsSection.getBoundingClientRect().top + window.scrollY - 12);
-    window.scrollTo({top, behavior:"smooth"});
+    if(now < scrollLockUntil) return;
+    scrollLockUntil = now + 900;
+    resultsSection.scrollIntoView({behavior:"smooth", block:"start"});
   }
 
-  // If Travelpayouts exposes its button in the parent document.
-  host.addEventListener("pointerdown", e=>{
-    const el = e.target instanceof Element ? e.target : null;
-    const button = el && el.closest("button, input[type=submit], [role=button]");
-    if(button) setTimeout(scrollToResults, 30);
-  }, true);
-
-  host.addEventListener("click", e=>{
-    const el = e.target instanceof Element ? e.target : null;
-    const button = el && el.closest("button, input[type=submit], [role=button]");
-    if(button) setTimeout(scrollToResults, 30);
-  }, true);
-
-  // Cross-origin iframe fallback. When the widget receives focus, the parent
-  // document loses focus. We scroll immediately; this also covers the Search
-  // button when it is inside the Travelpayouts iframe.
-  window.addEventListener("blur", ()=>{
-    setTimeout(()=>{
-      const active = document.activeElement;
-      if(active && active.tagName === "IFRAME" && host.contains(active)){
-        scrollToResults();
-      }
-    }, 40);
-  }, true);
-
-  // If Travelpayouts inserts/updates the results after the search, make sure
-  // the results area remains visible as a final fallback.
-  if(results){
-    const observer = new MutationObserver(()=>{
-      if(results.children.length || results.querySelector("iframe") || results.textContent.trim()){
-        setTimeout(scrollToResults, 80);
-      }
-    });
-    observer.observe(results,{childList:true,subtree:true,characterData:true});
+  function hasSearchActivity(){
+    return results.children.length > 0 || results.textContent.trim().length > 0;
   }
+
+  function attachIframe(frame){
+    if(frame.dataset.ahScrollBound === "1") return;
+    frame.dataset.ahScrollBound = "1";
+    frame.addEventListener("load",()=>{
+      if(!firstIframeLoadIgnored){
+        firstIframeLoadIgnored = true;
+        return;
+      }
+      scrollToResults();
+    }, {passive:true});
+  }
+
+  function bindIframes(){
+    searchHost.querySelectorAll("iframe").forEach(attachIframe);
+  }
+
+  new MutationObserver(bindIframes).observe(searchHost,{childList:true,subtree:true});
+  bindIframes();
+
+  window.addEventListener("message",e=>{
+    const text=typeof e.data === "string" ? e.data.toLowerCase() : JSON.stringify(e.data||{}).toLowerCase();
+    if(/search|result|ticket|flight|searching|loading/.test(text)) scrollToResults();
+  });
+
+  setInterval(()=>{
+    if(location.href !== lastHref){
+      lastHref = location.href;
+      scrollToResults();
+    }
+  },250);
+
+  searchHost.addEventListener("pointerdown",e=>{
+    const frame=e.target.closest?.("iframe") || (e.target.tagName === "IFRAME" ? e.target : null);
+    if(!frame) return;
+    const r=frame.getBoundingClientRect();
+    lastPointer={x:e.clientX,y:e.clientY,rect:r,time:Date.now()};
+  },true);
+
+  window.addEventListener("blur",()=>{
+    const p=lastPointer;
+    if(!p || Date.now()-p.time>1200) return;
+    const relX=(p.x-p.rect.left)/Math.max(1,p.rect.width);
+    const relY=(p.y-p.rect.top)/Math.max(1,p.rect.height);
+    const likelySubmit = (relY>=0.68 && relX>=0.45) || (relY>=0.78);
+    if(likelySubmit) scrollToResults();
+    lastPointer=null;
+  },true);
+
+  new MutationObserver(()=>{
+    if(hasSearchActivity()) scrollToResults();
+  }).observe(results,{childList:true,subtree:true,characterData:true});
 })();
 
 })();
