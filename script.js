@@ -394,32 +394,104 @@ document.addEventListener("click",e=>{document.querySelectorAll(".airport-field"
 
 
 /* White Label: after the client starts a search, automatically show the results.
-   This only changes the scroll position; the Travelpayouts White Label itself is untouched. */
+   Travelpayouts may render the search form/results inside cross-origin iframes, so
+   we detect iframe focus/load and changes in #tpwl-tickets without touching WL itself. */
 (function setupWhiteLabelResultsAutoScroll(){
-  let searchStarted = false;
   const results = document.getElementById("tpwl-tickets");
   const searchHost = document.getElementById("tpwl-search");
+  const resultsSection = document.getElementById("flightResults");
   if(!results || !searchHost) return;
 
-  function showResults(){
-    if(!searchStarted) return;
-    const hasResults = results.children.length > 0 || !!results.querySelector("iframe") || results.textContent.trim().length > 0;
-    if(!hasResults) return;
-    searchStarted = false;
-    setTimeout(()=>results.scrollIntoView({behavior:"smooth", block:"start"}), 120);
+  let armed = false;
+  let lastScroll = 0;
+  const startedAt = Date.now();
+  const knownFrames = new WeakSet();
+  const knownFrameSrc = new WeakMap();
+
+  function scrollToResults(){
+    const now = Date.now();
+    if(now - lastScroll < 1200) return;
+    lastScroll = now;
+    setTimeout(()=>{
+      (resultsSection || results).scrollIntoView({behavior:"smooth", block:"start"});
+    }, 80);
   }
 
-  const observer = new MutationObserver(showResults);
-  observer.observe(results,{childList:true,subtree:true});
+  function hasRealResults(){
+    const text = results.textContent.trim();
+    return results.children.length > 0 || text.length > 20;
+  }
 
+  function armSearch(){
+    armed = true;
+    // Give the widget a moment to start its own request/render cycle.
+    setTimeout(check, 250);
+    setTimeout(check, 900);
+    setTimeout(check, 1800);
+    setTimeout(check, 3500);
+  }
+
+  function check(){
+    if(!armed) return;
+    if(hasRealResults()){
+      armed = false;
+      scrollToResults();
+    }
+  }
+
+  function watchFrame(frame){
+    if(!(frame instanceof HTMLIFrameElement) || knownFrames.has(frame)) return;
+    knownFrames.add(frame);
+    knownFrameSrc.set(frame, frame.getAttribute("src") || "");
+    frame.addEventListener("load", ()=>{
+      const oldSrc = knownFrameSrc.get(frame) || "";
+      const newSrc = frame.getAttribute("src") || "";
+      knownFrameSrc.set(frame, newSrc);
+      // Ignore the initial widget boot. A later frame load after interaction
+      // is a strong signal that Travelpayouts has moved to/loaded results.
+      if(Date.now() - startedAt > 2500 && (armed || results.contains(frame) || frame.closest("#tpwl-tickets"))){
+        armed = false;
+        scrollToResults();
+      }
+      if(oldSrc !== newSrc && Date.now() - startedAt > 2500){
+        armed = false;
+        scrollToResults();
+      }
+    });
+  }
+
+  // Watch for the results iframe being inserted or replaced by Travelpayouts.
+  const observer = new MutationObserver(mutations=>{
+    mutations.forEach(m=>m.addedNodes.forEach(node=>{
+      if(node.nodeType !== 1) return;
+      if(node.matches?.("iframe")) watchFrame(node);
+      node.querySelectorAll?.("iframe").forEach(watchFrame);
+    }));
+    check();
+  });
+  observer.observe(results,{childList:true,subtree:true});
+  observer.observe(searchHost,{childList:true,subtree:true});
+
+  searchHost.querySelectorAll("iframe").forEach(watchFrame);
+  results.querySelectorAll("iframe").forEach(watchFrame);
+
+  // Normal (non-iframe) widget clicks.
   document.addEventListener("pointerdown", e=>{
     const target = e.target;
-    if(target === searchHost || (target instanceof Element && target.closest("#tpwl-search"))){
-      searchStarted = true;
-      setTimeout(showResults, 500);
-      setTimeout(showResults, 1500);
-      setTimeout(showResults, 3000);
-    }
+    if(target === searchHost || (target instanceof Element && target.closest("#tpwl-search"))) armSearch();
+  }, true);
+
+  // Cross-origin iframe interaction: the parent cannot read the button click,
+  // but it can detect that the Travelpayouts iframe has received focus.
+  window.addEventListener("blur", ()=>{
+    const active = document.activeElement;
+    if(active instanceof HTMLIFrameElement && searchHost.contains(active)) armSearch();
+  });
+
+  // If the iframe is already focused, a later focus event is still useful.
+  document.addEventListener("focusin", e=>{
+    const target = e.target;
+    if(target instanceof HTMLIFrameElement && searchHost.contains(target)) armSearch();
   }, true);
 })();
 
