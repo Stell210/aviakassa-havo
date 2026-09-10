@@ -392,4 +392,35 @@ function setupAirportPicker(id){
 ["sfFrom","sfTo"].forEach(setupAirportPicker);
 document.addEventListener("click",e=>{document.querySelectorAll(".airport-field").forEach(f=>{if(!f.contains(e.target)){const l=f.querySelector(".airport-suggestions"),i=f.querySelector("input");if(l){l.hidden=true;i?.setAttribute("aria-expanded","false")}}})});
 
+
+/* White Label: after the client starts a search, automatically show the results.
+   This only changes the scroll position; the Travelpayouts White Label itself is untouched. */
+(function setupWhiteLabelResultsAutoScroll(){
+  let searchStarted = false;
+  const results = document.getElementById("tpwl-tickets");
+  const searchHost = document.getElementById("tpwl-search");
+  if(!results || !searchHost) return;
+
+  function showResults(){
+    if(!searchStarted) return;
+    const hasResults = results.children.length > 0 || !!results.querySelector("iframe") || results.textContent.trim().length > 0;
+    if(!hasResults) return;
+    searchStarted = false;
+    setTimeout(()=>results.scrollIntoView({behavior:"smooth", block:"start"}), 120);
+  }
+
+  const observer = new MutationObserver(showResults);
+  observer.observe(results,{childList:true,subtree:true});
+
+  document.addEventListener("pointerdown", e=>{
+    const target = e.target;
+    if(target === searchHost || (target instanceof Element && target.closest("#tpwl-search"))){
+      searchStarted = true;
+      setTimeout(showResults, 500);
+      setTimeout(showResults, 1500);
+      setTimeout(showResults, 3000);
+    }
+  }, true);
+})();
+
 })();
