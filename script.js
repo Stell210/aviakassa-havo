@@ -393,106 +393,60 @@ function setupAirportPicker(id){
 document.addEventListener("click",e=>{document.querySelectorAll(".airport-field").forEach(f=>{if(!f.contains(e.target)){const l=f.querySelector(".airport-suggestions"),i=f.querySelector("input");if(l){l.hidden=true;i?.setAttribute("aria-expanded","false")}}})});
 
 
-/* White Label: after the client starts a search, automatically show the results.
-   Travelpayouts may render the search form/results inside cross-origin iframes, so
-   we detect iframe focus/load and changes in #tpwl-tickets without touching WL itself. */
-(function setupWhiteLabelResultsAutoScroll(){
-  const results = document.getElementById("tpwl-tickets");
-  const searchHost = document.getElementById("tpwl-search");
+/* Aviakassa_havo: after Search is pressed, move the page to the results area.
+   Travelpayouts may render the search form in a cross-origin iframe, so the
+   parent page cannot listen to the button click directly. We handle both the
+   normal DOM case and iframe focus as a fallback. */
+(function setupWhiteLabelImmediateScroll(){
+  const host = document.getElementById("tpwl-search");
   const resultsSection = document.getElementById("flightResults");
-  if(!results || !searchHost) return;
+  const results = document.getElementById("tpwl-tickets");
+  if(!host || !resultsSection) return;
 
-  let armed = false;
   let lastScroll = 0;
-  const startedAt = Date.now();
-  const knownFrames = new WeakSet();
-  const knownFrameSrc = new WeakMap();
-
   function scrollToResults(){
     const now = Date.now();
-    if(now - lastScroll < 1200) return;
+    if(now - lastScroll < 700) return;
     lastScroll = now;
+    const top = Math.max(0, resultsSection.getBoundingClientRect().top + window.scrollY - 12);
+    window.scrollTo({top, behavior:"smooth"});
+  }
+
+  // If Travelpayouts exposes its button in the parent document.
+  host.addEventListener("pointerdown", e=>{
+    const el = e.target instanceof Element ? e.target : null;
+    const button = el && el.closest("button, input[type=submit], [role=button]");
+    if(button) setTimeout(scrollToResults, 30);
+  }, true);
+
+  host.addEventListener("click", e=>{
+    const el = e.target instanceof Element ? e.target : null;
+    const button = el && el.closest("button, input[type=submit], [role=button]");
+    if(button) setTimeout(scrollToResults, 30);
+  }, true);
+
+  // Cross-origin iframe fallback. When the widget receives focus, the parent
+  // document loses focus. We scroll immediately; this also covers the Search
+  // button when it is inside the Travelpayouts iframe.
+  window.addEventListener("blur", ()=>{
     setTimeout(()=>{
-      (resultsSection || results).scrollIntoView({behavior:"smooth", block:"start"});
-    }, 80);
-  }
-
-  function hasRealResults(){
-    const text = results.textContent.trim();
-    return results.children.length > 0 || text.length > 20;
-  }
-
-  function armSearch(){
-    armed = true;
-    // Give the widget a moment to start its own request/render cycle.
-    setTimeout(check, 250);
-    setTimeout(check, 900);
-    setTimeout(check, 1800);
-    setTimeout(check, 3500);
-  }
-
-  function check(){
-    if(!armed) return;
-    if(hasRealResults()){
-      armed = false;
-      scrollToResults();
-    }
-  }
-
-  function watchFrame(frame){
-    if(!(frame instanceof HTMLIFrameElement) || knownFrames.has(frame)) return;
-    knownFrames.add(frame);
-    knownFrameSrc.set(frame, frame.getAttribute("src") || "");
-    frame.addEventListener("load", ()=>{
-      const oldSrc = knownFrameSrc.get(frame) || "";
-      const newSrc = frame.getAttribute("src") || "";
-      knownFrameSrc.set(frame, newSrc);
-      // Ignore the initial widget boot. A later frame load after interaction
-      // is a strong signal that Travelpayouts has moved to/loaded results.
-      if(Date.now() - startedAt > 2500 && (armed || results.contains(frame) || frame.closest("#tpwl-tickets"))){
-        armed = false;
+      const active = document.activeElement;
+      if(active && active.tagName === "IFRAME" && host.contains(active)){
         scrollToResults();
       }
-      if(oldSrc !== newSrc && Date.now() - startedAt > 2500){
-        armed = false;
-        scrollToResults();
+    }, 40);
+  }, true);
+
+  // If Travelpayouts inserts/updates the results after the search, make sure
+  // the results area remains visible as a final fallback.
+  if(results){
+    const observer = new MutationObserver(()=>{
+      if(results.children.length || results.querySelector("iframe") || results.textContent.trim()){
+        setTimeout(scrollToResults, 80);
       }
     });
+    observer.observe(results,{childList:true,subtree:true,characterData:true});
   }
-
-  // Watch for the results iframe being inserted or replaced by Travelpayouts.
-  const observer = new MutationObserver(mutations=>{
-    mutations.forEach(m=>m.addedNodes.forEach(node=>{
-      if(node.nodeType !== 1) return;
-      if(node.matches?.("iframe")) watchFrame(node);
-      node.querySelectorAll?.("iframe").forEach(watchFrame);
-    }));
-    check();
-  });
-  observer.observe(results,{childList:true,subtree:true});
-  observer.observe(searchHost,{childList:true,subtree:true});
-
-  searchHost.querySelectorAll("iframe").forEach(watchFrame);
-  results.querySelectorAll("iframe").forEach(watchFrame);
-
-  // Normal (non-iframe) widget clicks.
-  document.addEventListener("pointerdown", e=>{
-    const target = e.target;
-    if(target === searchHost || (target instanceof Element && target.closest("#tpwl-search"))) armSearch();
-  }, true);
-
-  // Cross-origin iframe interaction: the parent cannot read the button click,
-  // but it can detect that the Travelpayouts iframe has received focus.
-  window.addEventListener("blur", ()=>{
-    const active = document.activeElement;
-    if(active instanceof HTMLIFrameElement && searchHost.contains(active)) armSearch();
-  });
-
-  // If the iframe is already focused, a later focus event is still useful.
-  document.addEventListener("focusin", e=>{
-    const target = e.target;
-    if(target instanceof HTMLIFrameElement && searchHost.contains(target)) armSearch();
-  }, true);
 })();
 
 })();
