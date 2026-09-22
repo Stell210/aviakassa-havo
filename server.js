@@ -366,18 +366,89 @@ async function transcribeInstagramAudio(attachment){
   if(!r.ok) throw new Error(`OPENAI_TRANSCRIBE_${r.status}: ${data?.error?.message||raw.slice(0,400)}`);
   return String(data.text||"").trim();
 }
-async function aiAnalyze(instagramUserId,text){
-  const history=await getRecentAiHistory(instagramUserId);
-  if(!OPENAI_API_KEY){
-    return {language:"ru",intent:"general",reply:"Здравствуйте! 👋 Напишите, пожалуйста, откуда и куда вы хотите лететь, дату поездки и количество пассажиров. Я помогу оформить запрос.",name:"",phone:"",from_city:"",to_city:"",departure_date:"",return_date:"",passengers:"",baggage:"",handoff:false};
+function detectInstagramLanguage(text){
+  const t=String(text||"").toLowerCase();
+  if(/[ӣқғҳҷӯ]/i.test(t) || /\b(аз|ба|рӯз|рузи|сентябр|октябр|ноябр|декабр|январ|феврал|март|апрел|май|июн|июл|август)\b/i.test(t)) return "tj";
+  if(/\b(the|from|to|flight|ticket|tickets|september|october|november|december|january|february|march|april|may|june|july|august)\b/i.test(t)) return "en";
+  return "ru";
+}
+function parseFlightDetails(text){
+  const t=String(text||"").trim();
+  const low=t.toLowerCase();
+  const cities=Object.keys(IATA_BY_CITY).sort((a,b)=>b.length-a.length);
+  const found=[];
+  for(const city of cities){
+    const re=new RegExp("(?:^|[^a-zа-яёӣқғҳҷӯ])"+city.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"(?:$|[^a-zа-яёӣқғҳҷӯ])","i");
+    if(re.test(low) && !found.includes(city)) found.push(city);
   }
-  const prompt=`Ты AI-менеджер авиабилетов Aviakassa_havo (Таджикистан). Общайся кратко, вежливо и естественно на языке клиента: русский, таджикский или английский. Никогда не придумывай наличие рейса, цену, расписание или багаж. Если данных не хватает — задай только самый полезный следующий вопрос. Собирай: имя, телефон, откуда, куда, дата вылета, дата возвращения, пассажиры, багаж. Если маршрут и дата уже полностью указаны, intent=search. В reply не вставляй URL и не называй URL «ссылкой»: после ответа система сама добавит клиенту удобную кнопку для просмотра билетов. Если клиент хочет купить/забронировать или просит менеджера — intent=purchase и handoff=true после сбора доступных данных. Если клиент просит менеджера — handoff=true. Если клиент пишет что-то не связанное с билетами, отвечай естественно по смыслу и не проси маршрут без причины. Верни ТОЛЬКО JSON без markdown: {"language":"ru|tj|en","intent":"general|search|purchase|support","reply":"...","name":"","phone":"","from_city":"","to_city":"","departure_date":"YYYY-MM-DD или пусто","return_date":"YYYY-MM-DD или пусто","passengers":"","baggage":"","handoff":false}. Сегодня ${new Date().toISOString().slice(0,10)}. История: ${JSON.stringify(history)}. Новое сообщение: ${JSON.stringify(text)}`;
+  let from_city="",to_city="";
+  const route=low.match(/(?:из|from|аз)\s+(.+?)\s+(?:в|to|ба)\s+(.+?)(?:\s+(?:на|on|рӯзи|рузи|дата|date)\b|$)/i);
+  if(route){ from_city=route[1].trim(); to_city=route[2].trim(); }
+  if(!from_city && found.length>=2){ from_city=found[0]; to_city=found[1]; }
+  else if(!to_city && found.length>=2){ to_city=found[1]; }
+  const months={
+    январ:1,января:1,january:1,
+    феврал:2,февраля:2,february:2,
+    март:3,march:3,
+    апрел:4,апреля:4,april:4,
+    май:5,may:5,
+    июн:6,июня:6,june:6,
+    июл:7,июля:7,july:7,
+    август:8,августа:8,august:8,
+    сентябр:9,сентября:9,september:9,
+    октябр:10,октября:10,october:10,
+    ноябр:11,ноября:11,november:11,
+    декабр:12,декабря:12,december:12
+  };
+  let departure_date="";
+  const dm=low.match(/\b([0-3]?\d)\s+(январ(?:я)?|феврал(?:я)?|март|апрел(?:я)?|май|июн(?:я)?|июл(?:я)?|август(?:а)?|сентябр(?:я)?|октябр(?:я)?|ноябр(?:я)?|декабр(?:я)?|january|february|march|april|may|june|july|august|september|october|november|december)\b/i);
+  if(dm){
+    const day=String(Number(dm[1])).padStart(2,"0");
+    const key=dm[2].toLowerCase();
+    const monthKey=Object.keys(months).find(k=>key.startsWith(k));
+    if(monthKey) departure_date=`${new Date().getFullYear()}-${String(months[monthKey]).padStart(2,"0")}-${day}`;
+  }
+  const numeric=low.match(/\b([0-3]?\d)[.\/-]([01]?\d)(?:[.\/-](20\d\d))?\b/);
+  if(!departure_date && numeric){
+    const y=numeric[3]||String(new Date().getFullYear());
+    departure_date=`${y}-${String(Number(numeric[2])).padStart(2,"0")}-${String(Number(numeric[1])).padStart(2,"0")}`;
+  }
+  return {from_city,to_city,departure_date};
+}
+async function aiAnalyze(instagramUserId,text){
+  const history=(await getRecentAiHistory(instagramUserId)).slice(-8);
+  const detectedLanguage=detectInstagramLanguage(text);
+  const parsed=parseFlightDetails(text);
+  if(!OPENAI_API_KEY){
+    return {language:detectedLanguage,intent:parsed.from_city&&parsed.to_city&&parsed.departure_date?"search":"general",reply:detectedLanguage==="tj"?"Лутфан шаҳрҳои парвоз, сана ва шумораи мусофиронро нависед.":detectedLanguage==="en"?"Please send the route, travel date, and number of passengers.":"Напишите маршрут, дату поездки и количество пассажиров.",name:"",phone:"",from_city:parsed.from_city,to_city:parsed.to_city,departure_date:parsed.departure_date,return_date:"",passengers:"",baggage:"",handoff:false};
+  }
+  const prompt=`Ты AI-менеджер авиабилетов Aviakassa_havo (Таджикистан).
+ЯЗЫК ОТВЕТА: ${detectedLanguage}. Отвечай именно на языке текущего сообщения, а не на языке истории. Если язык таджикский — используй таджикский кириллицей.
+Текущий запрос: ${JSON.stringify(text)}
+Детерминированно распознано: from_city=${JSON.stringify(parsed.from_city)}, to_city=${JSON.stringify(parsed.to_city)}, departure_date=${JSON.stringify(parsed.departure_date)}.
+Правила: если в текущем сообщении есть полный маршрут и дата, ОБЯЗАТЕЛЬНО intent=search, handoff=false. Не отправляй клиента к менеджеру в этом случае. Не придумывай цену, наличие, расписание или багаж. Скажи, что поиск готовится/открывается, а система добавит кнопку с актуальными рейсами. Если данных не хватает — задай один самый полезный вопрос. Если клиент явно просит менеджера или хочет купить/забронировать, можно handoff=true.
+Верни ТОЛЬКО JSON без markdown: {"language":"ru|tj|en","intent":"general|search|purchase|support","reply":"...","name":"","phone":"","from_city":"","to_city":"","departure_date":"YYYY-MM-DD или пусто","return_date":"YYYY-MM-DD или пусто","passengers":"","baggage":"","handoff":false}. Сегодня ${new Date().toISOString().slice(0,10)}. История последних сообщений: ${JSON.stringify(history)}`;
   const r=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{"Authorization":`Bearer ${OPENAI_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({model:OPENAI_MODEL,instructions:"Отвечай строго по инструкции и возвращай только JSON.",input:prompt,max_output_tokens:700,store:false})});
   const raw=await r.text(); let data={}; try{data=JSON.parse(raw)}catch{}
   if(!r.ok) throw new Error(`OPENAI_${r.status}: ${data?.error?.message||raw.slice(0,500)}`);
   const output=String(data.output_text||"").trim();
   const cleaned=output.replace(/^```json\s*/i,"").replace(/```$/i,"").trim();
-  let result; try{result=JSON.parse(cleaned)}catch{result={language:"ru",intent:"support",reply:output||"Я передам ваш запрос менеджеру. Пожалуйста, напишите маршрут и дату.",handoff:true};}
+  let result; try{result=JSON.parse(cleaned)}catch{result={language:detectedLanguage,intent:"general",reply:"",handoff:false};}
+  result.language=detectedLanguage;
+  if(parsed.from_city && !result.from_city) result.from_city=parsed.from_city;
+  if(parsed.to_city && !result.to_city) result.to_city=parsed.to_city;
+  if(parsed.departure_date && !result.departure_date) result.departure_date=parsed.departure_date;
+  if(result.from_city && result.to_city && result.departure_date){
+    result.intent="search";
+    result.handoff=false;
+    const replies={
+      ru:`Понял ✈️ ${result.from_city} → ${result.to_city}, ${result.departure_date.split("-")[2]} сентября. Сейчас подготовлю поиск актуальных рейсов.`,
+      tj:`Фаҳмо ✈️ ${result.from_city} → ${result.to_city}, ${result.departure_date.split("-")[2]} сентябр. Ҳоло ҷустуҷӯи парвозҳои ҷориро омода мекунам.`,
+      en:`Got it ✈️ ${result.from_city} → ${result.to_city}, ${result.departure_date.split("-")[2]} September. I’ll prepare the search for current flights now.`
+    };
+    if(!result.reply || /передам|менеджер|маршрут и дату/i.test(String(result.reply))) result.reply=replies[detectedLanguage]||replies.ru;
+  }
+  if(!result.reply) result.reply=detectedLanguage==="tj"?"Лутфан масир ва санаи парвозро нависед.":detectedLanguage==="en"?"Please send the route and travel date.":"Напишите маршрут и дату поездки.";
   return {...result,reply:String(result.reply||"").trim()};
 }
 async function processInstagramMessage(m){
