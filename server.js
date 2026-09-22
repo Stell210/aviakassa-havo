@@ -301,21 +301,27 @@ async function sendInstagramFlightButton(recipientId,ai){
 }
 function extractInstagramMessages(body){
   const out=[];
-  for(const entry of Array.isArray(body?.entry)?body.entry:[]){
+  const entries=Array.isArray(body?.entry)?body.entry:[];
+  for(const entry of entries){
+    // Instagram Messaging webhooks can arrive in the entry.messaging format.
+    // Some Meta webhook payloads can also use entry.changes[].value.
+    const candidates=[];
+    if(Array.isArray(entry?.messaging)) candidates.push(...entry.messaging);
     const changes=Array.isArray(entry?.changes)?entry.changes:[];
     for(const change of changes){
-      if(change?.field!=="messages") continue;
+      if(change?.field!=="messages" && change?.field!=="messaging") continue;
       const v=change.value||{};
-      const candidates=Array.isArray(v.messages)?v.messages:[v];
-      for(const item of candidates){
-        const msg=item?.message||{};
-        const sender=item?.sender?.id || msg?.sender?.id;
-        const recipient=item?.recipient?.id || msg?.recipient?.id;
-        const mid=msg?.mid || item?.mid || item?.message_id || "";
-        const text=typeof msg?.text==="string"?msg.text.trim():"";
-        const attachments=Array.isArray(msg?.attachments)?msg.attachments:[];
-        if(sender && recipient && (text || attachments.length)) out.push({senderId:String(sender),recipientId:String(recipient),mid:String(mid||""),text,attachments,timestamp:item?.timestamp||v?.timestamp||Date.now()});
-      }
+      if(Array.isArray(v.messages)) candidates.push(...v.messages);
+      else candidates.push(v);
+    }
+    for(const item of candidates){
+      const msg=item?.message||{};
+      const sender=item?.sender?.id || msg?.sender?.id;
+      const recipient=item?.recipient?.id || msg?.recipient?.id;
+      const mid=msg?.mid || item?.mid || item?.message_id || "";
+      const text=typeof msg?.text==="string"?msg.text.trim():"";
+      const attachments=Array.isArray(msg?.attachments)?msg.attachments:[];
+      if(sender && recipient && (text || attachments.length)) out.push({senderId:String(sender),recipientId:String(recipient),mid:String(mid||""),text,attachments,timestamp:item?.timestamp||Date.now()});
     }
   }
   return out;
@@ -375,6 +381,7 @@ async function aiAnalyze(instagramUserId,text){
   return {...result,reply:String(result.reply||"").trim()};
 }
 async function processInstagramMessage(m){
+  console.log("Instagram message processing started",JSON.stringify({sender:m.senderId,mid:m.mid,text:m.text.slice(0,120)}));
   await saveAiMessage(m.senderId,m.mid,"in",m.text||"[Вложение]");
   let text=m.text||"";
   if(!text && m.attachments?.length){
@@ -410,6 +417,7 @@ async function instagramWebhook(req,res,url){
       const body=await parseBody(req);
       console.log("Instagram webhook event received",JSON.stringify(body).slice(0,5000));
       const messages=extractInstagramMessages(body);
+      console.log("Instagram messages extracted",JSON.stringify({count:messages.length,items:messages.map(m=>({sender:m.senderId,mid:m.mid,text:m.text.slice(0,120)}))}));
       res.writeHead(200,{"Content-Type":"application/json","Cache-Control":"no-store"});res.end(JSON.stringify({ok:true,received:messages.length}));
       for(const m of messages) processInstagramMessage(m).catch(e=>console.error("Instagram async processing error:",e.message));
       return true;
