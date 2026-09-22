@@ -22,3 +22,9 @@ Instagram Login callback:
 - Redirect URI for Meta Instagram Login configuration: https://aviakassahavo.onrender.com/auth/instagram/callback
 - The callback route is included in server.js and intentionally does not expose or log authorization codes.
 - Instagram/Meta secrets must be configured as Render environment variables and must not be committed to GitHub.
+
+
+Instagram Webhook:
+Callback URL: https://aviakassahavo.onrender.com/api/instagram/webhook
+Verification token default: aviakassa_havo_meta_verify_2026
+For production, set META_VERIFY_TOKEN in Render to your own value and use the same value in Meta.
