@@ -278,6 +278,14 @@ function normalizePassengers(value){
   const m=String(value||"").match(/[1-9]/);
   return m?m[0]:"1";
 }
+function normalizeIsoDate(value){
+  const v=String(value||"").trim();
+  const m=v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!m) return "";
+  const y=Number(m[1]), mo=Number(m[2]), d=Number(m[3]);
+  const dt=new Date(y,mo-1,d);
+  return dt.getFullYear()===y && dt.getMonth()===mo-1 && dt.getDate()===d ? v : "";
+}
 function buildWhiteLabelSearchUrl(ai){
   const origin=cityToIata(ai.from_city), destination=cityToIata(ai.to_city);
   const dep=String(ai.departure_date||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -460,6 +468,26 @@ function detectManagerRequest(text){
   ];
   return patterns.some(re=>re.test(t));
 }
+function detectManagerFollowup(text){
+  const t=String(text||"").toLowerCase().replace(/[ё]/g,"е").trim();
+  if(!t) return false;
+  // Messages sent after the client was already handed to a manager.
+  // These must never be interpreted as a new flight search.
+  const patterns=[
+    /(?:менеджер|оператор|сотрудник).{0,60}(?:не ответил|не отвечает|не ответила|не отвечает|не позвонил|не позвонила|не звонил|не связал|не связался|не связалась|молчит|ответа нет|до сих пор|пока нет|хол|ҷавоб надод|ҷавоб намедиҳад|тамос нагирифт|занги накард)/i,
+    /(?:мне|нам|маро).{0,30}(?:не ответил|не позвонил|не связался|не звонит|никто не ответил|ответа нет)/i,
+    /(?:до сих пор|пока|хол|то ҳол).{0,40}(?:нет ответа|не ответил|не ответила|не звонил|не позвонил|ҷавоб нест|ҷавоб надод)/i,
+    /(?:когда|кай).{0,30}(?:ответит|позвонит|свяжется|ҷавоб медиҳад|тамос мегирад).{0,30}(?:менеджер|оператор)/i,
+    /(?:manager|agent|operator).{0,60}(?:didn.?t reply|hasn.?t replied|didn.?t call|hasn.?t called|no response|still waiting)/i,
+    /(?:still|yet).{0,30}(?:waiting|no response|no reply).{0,30}(?:manager|agent|operator)?/i
+  ];
+  return patterns.some(re=>re.test(t));
+}
+function managerFollowupReply(language){
+  if(language==="tj") return "Фаҳмо 🙏 Узр барои интизорӣ. Менеджер ҳоло ба шумо ҷавоб надодааст. Ман дархости шуморо нигоҳ медорам. Лутфан каме интизор шавед — менеджер бо шумо тамос мегирад.";
+  if(language==="en") return "I understand 🙏 Sorry for the wait. The manager has not replied yet. I’ll keep your request active. Please wait a little longer — the manager will contact you.";
+  return "Понимаю 🙏 Извините за ожидание. Менеджер пока не ответил. Я сохраню вашу заявку активной. Пожалуйста, немного подождите — менеджер свяжется с вами.";
+}
 function managerReply(language){
   if(language==="tj") return "Албатта 👍 Ман дархости шуморо ба менеджер мефиристам. Лутфан каме интизор шавед — менеджер бо шумо тамос мегирад.";
   if(language==="en") return "Of course 👍 I’ll pass your request to a manager. Please wait a little — a manager will contact you.";
@@ -537,8 +565,10 @@ async function aiAnalyze(instagramUserId,text){
   const low=String(text||"").toLowerCase();
   const asksForFlights=/(рейс|рейсы|парвоз|парвозҳо|билет|билеты|flight|flights|ticket|tickets|фирист|отправ|send|дидани|смотреть)/i.test(low);
   const managerRequest=detectManagerRequest(text);
-  if(managerRequest){
-    return {language:detectedLanguage,intent:"support",reply:managerReply(detectedLanguage),name:"",phone:"",from_city:existingLead?.from_city||"",to_city:existingLead?.to_city||"",departure_date:existingLead?.departure_date?String(existingLead.departure_date).slice(0,10):"",return_date:existingLead?.return_date?String(existingLead.return_date).slice(0,10):"",passengers:existingLead?.passengers||"",baggage:existingLead?.baggage||"",handoff:true};
+  const managerFollowup=detectManagerFollowup(text);
+  if(managerRequest || managerFollowup || existingLead?.handoff===true && /(?:менеджер|оператор|manager|agent|то ҳол|до сих пор|пока|waiting|ҷавоб|ответ|звон|позвон|тамос)/i.test(low)){
+    const isFollowup=managerFollowup || (!managerRequest && existingLead?.handoff===true);
+    return {language:detectedLanguage,intent:"support",reply:isFollowup?managerFollowupReply(detectedLanguage):managerReply(detectedLanguage),name:"",phone:"",from_city:existingLead?.from_city||"",to_city:existingLead?.to_city||"",departure_date:existingLead?.departure_date?String(existingLead.departure_date).slice(0,10):"",return_date:existingLead?.return_date?String(existingLead.return_date).slice(0,10):"",passengers:existingLead?.passengers||"",baggage:existingLead?.baggage||"",handoff:true};
   }
   // Conversation memory: reuse the latest known trip when the client asks a follow-up
   // such as “а обратно?”, “а рейсы?”, “а на следующий день?” without repeating the route.
@@ -577,9 +607,16 @@ async function aiAnalyze(instagramUserId,text){
   const cleaned=output.replace(/^```json\s*/i,"").replace(/```$/i,"").trim();
   let result; try{result=JSON.parse(cleaned)}catch{result={language:detectedLanguage,intent:"general",reply:"",handoff:false};}
   result.language=detectedLanguage;
-  if(parsed.from_city && !result.from_city) result.from_city=parsed.from_city;
-  if(parsed.to_city && !result.to_city) result.to_city=parsed.to_city;
-  if(parsed.departure_date && !result.departure_date) result.departure_date=parsed.departure_date;
+  if(parsed.from_city) result.from_city=parsed.from_city;
+  if(parsed.to_city) result.to_city=parsed.to_city;
+  const parsedDeparture=normalizeIsoDate(parsed.departure_date);
+  const parsedReturn=normalizeIsoDate(parsed.return_date);
+  const existingDeparture=normalizeIsoDate(existingLead?.departure_date);
+  const existingReturn=normalizeIsoDate(existingLead?.return_date);
+  const aiDeparture=normalizeIsoDate(result.departure_date);
+  const aiReturn=normalizeIsoDate(result.return_date);
+  result.departure_date=parsedDeparture || aiDeparture || existingDeparture || "";
+  result.return_date=parsedReturn || aiReturn || existingReturn || "";
   if(result.from_city && result.to_city && result.departure_date){
     result.intent="search";
     result.handoff=false;
@@ -594,6 +631,16 @@ async function aiAnalyze(instagramUserId,text){
       en:`Got it ✈️ ${result.from_city} → ${result.to_city}, ${day} ${month}. I’ll prepare the search for current flights and prices.`
     };
     result.reply=replies[detectedLanguage]||replies.ru;
+  }
+  if(!(result.from_city && result.to_city && result.departure_date) && asksForFlights){
+    const missingDate=!result.departure_date;
+    result.reply=detectedLanguage==="tj"
+      ? (result.from_city && result.to_city && missingDate ? `Фаҳмо ✈️ ${result.from_city} → ${result.to_city}. Лутфан санаи парвозро нависед, то ман ҷустуҷӯи парвозҳои ҷориро омода кунам.` : "Фаҳмо ✈️ Лутфан аз кадом шаҳр → ба кадом шаҳр ва санаи сафарро нависед.")
+      : detectedLanguage==="en"
+        ? (result.from_city && result.to_city && missingDate ? `Got it ✈️ ${result.from_city} → ${result.to_city}. Please send the departure date so I can prepare the current flight search.` : "Got it ✈️ Please send the route and travel date.")
+        : (result.from_city && result.to_city && missingDate ? `Понял ✈️ ${result.from_city} → ${result.to_city}. Напишите дату вылета, и я подготовлю поиск актуальных рейсов.` : "Понял ✈️ Напишите маршрут и дату поездки.");
+    result.intent="general";
+    result.handoff=false;
   }
   if(!result.reply) result.reply=detectedLanguage==="tj"?"Лутфан масир ва санаи парвозро нависед.":detectedLanguage==="en"?"Please send the route and travel date.":"Напишите маршрут и дату поездки.";
   return {...result,reply:String(result.reply||"").trim()};
