@@ -687,82 +687,6 @@ async function maybeRenotifyManager(lead,previousLead){
     await telegramNotify(refreshed||lead);
   }catch(e){console.error("Manager re-notify failed:",e.message)}
 }
-
-function instagramSearchCardText(ai, lang="ru") {
-  const from=String(ai?.from_city||"").trim()||"—";
-  const to=String(ai?.to_city||"").trim()||"—";
-  const date=String(ai?.departure_date||"").trim();
-  const shownDate=date ? formatFormDate(date,lang) : "—";
-  if(lang==="tj") return `✈️ Ҷустуҷӯи чипта\n\n📍 Аз: ${from}\n📍 Ба: ${to}\n📅 Сана: ${shownDate}\n\nАз тугмаҳо интихоб кунед:`;
-  if(lang==="en") return `✈️ Flight search\n\n📍 From: ${from}\n📍 To: ${to}\n📅 Date: ${shownDate}\n\nChoose what to fill:`;
-  return `✈️ Поиск авиабилета\n\n📍 Откуда: ${from}\n📍 Куда: ${to}\n📅 Дата: ${shownDate}\n\nВыберите, что заполнить:`;
-}
-
-async function sendInstagramSearchCard(recipientId, ai={}){
-  const lang=ai?.language||"ru";
-  const title=lang==="tj"?"✈️ Ҷустуҷӯи чипта":lang==="en"?"✈️ Flight search":"✈️ Поиск авиабилета";
-  const subtitle=lang==="tj"?"Масир ва санаро мустақиман дар чат интихоб кунед.":lang==="en"?"Choose the route and date directly in the chat.":"Выберите маршрут и дату прямо в чате.";
-  const buttons=[
-    {type:"postback",title:lang==="tj"?"📍 Аз куҷо":lang==="en"?"📍 From":"📍 Откуда",payload:"SEARCH_FROM"},
-    {type:"postback",title:lang==="tj"?"📍 Ба куҷо":lang==="en"?"📍 To":"📍 Куда",payload:"SEARCH_TO"},
-    {type:"postback",title:lang==="tj"?"📅 Сана":lang==="en"?"📅 Date":"📅 Дата",payload:"SEARCH_DATE"}
-  ];
-  const payload={recipient:{id:String(recipientId)},message:{attachment:{type:"template",payload:{template_type:"generic",elements:[{title,subtitle,buttons}]}}}};
-  try{return await instagramGraph(`/me/messages`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})}
-  catch(e){console.error("Instagram search card error:",e.message);return null;}
-}
-
-async function sendInstagramCityQuickReplies(recipientId, ai={}, mode="from"){
-  const lang=ai?.language||"ru";
-  const cities=[
-    ["Душанбе","DYU"],["Москва","MOW"],["Ташкент","TAS"],["Самарканд","SKD"],["Алматы","ALA"],
-    ["Астана","NQZ"],["Бишкек","FRU"],["Стамбул","IST"],["Дубай","DXB"],["Екатеринбург","SVX"]
-  ];
-  const title=mode==="from"?(lang==="tj"?"📍 Шаҳри парвозро интихоб кунед":lang==="en"?"📍 Choose departure city":"📍 Выберите город вылета"):(lang==="tj"?"📍 Шаҳри расиданро интихоб кунед":lang==="en"?"📍 Choose destination":"📍 Выберите город назначения");
-  const quick_replies=cities.map(([name,code])=>({content_type:"text",title:name,payload:`SEARCH_${mode.toUpperCase()}_${code}`}));
-  const payload={recipient:{id:String(recipientId)},message:{text:title,quick_replies}};
-  try{return await instagramGraph(`/me/messages`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})}
-  catch(e){console.error("Instagram city quick replies error:",e.message);return null;}
-}
-
-async function processInstagramSearchCardPostback(m){
-  const existing=await getExistingAiLead(m.senderId);
-  const language=existing?.language||detectInstagramLanguage(m.postbackTitle||"");
-  const payload=String(m.postbackPayload||"");
-  if(payload==="SEARCH_FROM"){
-    await sendInstagramCityQuickReplies(m.senderId,{language},"from");
-    return;
-  }
-  if(payload==="SEARCH_TO"){
-    await sendInstagramCityQuickReplies(m.senderId,{language},"to");
-    return;
-  }
-  if(payload==="SEARCH_DATE"){
-    const reply=language==="tj"?"📅 Санаи парвозро нависед, масалан: 27 сентябр, 27.09.2026 ё 26.09.26.":language==="en"?"📅 Send the departure date, for example: 27 September, 27.09.2026 or 26.09.26.":"📅 Напишите дату вылета, например: 27 сентября, 27.09.2026 или 26.09.26.";
-    const sent=await sendInstagramText(m.senderId,reply);
-    if(sent?.message_id) await saveAiMessage(m.senderId,sent.message_id,"out",reply);
-    return;
-  }
-  const match=payload.match(/^SEARCH_(FROM|TO)_([A-Z]{3})$/);
-  if(match){
-    const mode=match[1].toLowerCase(),code=match[2];
-    const cityByCode={DYU:"Душанбе",MOW:"Москва",TAS:"Ташкент",SKD:"Самарканд",ALA:"Алматы",NQZ:"Астана",FRU:"Бишкек",IST:"Стамбул",DXB:"Дубай",SVX:"Екатеринбург"};
-    const city=cityByCode[code];
-    if(!city) return;
-    const current={
-      instagram_user_id:m.senderId,language,intent:"search",from_city:existing?.from_city||"",to_city:existing?.to_city||"",
-      departure_date:existing?.departure_date?String(existing.departure_date).slice(0,10):"",return_date:existing?.return_date?String(existing.return_date).slice(0,10):"",trip_type:existing?.trip_type||"",
-      passengers:existing?.passengers||"",baggage:existing?.baggage||"",last_message:`[Выбрано: ${mode==="from"?"откуда":"куда"} ${city}]`,ai_reply:"",status:"new",handoff:false,manager_waiting:false
-    };
-    if(mode==="from") current.from_city=city; else current.to_city=city;
-    const saved=await upsertAiLead(current);
-    const cardAi={language,from_city:current.from_city,to_city:current.to_city,departure_date:current.departure_date};
-    const sent=await sendInstagramSearchCard(m.senderId,cardAi);
-    if(sent?.message_id) await saveAiMessage(m.senderId,sent.message_id,"out","[Карточка поиска билета]");
-    return saved;
-  }
-}
-
 async function processInstagramManagerPostback(m){
   const existing=await getExistingAiLead(m.senderId);
   const language=existing?.language||detectInstagramLanguage(m.postbackTitle||"");
@@ -801,7 +725,6 @@ async function processInstagramMessage(m){
   await saveAiMessage(m.senderId,m.mid,"in",m.text||m.postbackTitle||"[Вложение]");
   if(m.postbackPayload==="CONNECT_MANAGER") return processInstagramManagerPostback(m);
   if(m.postbackPayload==="CHOOSE_ONEWAY" || m.postbackPayload==="CHOOSE_ROUNDTRIP") return processInstagramTripChoice(m);
-  if(m.postbackPayload==="SEARCH_FROM" || m.postbackPayload==="SEARCH_TO" || m.postbackPayload==="SEARCH_DATE" || /^SEARCH_(FROM|TO)_[A-Z]{3}$/.test(String(m.postbackPayload||""))) return processInstagramSearchCardPostback(m);
   let text=m.text||"";
   if(!text && m.attachments?.length){
     const audio=m.attachments.find(a=>String(a?.type||"").toLowerCase().includes("audio"));
@@ -816,13 +739,8 @@ async function processInstagramMessage(m){
     const lead=await upsertAiLead({instagram_user_id:m.senderId,username:profile?.username||"",language:ai.language,intent:ai.intent,name:ai.name||profile?.name||"",phone:ai.phone,from_city:ai.from_city,to_city:ai.to_city,departure_date:ai.departure_date,return_date:ai.return_date,trip_type:ai.trip_type,passengers:ai.passengers,baggage:ai.baggage,last_message:m.text||"[Вложение]",ai_reply:ai.reply,status,handoff:ai.handoff,manager_waiting:!!ai.manager_waiting});
     if(AI_AUTO_REPLY && ai.reply){const sent=await sendInstagramText(m.senderId,ai.reply);await saveAiMessage(m.senderId,sent?.message_id||`out-${Date.now()}-${Math.random()}`,"out",ai.reply);}
     if(AI_AUTO_REPLY){
-      let buttonSent=null;
-      if(ai.intent==="search" && ai.from_city && ai.to_city && ai.departure_date){
-        buttonSent=await sendInstagramActionButtons(m.senderId,ai);
-      }else if(ai.intent==="general" || !ai.from_city || !ai.to_city || !ai.departure_date){
-        buttonSent=await sendInstagramSearchCard(m.senderId,ai);
-      }
-      if(buttonSent?.message_id) await saveAiMessage(m.senderId,buttonSent.message_id,"out",ai.from_city&&ai.to_city&&ai.departure_date?"[Кнопки: просмотр актуальных билетов + менеджер]":"[Карточка поиска билета]");
+      const buttonSent=await sendInstagramActionButtons(m.senderId,ai);
+      if(buttonSent?.message_id) await saveAiMessage(m.senderId,buttonSent.message_id,"out",ai.from_city&&ai.to_city&&ai.departure_date?"[Кнопки: просмотр актуальных билетов + менеджер]":"[Кнопка: менеджер]");
     }
     if(lead && ai.handoff && (!previousLead?.manager_waiting || ai.intent!=="support")) await telegramNotify(lead);
     if(lead && ai.intent==="support" && ai.manager_waiting) await maybeRenotifyManager(lead,previousLead);
