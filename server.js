@@ -309,6 +309,7 @@ async function sendInstagramActionButtons(recipientId,ai){
   const lang=ai?.language||"ru";
   const labels={ru:"✈️ Смотреть билеты и цены",tj:"✈️ Дидани билетҳо ва нархҳо",en:"✈️ View flights & prices"};
   const managerLabels={ru:"👨‍💼 Связаться с менеджером",tj:"👨‍💼 Пайваст шудан бо менеджер",en:"👨‍💼 Contact manager"};
+  const editLabels={ru:"✏️ Изменить данные",tj:"✏️ Тағйир додани маълумот",en:"✏️ Edit details"};
   const roundLabels={ru:"🔄 Туда и обратно",tj:"🔄 Рафту баргашт",en:"🔄 Round trip"};
   const title={ru:"Что хотите сделать?",tj:"Чӣ кор кардан мехоҳед?",en:"What would you like to do?"};
   const subtitle={ru:"После нажатия «Смотреть билеты и цены» поиск может занять 5–10 секунд. Пожалуйста, подождите.",tj:"Пас аз пахши «Дидани билетҳо ва нархҳо» ҷустуҷӯ 5–10 сония мегирад. Лутфан интизор шавед.",en:"After tapping «View flights & prices», the search may take 5–10 seconds. Please wait."};
@@ -317,7 +318,7 @@ async function sendInstagramActionButtons(recipientId,ai){
   const managerOnly=ai?.intent==="support" && ai?.handoff===true;
   const hasReturn=!!normalizeIsoDate(ai?.return_date);
   if(url && !managerOnly) buttons.push({type:"web_url",url,title:labels[lang]||labels.ru});
-  if(!hasReturn && !managerOnly && url && ai?.trip_type!=="oneway") buttons.push({type:"postback",title:roundLabels[lang]||roundLabels.ru,payload:"CHOOSE_ROUNDTRIP"});
+  if(url && !managerOnly) buttons.push({type:"postback",title:editLabels[lang]||editLabels.ru,payload:"EDIT_SEARCH"});
   buttons.push({type:"postback",title:managerLabels[lang]||managerLabels.ru,payload:"CONNECT_MANAGER"});
   const payload={recipient:{id:String(recipientId)},message:{attachment:{type:"template",payload:{template_type:"generic",elements:[{title:title[lang]||title.ru,subtitle:subtitle[lang]||subtitle.ru,buttons:buttons.slice(0,3)}]}}}};
   try{return await instagramGraph(`/me/messages`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})}
@@ -611,8 +612,8 @@ function detectAlreadyProvided(text){
 function missingInfoReply(lang, lead){
   if(!lead?.from_city || !lead?.to_city) return lang==='tj'?'Лутфан шаҳрҳоро нависед: аз кадом шаҳр → ба кадом шаҳр.':lang==='en'?'Please send the route: from which city → to which city.':'Напишите маршрут: из какого города → в какой город.';
   if(!lead?.departure_date) return lang==='tj'?`Фаҳмо ✈️ ${lead.from_city} → ${lead.to_city}. Лутфан санаи парвозро нависед. 📅`:lang==='en'?`Got it ✈️ ${lead.from_city} → ${lead.to_city}. Please send the departure date. 📅`:`Понял ✈️ ${lead.from_city} → ${lead.to_city}. Напишите дату вылета. 📅`;
-  if(!lead?.passengers) return lang==='tj'?`Фаҳмо ✈️ ${lead.from_city} → ${lead.to_city}. Чанд нафар сафар мекунанд? 👥`:lang==='en'?`Got it ✈️ ${lead.from_city} → ${lead.to_city}. How many passengers will travel? 👥`:`Понял ✈️ ${lead.from_city} → ${lead.to_city}. Сколько пассажиров будет? 👥`;
-  if(!lead?.baggage) return lang==='tj'?'Маълумоти мусофиронро гирифтам. 🧳 Ба шумо бағоҷ лозим аст ё танҳо ручная кладь?':lang==='en'?'I have the passenger details. 🧳 Do you need checked baggage or hand luggage only?':'Данные о пассажирах получил. 🧳 Вам нужен багаж или только ручная кладь?';
+  // Passengers and baggage are optional. The search can open with the default
+  // passenger count; if the client supplied these details, they are preserved.
   return '';
 }
 
@@ -636,14 +637,23 @@ async function aiAnalyze(instagramUserId,text){
     const isFollowup=managerFollowup||(!managerRequest&&managerContext);
     return {language:detectedLanguage,intent:'support',reply:isFollowup?managerFollowupReply(detectedLanguage):managerReply(detectedLanguage),name:'',phone:'',from_city:existingLead?.from_city||'',to_city:existingLead?.to_city||'',departure_date:existingLead?.departure_date?String(existingLead.departure_date).slice(0,10):'',return_date:existingLead?.return_date?String(existingLead.return_date).slice(0,10):'',trip_type:existingLead?.trip_type||'',passengers:existingLead?.passengers||'',baggage:existingLead?.baggage||'',handoff:true,manager_waiting:true};
   }
-  const asksAboutReturn=/(обратно|туда.?обратно|возврат|баргашт|бозгашт|return|back)/i.test(low);
-  if(!parsed.from_city&&existingLead?.from_city&&existingLead?.to_city){parsed.from_city=existingLead.from_city;parsed.to_city=existingLead.to_city;}
-  if(!parsed.departure_date&&existingLead?.departure_date&&!asksAboutReturn)parsed.departure_date=String(existingLead.departure_date).slice(0,10);
-  if(asksAboutReturn&&existingLead?.from_city&&existingLead?.to_city){parsed.from_city=existingLead.from_city;parsed.to_city=existingLead.to_city;parsed.departure_date=existingLead.departure_date?String(existingLead.departure_date).slice(0,10):parsed.departure_date;}
-  if(!parsed.return_date&&existingLead?.return_date&&asksAboutReturn)parsed.return_date=String(existingLead.return_date).slice(0,10);
-  if(!parsed.trip_type&&existingLead?.trip_type)parsed.trip_type=existingLead.trip_type;
-  const passengers=parsed.passengers||existingLead?.passengers||'',baggage=parsed.baggage||existingLead?.baggage||'',trip_type=parsed.trip_type||existingLead?.trip_type||'';
-  const merged={from_city:parsed.from_city||'',to_city:parsed.to_city||'',departure_date:parsed.departure_date||'',return_date:parsed.return_date||'',trip_type,passengers,baggage};
+  // Simple customer flow: only route + departure date are required.
+  // Do not ask about baggage or return tickets. A new route starts a new date context,
+  // while a date-only follow-up may reuse the previously saved route.
+  const hasCurrentRoute=!!(parsed.from_city&&parsed.to_city);
+  if(!hasCurrentRoute&&existingLead?.from_city&&existingLead?.to_city){
+    parsed.from_city=existingLead.from_city;
+    parsed.to_city=existingLead.to_city;
+  }
+  if(!parsed.departure_date&&!hasCurrentRoute&&existingLead?.departure_date){
+    parsed.departure_date=String(existingLead.departure_date).slice(0,10);
+  }
+  // Return date is intentionally not part of the required flow.
+  parsed.return_date='';
+  parsed.trip_type='oneway';
+
+  const passengers=parsed.passengers||existingLead?.passengers||'',baggage=parsed.baggage||existingLead?.baggage||'';
+  const merged={from_city:parsed.from_city||'',to_city:parsed.to_city||'',departure_date:parsed.departure_date||'',return_date:'',trip_type:'oneway',passengers,baggage};
 
   // Deterministic flight-data flow: never let an LLM replace correctly parsed route/date/context.
   const greeting=standaloneGreeting;
@@ -657,12 +667,6 @@ async function aiAnalyze(instagramUserId,text){
   const missing=missingInfoReply(detectedLanguage,merged);
   if(missing){
     return {language:detectedLanguage,intent:'general',reply:missing,name:'',phone:'',...merged,handoff:false,manager_waiting:false};
-  }
-  if(merged.trip_type==='roundtrip' && !merged.return_date){
-    return {language:detectedLanguage,intent:'general',reply:detectedLanguage==='tj'?`Фаҳмо ✈️ ${merged.from_city} → ${merged.to_city}, ${merged.departure_date}. Лутфан санаи бозгаштро нависед. 📅`:detectedLanguage==='en'?`Got it ✈️ ${merged.from_city} → ${merged.to_city}, ${merged.departure_date}. Please send the return date. 📅`:`Понял ✈️ ${merged.from_city} → ${merged.to_city}, ${merged.departure_date}. Напишите дату обратного рейса. 📅`,name:'',phone:'',...merged,handoff:false,manager_waiting:false};
-  }
-  if(asksAboutReturn && !merged.return_date){
-    return {language:detectedLanguage,intent:'general',reply:detectedLanguage==='tj'?`Фаҳмо ✈️ ${merged.from_city} → ${merged.to_city}. Лутфан санаи бозгаштро нависед. 📅`:`Понял ✈️ ${merged.from_city} → ${merged.to_city}. Напишите дату обратного рейса. 📅`,name:'',phone:'',...merged,handoff:false,manager_waiting:false};
   }
   // Ready to search: deterministic confirmation. Actual live prices remain on White Label.
   const parts=merged.departure_date.split('-');
@@ -698,6 +702,35 @@ async function processInstagramManagerPostback(m){
   if(lead) await telegramNotify(lead);
   console.log("Instagram manager postback processed",JSON.stringify({sender:m.senderId,handoff:true}));
 }
+async function processInstagramEditSearch(m){
+  const existing=await getExistingAiLead(m.senderId);
+  const language=existing?.language||detectInstagramLanguage(m.postbackTitle||"");
+  const currentRoute=existing?.from_city&&existing?.to_city?`${existing.from_city} → ${existing.to_city}`:"";
+  const currentDate=existing?.departure_date?String(existing.departure_date).slice(0,10):"";
+  let reply;
+  if(language==="tj") reply=`Албатта ✏️ Маълумоти ҷориро тағйир диҳед.
+
+${currentRoute?`✈️ ${currentRoute}`:""}${currentDate?`
+📅 ${currentDate}`:""}
+
+Масалан: «сана 28 сентябр», «ба Москва», ё «Душанбе → Казан». Ман танҳо қисми лозимаро иваз мекунам. <|END|>`;
+  else if(language==="en") reply=`Sure ✏️ You can change your trip details.
+
+${currentRoute?`✈️ ${currentRoute}`:""}${currentDate?`
+📅 ${currentDate}`:""}
+
+For example: “date 28 September”, “to Moscow”, or “Dushanbe → Kazan”. I’ll change only the needed part.`;
+  else reply=`Конечно ✏️ Изменим данные поездки.
+
+${currentRoute?`✈️ ${currentRoute}`:""}${currentDate?`
+📅 ${currentDate}`:""}
+
+Например: «дату на 28 сентября», «в Москву» или «Душанбе → Казань». Я изменю только нужную часть.`;
+  reply=reply.replace(/<\|END\|>/g,"").replace(/\n{3,}/g,"\n\n").trim();
+  await upsertAiLead({instagram_user_id:m.senderId,language,intent:"search",from_city:existing?.from_city||"",to_city:existing?.to_city||"",departure_date:currentDate,return_date:existing?.return_date?String(existing.return_date).slice(0,10):"",trip_type:existing?.trip_type||"",passengers:existing?.passengers||"",baggage:existing?.baggage||"",last_message:"[Клиент выбрал: изменить данные]",ai_reply:reply,status:existing?.status||"new",handoff:false,manager_waiting:false});
+  if(AI_AUTO_REPLY){const sent=await sendInstagramText(m.senderId,reply);await saveAiMessage(m.senderId,sent?.message_id||`out-${Date.now()}-${Math.random()}`,"out",reply);}
+}
+
 async function processInstagramTripChoice(m){
   const existing=await getExistingAiLead(m.senderId);
   const language=existing?.language||detectInstagramLanguage(m.postbackTitle||"");
@@ -725,6 +758,7 @@ async function processInstagramMessage(m){
   console.log("Instagram message processing started",JSON.stringify({sender:m.senderId,mid:m.mid,text:m.text.slice(0,120),postback:m.postbackPayload||""}));
   await saveAiMessage(m.senderId,m.mid,"in",m.text||m.postbackTitle||"[Вложение]");
   if(m.postbackPayload==="CONNECT_MANAGER") return processInstagramManagerPostback(m);
+  if(m.postbackPayload==="EDIT_SEARCH") return processInstagramEditSearch(m);
   if(m.postbackPayload==="CHOOSE_ONEWAY" || m.postbackPayload==="CHOOSE_ROUNDTRIP") return processInstagramTripChoice(m);
   let text=m.text||"";
   if(!text && m.attachments?.length){
