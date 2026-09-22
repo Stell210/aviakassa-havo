@@ -620,6 +620,18 @@ async function aiAnalyze(instagramUserId,text){
   const history=(await getRecentAiHistory(instagramUserId)).slice(-10),existingLead=await getExistingAiLead(instagramUserId),detectedLanguage=detectInstagramLanguage(text),parsed=parseFlightDetails(text),low=String(text||'').toLowerCase();
   const asksForFlights=/(рейс|рейсы|парвоз|парвозҳо|билет|билеты|flight|flights|ticket|tickets|фирист|отправ|send|дидани|смотреть)/i.test(low);
   const managerRequest=detectManagerRequest(text),managerFollowup=detectManagerFollowup(text),managerContext=!!existingLead?.manager_waiting,alreadyProvided=detectAlreadyProvided(text);
+  // Stage 8: greetings/social messages are standalone messages. They must not inherit
+  // an old route/date and must never start a flight search. Context is restored only
+  // when the current message actually contains a continuation signal or flight data.
+  const standaloneGreeting=/^(?:салом(?:\s+алейкум)?|ассалом(?:\s+алейкум)?|ваалейкум(?:\s+ассалом)?|привет|здравствуйте|добрый\s+(?:день|вечер|утро)|hello|hi|hey)[!.,\s]*$/i.test(low);
+  const standaloneSocial=/^(?:спасибо|большое\s+спасибо|рахмат|ташаккур|ок|хорошо|понял(?:а)?|понятно|ладно|до\s+свидания|пока|thanks|thank\s+you|ok|okay|bye)[!.,\s]*$/i.test(low);
+  const hasFlightSignal=!!(parsed.from_city||parsed.to_city||parsed.departure_date||parsed.return_date||parsed.passengers||parsed.baggage||/(обратно|туда.?обратно|return|back|рафту|баргашт|бозгашт|менеджер|оператор|билет|рейс|парвоз|багаж|luggage|baggage)/i.test(low));
+  if(standaloneGreeting){
+    return {language:detectedLanguage,intent:'general',reply:detectedLanguage==='tj'?'Салом! 👋 Хуш омадед ба Aviakassa_havo. Чӣ гуна метавонам ба шумо кӯмак кунам?':detectedLanguage==='en'?'Hello! 👋 Welcome to Aviakassa_havo. How can I help you?':'Здравствуйте! 👋 Добро пожаловать в Aviakassa_havo. Чем могу помочь?',name:'',phone:'',from_city:'',to_city:'',departure_date:'',return_date:'',trip_type:'',passengers:'',baggage:'',handoff:false,manager_waiting:false};
+  }
+  if(standaloneSocial && !hasFlightSignal){
+    return {language:detectedLanguage,intent:'general',reply:detectedLanguage==='tj'?'Хуш омадед! Агар саволи дигар дошта бошед, нависед. 😊':detectedLanguage==='en'?'You’re welcome! If you have another question, just write to me. 😊':'Пожалуйста! Если у вас есть ещё вопрос, просто напишите мне. 😊',name:'',phone:'',from_city:'',to_city:'',departure_date:'',return_date:'',trip_type:'',passengers:'',baggage:'',handoff:false,manager_waiting:false};
+  }
   if(managerRequest||managerFollowup||(managerContext&&/(?:менеджер|оператор|manager|agent|то ҳол|ҳоло|до сих пор|пока|waiting|ҷавоб|ответ|звон|позвон|тамос|contact)/i.test(low))){
     const isFollowup=managerFollowup||(!managerRequest&&managerContext);
     return {language:detectedLanguage,intent:'support',reply:isFollowup?managerFollowupReply(detectedLanguage):managerReply(detectedLanguage),name:'',phone:'',from_city:existingLead?.from_city||'',to_city:existingLead?.to_city||'',departure_date:existingLead?.departure_date?String(existingLead.departure_date).slice(0,10):'',return_date:existingLead?.return_date?String(existingLead.return_date).slice(0,10):'',trip_type:existingLead?.trip_type||'',passengers:existingLead?.passengers||'',baggage:existingLead?.baggage||'',handoff:true,manager_waiting:true};
@@ -634,7 +646,7 @@ async function aiAnalyze(instagramUserId,text){
   const merged={from_city:parsed.from_city||'',to_city:parsed.to_city||'',departure_date:parsed.departure_date||'',return_date:parsed.return_date||'',trip_type,passengers,baggage};
 
   // Deterministic flight-data flow: never let an LLM replace correctly parsed route/date/context.
-  const greeting=/^(салом(?:\s+алейкум)?|ассалом\s+алейкум|ваалейкум\s+ассалом|привет|здравствуйте|hello|hi)[!.\s]*$/i.test(low);
+  const greeting=standaloneGreeting;
   if(alreadyProvided && existingLead){
     const state={...merged,from_city:merged.from_city||existingLead.from_city||'',to_city:merged.to_city||existingLead.to_city||'',departure_date:merged.departure_date||String(existingLead.departure_date||'').slice(0,10),return_date:merged.return_date||String(existingLead.return_date||'').slice(0,10),passengers:merged.passengers||existingLead.passengers||'',baggage:merged.baggage||existingLead.baggage||'',trip_type:merged.trip_type||existingLead.trip_type||''};
     return {language:detectedLanguage,intent:'general',reply:missingInfoReply(detectedLanguage,state)|| (detectedLanguage==='tj'?'Ҳа, ман маълумоти шуморо дидам 👍 Ман онро аз нав пурсидан намехоҳам. Лутфан каме интизор шавед.':'Да, я вижу вашу заявку 👍 Не нужно повторять данные. Я использую уже указанную информацию.'),name:'',phone:'',...state,handoff:false,manager_waiting:false};
@@ -656,8 +668,14 @@ async function aiAnalyze(instagramUserId,text){
   const parts=merged.departure_date.split('-');
   const monthNames={ru:['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'],tj:['январ','феврал','март','апрел','май','июн','июл','август','сентябр','октябр','ноябр','декабр'],en:['January','February','March','April','May','June','July','August','September','October','November','December']};
   const day=parts[2],month=(monthNames[detectedLanguage]||monthNames.ru)[Number(parts[1])-1];
-  let reply=detectedLanguage==='tj'?`Фаҳмо ✈️ ${merged.from_city} → ${merged.to_city}, ${day} ${month}. Ҳоло ҷустуҷӯи парвозҳои ҷорӣ ва нархҳоро омода мекунам.`:detectedLanguage==='en'?`Got it ✈️ ${merged.from_city} → ${merged.to_city}, ${day} ${month}. I’ll prepare the current flight and price search.`:`Понял ✈️ ${merged.from_city} → ${merged.to_city}, ${day} ${month}. Сейчас подготовлю поиск актуальных рейсов и цен.`;
-  if(merged.return_date){const rp=merged.return_date.split('-');reply+=detectedLanguage==='tj'?` Бозгашт: ${rp[2]} ${monthNames.tj[Number(rp[1])-1]}.`:detectedLanguage==='en'?` Return: ${rp[2]} ${monthNames.en[Number(rp[1])-1]}.`:` Обратно: ${rp[2]} ${monthNames.ru[Number(rp[1])-1]}.`;}
+  const safeFrom=String(merged.from_city||'').trim(),safeTo=String(merged.to_city||'').trim();
+  const safeDay=/^\d{2}$/.test(String(day||''))?String(day):'';
+  const safeMonth=month && month!=='undefined' ? String(month) : '';
+  if(!safeFrom||!safeTo||!safeDay||!safeMonth){
+    return {language:detectedLanguage,intent:'general',reply:missingInfoReply(detectedLanguage,merged)|| (detectedLanguage==='tj'?'Лутфан санаи парвозро нависед. 📅':detectedLanguage==='en'?'Please send the departure date. 📅':'Пожалуйста, укажите дату вылета. 📅'),name:'',phone:'',...merged,handoff:false,manager_waiting:false};
+  }
+  let reply=detectedLanguage==='tj'?`Фаҳмо ✈️ ${safeFrom} → ${safeTo}, ${safeDay} ${safeMonth}. Ҳоло ҷустуҷӯи парвозҳои ҷорӣ ва нархҳоро омода мекунам.`:detectedLanguage==='en'?`Got it ✈️ ${safeFrom} → ${safeTo}, ${safeDay} ${safeMonth}. I’ll prepare the current flight and price search.`:`Понял ✈️ ${safeFrom} → ${safeTo}, ${safeDay} ${safeMonth}. Сейчас подготовлю поиск актуальных рейсов и цен.`;
+  if(normalizeIsoDate(merged.return_date)){const rp=merged.return_date.split('-');const rmonth=(monthNames[detectedLanguage]||monthNames.ru)[Number(rp[1])-1];if(rmonth){reply+=detectedLanguage==='tj'?` Бозгашт: ${rp[2]} ${rmonth}.`:detectedLanguage==='en'?` Return: ${rp[2]} ${rmonth}.`:` Обратно: ${rp[2]} ${rmonth}.`;}}
   return {language:detectedLanguage,intent:'search',reply,name:'',phone:'',...merged,handoff:false,manager_waiting:false};
 }
 async function maybeRenotifyManager(lead,previousLead){
