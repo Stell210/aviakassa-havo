@@ -10,7 +10,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 const DATABASE_URL = process.env.DATABASE_URL || "";
 const TRAVELPAYOUTS_API_TOKEN = process.env.TRAVELPAYOUTS_API_TOKEN || "";
 const TRAVELPAYOUTS_WHITE_LABEL_ID = process.env.TRAVELPAYOUTS_WHITE_LABEL_ID || "21705";
-const TRAVELPAYOUTS_WHITE_LABEL_URL = process.env.TRAVELPAYOUTS_WHITE_LABEL_URL || "https://aviakassahavo.onrender.com/";
+const TRAVELPAYOUTS_WHITE_LABEL_URL = process.env.TRAVELPAYOUTS_WHITE_LABEL_URL || "https://aviakassa-havo1.onrender.com/";
 const META_VERIFY_TOKEN = process.env.META_VERIFY_TOKEN || "aviakassa_havo_meta_verify_2026";
 const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN || "";
 const META_GRAPH_VERSION = process.env.META_GRAPH_VERSION || "v26.0";
@@ -289,15 +289,19 @@ function buildWhiteLabelSearchUrl(ai){
   const base=TRAVELPAYOUTS_WHITE_LABEL_URL.endsWith("/")?TRAVELPAYOUTS_WHITE_LABEL_URL:TRAVELPAYOUTS_WHITE_LABEL_URL+"/";
   return `${base}?flightSearch=${encodeURIComponent(code)}`;
 }
-async function sendInstagramFlightButton(recipientId,ai){
-  const url=buildWhiteLabelSearchUrl(ai);
-  if(!url) return null;
+async function sendInstagramActionButtons(recipientId,ai){
+  const lang=ai?.language||"ru";
   const labels={ru:"✈️ Смотреть билеты",tj:"✈️ Дидани парвозҳо",en:"✈️ View flights"};
-  const title={ru:"Ваш поиск готов ✈️",tj:"Ҷустуҷӯи шумо омода аст ✈️",en:"Your search is ready ✈️"};
-  const subtitle={ru:"Нажмите кнопку — откроются актуальные рейсы и цены.",tj:"Тугмаро пахш кунед — парвозҳо ва нархҳои ҷорӣ кушода мешаванд.",en:"Tap the button to see current flights and prices."};
-  const payload={recipient:{id:String(recipientId)},message:{attachment:{type:"template",payload:{template_type:"generic",elements:[{title:title[ai.language]||title.ru,subtitle:subtitle[ai.language]||subtitle.ru,buttons:[{type:"web_url",url,title:labels[ai.language]||labels.ru}]}]}}}};
+  const managerLabels={ru:"👨‍💼 Связаться с менеджером",tj:"👨‍💼 Пайваст шудан бо менеджер",en:"👨‍💼 Contact manager"};
+  const title={ru:"Что хотите сделать?",tj:"Чӣ кор кардан мехоҳед?",en:"What would you like to do?"};
+  const subtitle={ru:"Выберите действие ниже.",tj:"Амали лозимиро интихоб кунед.",en:"Choose an option below."};
+  const buttons=[];
+  const url=buildWhiteLabelSearchUrl(ai);
+  if(url) buttons.push({type:"web_url",url,title:labels[lang]||labels.ru});
+  buttons.push({type:"postback",title:managerLabels[lang]||managerLabels.ru,payload:"CONNECT_MANAGER"});
+  const payload={recipient:{id:String(recipientId)},message:{attachment:{type:"template",payload:{template_type:"generic",elements:[{title:title[lang]||title.ru,subtitle:subtitle[lang]||subtitle.ru,buttons}]}}}};
   try{return await instagramGraph(`/me/messages`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})}
-  catch(e){console.error("Instagram flight button error:",e.message);return null;}
+  catch(e){console.error("Instagram action buttons error:",e.message);return null;}
 }
 function extractInstagramMessages(body){
   const out=[];
@@ -318,13 +322,15 @@ function extractInstagramMessages(body){
       const sender=item?.sender?.id || msg?.sender?.id;
       const recipient=item?.recipient?.id || msg?.recipient?.id;
       const mid=msg?.mid || item?.mid || item?.message_id || "";
+      const postbackPayload=typeof item?.postback?.payload==="string"?item.postback.payload:(typeof msg?.postback?.payload==="string"?msg.postback.payload:"");
+      const postbackTitle=typeof item?.postback?.title==="string"?item.postback.title:(typeof msg?.postback?.title==="string"?msg.postback.title:"");
       const text=typeof msg?.text==="string"?msg.text.trim():"";
       const attachments=Array.isArray(msg?.attachments)?msg.attachments:[];
       // Never process messages sent by our own Instagram business account.
       // Meta can send outgoing messages back through the webhook (sometimes with is_echo=true).
       if(msg?.is_echo===true || item?.is_echo===true) continue;
       if(businessId && sender && String(sender)===businessId) continue;
-      if(sender && recipient && (text || attachments.length)) out.push({senderId:String(sender),recipientId:String(recipient),mid:String(mid||""),text,attachments,timestamp:item?.timestamp||Date.now()});
+      if(sender && recipient && (text || attachments.length || postbackPayload)) out.push({senderId:String(sender),recipientId:String(recipient),mid:String(mid||item?.postback?.mid||""),text,attachments,postbackPayload,postbackTitle,timestamp:item?.timestamp||Date.now()});
     }
   }
   return out;
@@ -378,10 +384,29 @@ async function transcribeInstagramAudio(attachment){
 }
 function detectInstagramLanguage(text){
   const t=String(text||"").toLowerCase();
-  const hasTajikWord=/(^|\s)(аз|ба|рузи|рӯзи|парвоз|рейс|билет|фиристед|фирист|салом|ташаккур|рахмат|сентябр|октябр|ноябр|декабр|январ|феврал|март|апрел|май|июн|июл|август)(?=\s|$|[,.!?])/i.test(t);
+  const hasTajikWord=/(^|\s)(аз|ба|рузи|рӯзи|парвоз|рейс|билет|фиристед|фирист|салом|ташаккур|рахмат|сентябр|октябр|ноябр|декабр|январ|феврал|март|мар|апрел|май|июн|июл|август)(?=\s|$|[,.!?])/i.test(t);
   if(/[ӣқғҳҷӯ]/i.test(t) || hasTajikWord) return "tj";
   if(/(^|\s)(the|from|to|flight|flights|ticket|tickets|send|hello|hi|september|october|november|december|january|february|march|april|may|june|july|august)(?=\s|$|[,.!?])/i.test(t)) return "en";
   return "ru";
+}
+function detectManagerRequest(text){
+  const t=String(text||"").toLowerCase().replace(/[ё]/g,"е").trim();
+  if(!t) return false;
+  const patterns=[
+    /(?:соедин|свяж|подключ|позов|позвать|переключ).{0,40}(?:менеджер|оператор|сотрудник)/i,
+    /(?:менеджер|оператор|сотрудник).{0,40}(?:соедин|свяж|подключ|позов|переключ)/i,
+    /(?:мне|меня).{0,20}(?:к|с).{0,20}(?:менеджер|оператор)/i,
+    /(?:маро|мани).{0,20}(?:бо|ба).{0,20}(?:менеджер|оператор).{0,30}(?:пайваст|васл|пайванд)/i,
+    /(?:бо|ба).{0,20}(?:менеджер|оператор).{0,30}(?:пайваст|васл|пайванд)/i,
+    /(?:connect|transfer|put|pass|send).{0,40}(?:me|us)?.{0,20}(?:to|with).{0,20}(?:a )?(?:manager|agent|operator)/i,
+    /(?:manager|agent|operator).{0,30}(?:connect|transfer|talk|speak)/i
+  ];
+  return patterns.some(re=>re.test(t));
+}
+function managerReply(language){
+  if(language==="tj") return "Албатта 👍 Ман дархости шуморо ба менеджер мефиристам. Лутфан каме интизор шавед — менеджер бо шумо тамос мегирад.";
+  if(language==="en") return "Of course 👍 I’ll pass your request to a manager. Please wait a little — a manager will contact you.";
+  return "Конечно 👍 Я передам ваш запрос менеджеру. Пожалуйста, немного подождите — менеджер свяжется с вами.";
 }
 function parseFlightDetails(text){
   const t=String(text||"").trim();
@@ -410,21 +435,21 @@ function parseFlightDetails(text){
     if(found.length>=2){ from_city=found[0].city; to_city=found[1].city; }
   }
   const months={
-    январь:1,января:1,январ:1,january:1,
-    февраль:2,февраля:2,феврал:2,february:2,
-    март:3,march:3,
-    апрель:4,апреля:4,апрел:4,april:4,
+    январь:1,января:1,январ:1,янв:1,january:1,
+    февраль:2,февраля:2,феврал:2,фев:2,february:2,
+    март:3,мар:3,march:3,
+    апрель:4,апреля:4,апрел:4,апр:4,april:4,
     май:5,may:5,
     июнь:6,июня:6,июн:6,june:6,
     июль:7,июля:7,июл:7,july:7,
-    август:8,августа:8,august:8,
-    сентябрь:9,сентября:9,сентябр:9,september:9,
-    октябрь:10,октября:10,октябр:10,october:10,
-    ноябрь:11,ноября:11,ноябр:11,november:11,
-    декабрь:12,декабря:12,декабр:12,december:12
+    август:8,августа:8,авг:8,august:8,
+    сентябрь:9,сентября:9,сентябр:9,сент:9,september:9,
+    октябрь:10,октября:10,октябр:10,окт:10,october:10,
+    ноябрь:11,ноября:11,ноябр:11,нояб:11,november:11,
+    декабрь:12,декабря:12,декабр:12,дек:12,december:12
   };
   let departure_date="";
-  const monthPattern="январ(?:ь|я)?|феврал(?:ь|я)?|март|апрел(?:ь|я)?|май|июн(?:ь|я)?|июл(?:ь|я)?|август(?:а)?|сентябр(?:ь|я)?|октябр(?:ь|я)?|ноябр(?:ь|я)?|декабр(?:ь|я)?|january|february|march|april|may|june|july|august|september|october|november|december";
+  const monthPattern="январ(?:ь|я)?|янв|феврал(?:ь|я)?|фев|март|мар|апрел(?:ь|я)?|апр|май|июн(?:ь|я)?|июн|июл(?:ь|я)?|июл|август(?:а)?|авг|сентябр(?:ь|я)?|сент|октябр(?:ь|я)?|окт|ноябр(?:ь|я)?|нояб|декабр(?:ь|я)?|дек|january|february|march|april|may|june|july|august|september|october|november|december";
   const dm=low.match(new RegExp("(?:^|\\s)([0-3]?\\d)\\s+("+monthPattern+")(?=\\s|$|[,.!?])","i"));
   if(dm){
     const day=String(Number(dm[1])).padStart(2,"0");
@@ -436,9 +461,11 @@ function parseFlightDetails(text){
       if(candidate.getFullYear()===year && candidate.getMonth()===months[monthKey]-1 && candidate.getDate()===Number(day)) departure_date=`${year}-${String(months[monthKey]).padStart(2,"0")}-${day}`;
     }
   }
-  const numeric=low.match(/\b([0-3]?\d)[.\/-]([01]?\d)(?:[.\/-](20\d\d))?\b/);
+  // Numeric dates: 29.09.26 -> 2026-09-29; 26.09 -> current year.
+  const numeric=low.match(/\b([0-3]?\d)[.\/-]([01]?\d)(?:[.\/-](\d{2}|\d{4}))?\b/);
   if(!departure_date && numeric){
-    const y=numeric[3]||String(new Date().getFullYear());
+    let y=numeric[3]||String(new Date().getFullYear());
+    if(y.length===2) y=`20${y}`;
     const d=Number(numeric[1]),m=Number(numeric[2]);
     const candidate=new Date(Number(y),m-1,d);
     if(candidate.getFullYear()===Number(y) && candidate.getMonth()===m-1 && candidate.getDate()===d) departure_date=`${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
@@ -452,6 +479,10 @@ async function aiAnalyze(instagramUserId,text){
   const parsed=parseFlightDetails(text);
   const low=String(text||"").toLowerCase();
   const asksForFlights=/(рейс|рейсы|парвоз|парвозҳо|билет|билеты|flight|flights|ticket|tickets|фирист|отправ|send|дидани|смотреть)/i.test(low);
+  const managerRequest=detectManagerRequest(text);
+  if(managerRequest){
+    return {language:detectedLanguage,intent:"support",reply:managerReply(detectedLanguage),name:"",phone:"",from_city:existingLead?.from_city||"",to_city:existingLead?.to_city||"",departure_date:existingLead?.departure_date?String(existingLead.departure_date).slice(0,10):"",return_date:existingLead?.return_date?String(existingLead.return_date).slice(0,10):"",passengers:existingLead?.passengers||"",baggage:existingLead?.baggage||"",handoff:true};
+  }
   if(!parsed.from_city && existingLead?.from_city && existingLead?.to_city && existingLead?.departure_date && asksForFlights){
     parsed.from_city=existingLead.from_city;
     parsed.to_city=existingLead.to_city;
@@ -468,7 +499,7 @@ async function aiAnalyze(instagramUserId,text){
   const prompt=`Ты AI-менеджер авиабилетов Aviakassa_havo (Таджикистан).
 ЯЗЫК ОТВЕТА: ${detectedLanguage}. Отвечай именно на языке текущего сообщения, а не на языке истории. Если язык таджикский — используй таджикский кириллицей.
 Текущий запрос: ${JSON.stringify(text)}
-Детерминированно распознано: from_city=${JSON.stringify(parsed.from_city)}, to_city=${JSON.stringify(parsed.to_city)}, departure_date=${JSON.stringify(parsed.departure_date)}.
+Детерминированно распознано: from_city=${JSON.stringify(parsed.from_city)}, to_city=${JSON.stringify(parsed.to_city)}, departure_date=${JSON.stringify(parsed.departure_date)}. Форматы даты: 29.09.26 = 29 сентября 2026; 26.09 = 26 сентября 2026 (если год не указан, используй текущий год); 29 сент = 29 сентября 2026. Если в сообщении два города подряд без слов «из/в», например «Москва Душанбе 29.09.26», используй первый город как from_city, второй как to_city.
 Правила: если в текущем сообщении есть полный маршрут и дата, ОБЯЗАТЕЛЬНО intent=search, handoff=false. Не отправляй клиента к менеджеру в этом случае. Не придумывай цену, наличие, расписание или багаж. Скажи, что поиск готовится/открывается, а система добавит кнопку с актуальными рейсами. Если данных не хватает — задай один самый полезный вопрос. Если клиент явно просит менеджера или хочет купить/забронировать, можно handoff=true.
 Верни ТОЛЬКО JSON без markdown: {"language":"ru|tj|en","intent":"general|search|purchase|support","reply":"...","name":"","phone":"","from_city":"","to_city":"","departure_date":"YYYY-MM-DD или пусто","return_date":"YYYY-MM-DD или пусто","passengers":"","baggage":"","handoff":false}. Сегодня ${new Date().toISOString().slice(0,10)}. История последних сообщений: ${JSON.stringify(history)}`;
   const r=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{"Authorization":`Bearer ${OPENAI_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({model:OPENAI_MODEL,instructions:"Отвечай строго по инструкции и возвращай только JSON.",input:prompt,max_output_tokens:700,store:false})});
@@ -499,9 +530,21 @@ async function aiAnalyze(instagramUserId,text){
   if(!result.reply) result.reply=detectedLanguage==="tj"?"Лутфан масир ва санаи парвозро нависед.":detectedLanguage==="en"?"Please send the route and travel date.":"Напишите маршрут и дату поездки.";
   return {...result,reply:String(result.reply||"").trim()};
 }
+async function processInstagramManagerPostback(m){
+  const existing=await getExistingAiLead(m.senderId);
+  const language=existing?.language||detectInstagramLanguage(m.postbackTitle||"");
+  const reply=managerReply(language);
+  const lead=await upsertAiLead({instagram_user_id:m.senderId,username:"",language,intent:"support",name:"",phone:"",from_city:existing?.from_city||"",to_city:existing?.to_city||"",departure_date:existing?.departure_date?String(existing.departure_date).slice(0,10):"",return_date:existing?.return_date?String(existing.return_date).slice(0,10):"",passengers:existing?.passengers||"",baggage:existing?.baggage||"",last_message:"[Клиент нажал кнопку: менеджер]",ai_reply:reply,status:"in_progress",handoff:true});
+  if(AI_AUTO_REPLY){const sent=await sendInstagramText(m.senderId,reply);await saveAiMessage(m.senderId,sent?.message_id||`out-${Date.now()}-${Math.random()}`,"out",reply);}
+  if(lead) await telegramNotify(lead);
+  console.log("Instagram manager postback processed",JSON.stringify({sender:m.senderId,handoff:true}));
+}
 async function processInstagramMessage(m){
-  console.log("Instagram message processing started",JSON.stringify({sender:m.senderId,mid:m.mid,text:m.text.slice(0,120)}));
-  await saveAiMessage(m.senderId,m.mid,"in",m.text||"[Вложение]");
+  console.log("Instagram message processing started",JSON.stringify({sender:m.senderId,mid:m.mid,text:m.text.slice(0,120),postback:m.postbackPayload||""}));
+  await saveAiMessage(m.senderId,m.mid,"in",m.text||m.postbackTitle||"[Вложение]");
+  if(m.postbackPayload==="CONNECT_MANAGER"){
+    return processInstagramManagerPostback(m);
+  }
   let text=m.text||"";
   if(!text && m.attachments?.length){
     const audio=m.attachments.find(a=>String(a?.type||"").toLowerCase().includes("audio"));
@@ -513,9 +556,9 @@ async function processInstagramMessage(m){
     const status=ai.handoff?"in_progress":"new";
     const lead=await upsertAiLead({instagram_user_id:m.senderId,username:"",language:ai.language,intent:ai.intent,name:ai.name,phone:ai.phone,from_city:ai.from_city,to_city:ai.to_city,departure_date:ai.departure_date,return_date:ai.return_date,passengers:ai.passengers,baggage:ai.baggage,last_message:m.text||"[Вложение]",ai_reply:ai.reply,status,handoff:ai.handoff});
     if(AI_AUTO_REPLY && ai.reply){const sent=await sendInstagramText(m.senderId,ai.reply);await saveAiMessage(m.senderId,sent?.message_id||`out-${Date.now()}-${Math.random()}`,"out",ai.reply);}
-    if(AI_AUTO_REPLY && (ai.intent==="search" || (ai.intent==="purchase" && ai.from_city && ai.to_city && ai.departure_date))){
-      const buttonSent=await sendInstagramFlightButton(m.senderId,ai);
-      if(buttonSent?.message_id) await saveAiMessage(m.senderId,buttonSent.message_id,"out","[Кнопка: просмотр актуальных билетов]");
+    if(AI_AUTO_REPLY){
+      const buttonSent=await sendInstagramActionButtons(m.senderId,ai);
+      if(buttonSent?.message_id) await saveAiMessage(m.senderId,buttonSent.message_id,"out",ai.from_city&&ai.to_city&&ai.departure_date?"[Кнопки: просмотр актуальных билетов + менеджер]":"[Кнопка: менеджер]");
     }
     if(lead && ai.handoff) await telegramNotify(lead);
     console.log("Instagram AI processed",JSON.stringify({sender:m.senderId,intent:ai.intent,handoff:!!ai.handoff}));
