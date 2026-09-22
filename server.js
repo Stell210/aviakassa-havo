@@ -10,7 +10,6 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 const DATABASE_URL = process.env.DATABASE_URL || "";
 const TRAVELPAYOUTS_API_TOKEN = process.env.TRAVELPAYOUTS_API_TOKEN || "";
 const TRAVELPAYOUTS_WHITE_LABEL_ID = process.env.TRAVELPAYOUTS_WHITE_LABEL_ID || "21705";
-const META_VERIFY_TOKEN = process.env.META_VERIFY_TOKEN || "aviakassa_havo_meta_verify_2026";
 const DEFAULT_FLIGHT_MARKUP_RUB = Number.isFinite(Number(process.env.FLIGHT_MARKUP_RUB)) ? Math.max(0, Number(process.env.FLIGHT_MARKUP_RUB)) : 500;
 const publicDir = __dirname;
 const pool = DATABASE_URL ? new Pool({
@@ -191,29 +190,6 @@ async function initDb(){
   }
 }
 
-async function instagramWebhook(req,res,url){
-  if(url.pathname !== "/api/instagram/webhook") return false;
-  if(req.method === "GET"){
-    const mode = safe(url.searchParams.get("hub.mode"),50);
-    const token = safe(url.searchParams.get("hub.verify_token"),300);
-    const challenge = safe(url.searchParams.get("hub.challenge"),1000);
-    if(mode === "subscribe" && token === META_VERIFY_TOKEN && challenge){
-      return send(res,200,challenge,"text/plain; charset=utf-8");
-    }
-    return send(res,403,{ok:false,error:"WEBHOOK_VERIFICATION_FAILED"});
-  }
-  if(req.method === "POST"){
-    try{
-      const body = await parseBody(req);
-      console.log("Instagram webhook event received", JSON.stringify(body).slice(0,5000));
-    }catch(e){
-      console.error("Instagram webhook parse error:", e.message);
-    }
-    return send(res,200,{ok:true});
-  }
-  return send(res,405,{ok:false,error:"METHOD_NOT_ALLOWED"});
-}
-
 async function instagramAuthCallback(req,res,url){
   if(req.method !== "GET") return false;
   if(url.pathname !== "/auth/instagram/callback") return false;
@@ -252,9 +228,25 @@ async function api(req,res,url){
     let user=null;
     if(pool){
       const q=await pool.query(`SELECT id,name,username,password_hash,role,active,permissions FROM managers WHERE username=$1 LIMIT 1`,[username]);
-      if(q.rowCount && q.rows[0].active && verifyPassword(password,q.rows[0].password_hash)) user={id:q.rows[0].id,name:q.rows[0].name,username:q.rows[0].username,role:q.rows[0].role,permissions:Array.isArray(q.rows[0].permissions)?q.rows[0].permissions:[]};
+      if(q.rowCount){
+        const row=q.rows[0];
+        if(row.active && verifyPassword(password,row.password_hash)){
+          user={id:row.id,name:row.name,username:row.username,role:row.role,permissions:Array.isArray(row.permissions)?row.permissions:[]};
+        } else if(username==="admin" && ADMIN_PASSWORD && password===ADMIN_PASSWORD){
+          // Render's ADMIN_PASSWORD is the master admin credential.
+          // If the DB still contains an old admin hash, accept the current
+          // Render password and synchronize the DB hash so future logins work.
+          if(row.role!=="admin" || !row.active || !verifyPassword(ADMIN_PASSWORD,row.password_hash)){
+            await pool.query(`UPDATE managers SET password_hash=$1, role='admin', active=true, permissions=$2::jsonb WHERE id=$3`,[hashPassword(ADMIN_PASSWORD),JSON.stringify(ALL_PERMISSIONS),row.id]);
+          }
+          user={id:row.id,name:row.name||"Главный администратор",username:"admin",role:"admin",permissions:ALL_PERMISSIONS};
+        }
+      }
     }
-    if(!user && username==="admin" && ADMIN_PASSWORD && password===ADMIN_PASSWORD) user={id:null,name:"Главный администратор",username:"admin",role:"admin",permissions:ALL_PERMISSIONS};
+    if(!user && username==="admin" && ADMIN_PASSWORD && password===ADMIN_PASSWORD){
+      // Also allow the master admin credential when the database is unavailable.
+      user={id:null,name:"Главный администратор",username:"admin",role:"admin",permissions:ALL_PERMISSIONS};
+    }
     if(!user){countFailed(ip);return send(res,401,{ok:false,error:"INVALID_PASSWORD"});}
     clearFailed(ip); return send(res,200,{ok:true,token:issueSession(user),user:{id:user.id,name:user.name,username:user.username,role:user.role,permissions:user.permissions||[]}});
   }
@@ -426,8 +418,6 @@ const server=http.createServer(async(req,res)=>{
     const u=new URL(req.url,`http://${req.headers.host||"localhost"}`);
     const instagramHandled = await instagramAuthCallback(req,res,u);
     if(instagramHandled!==false)return;
-    const webhookHandled = await instagramWebhook(req,res,u);
-    if(webhookHandled!==false)return;
     if(u.pathname.startsWith("/api/")){const handled=await api(req,res,u);if(handled!==false)return;}
     // Friendly admin URLs. Keep /admin.html working as well.
     if(u.pathname==="/admin" || u.pathname==="/admin/") u.pathname="/admin.html";
