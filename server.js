@@ -249,9 +249,9 @@ async function sendInstagramText(recipientId,text){
 }
 
 const IATA_BY_CITY={
-  "москва":"MOW","moscow":"MOW","мск":"MOW",
+  "москва":"MOW","москвы":"MOW","москву":"MOW","moscow":"MOW","мск":"MOW",
   "душанбе":"DYU","dushanbe":"DYU",
-  "ташкент":"TAS","tashkent":"TAS",
+  "ташкент":"TAS","ташкента":"TAS","ташкенте":"TAS","tashkent":"TAS",
   "самарканд":"SKD","samarkand":"SKD",
   "алматы":"ALA","almaty":"ALA",
   "астана":"NQZ","нур-султан":"NQZ","astana":"NQZ","nur-sultan":"NQZ",
@@ -259,7 +259,7 @@ const IATA_BY_CITY={
   "стамбул":"IST","istanbul":"IST",
   "дубай":"DXB","dubai":"DXB",
   "анталья":"AYT","antalya":"AYT",
-  "екатеринбург":"SVX","yekaterinburg":"SVX",
+  "екатеринбург":"SVX","екатеринбурга":"SVX","екатеринбурге":"SVX","yekaterinburg":"SVX",
   "новосибирск":"OVB","novosibirsk":"OVB",
   "санкт-петербург":"LED","петербург":"LED","saint petersburg":"LED","st petersburg":"LED",
   "казань":"KZN","kazan":"KZN",
@@ -303,8 +303,7 @@ function extractInstagramMessages(body){
   const out=[];
   const entries=Array.isArray(body?.entry)?body.entry:[];
   for(const entry of entries){
-    // Instagram Messaging webhooks can arrive in the entry.messaging format.
-    // Some Meta webhook payloads can also use entry.changes[].value.
+    const businessId=String(entry?.id||"");
     const candidates=[];
     if(Array.isArray(entry?.messaging)) candidates.push(...entry.messaging);
     const changes=Array.isArray(entry?.changes)?entry.changes:[];
@@ -321,6 +320,10 @@ function extractInstagramMessages(body){
       const mid=msg?.mid || item?.mid || item?.message_id || "";
       const text=typeof msg?.text==="string"?msg.text.trim():"";
       const attachments=Array.isArray(msg?.attachments)?msg.attachments:[];
+      // Never process messages sent by our own Instagram business account.
+      // Meta can send outgoing messages back through the webhook (sometimes with is_echo=true).
+      if(msg?.is_echo===true || item?.is_echo===true) continue;
+      if(businessId && sender && String(sender)===businessId) continue;
       if(sender && recipient && (text || attachments.length)) out.push({senderId:String(sender),recipientId:String(recipient),mid:String(mid||""),text,attachments,timestamp:item?.timestamp||Date.now()});
     }
   }
@@ -330,6 +333,13 @@ async function getRecentAiHistory(instagramUserId){
   if(!pool) return [];
   const q=await pool.query(`SELECT direction,message_text FROM ai_messages WHERE instagram_user_id=$1 ORDER BY created_at DESC LIMIT 12`,[instagramUserId]);
   return q.rows.reverse();
+}
+async function getExistingAiLead(instagramUserId){
+  if(!pool) return null;
+  try{
+    const q=await pool.query(`SELECT language,from_city,to_city,departure_date,return_date,passengers,baggage FROM ai_leads WHERE instagram_user_id=$1 LIMIT 1`,[instagramUserId]);
+    return q.rows[0]||null;
+  }catch(e){ console.error("AI lead lookup error:",e.message); return null; }
 }
 async function upsertAiLead(data){
   if(!pool) return null;
@@ -368,8 +378,9 @@ async function transcribeInstagramAudio(attachment){
 }
 function detectInstagramLanguage(text){
   const t=String(text||"").toLowerCase();
-  if(/[ӣқғҳҷӯ]/i.test(t) || /\b(аз|ба|рӯз|рузи|сентябр|октябр|ноябр|декабр|январ|феврал|март|апрел|май|июн|июл|август)\b/i.test(t)) return "tj";
-  if(/\b(the|from|to|flight|ticket|tickets|september|october|november|december|january|february|march|april|may|june|july|august)\b/i.test(t)) return "en";
+  const hasTajikWord=/(^|\s)(аз|ба|рузи|рӯзи|парвоз|рейс|билет|фиристед|фирист|салом|ташаккур|рахмат|сентябр|октябр|ноябр|декабр|январ|феврал|март|апрел|май|июн|июл|август)(?=\s|$|[,.!?])/i.test(t);
+  if(/[ӣқғҳҷӯ]/i.test(t) || hasTajikWord) return "tj";
+  if(/(^|\s)(the|from|to|flight|flights|ticket|tickets|send|hello|hi|september|october|november|december|january|february|march|april|may|june|july|august)(?=\s|$|[,.!?])/i.test(t)) return "en";
   return "ru";
 }
 function parseFlightDetails(text){
@@ -379,48 +390,80 @@ function parseFlightDetails(text){
   const found=[];
   for(const city of cities){
     const re=new RegExp("(?:^|[^a-zа-яёӣқғҳҷӯ])"+city.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"(?:$|[^a-zа-яёӣқғҳҷӯ])","i");
-    if(re.test(low) && !found.includes(city)) found.push(city);
+    const m=re.exec(low);
+    if(m && !found.some(x=>x.city===city)) found.push({city,index:m.index});
   }
+  found.sort((a,b)=>a.index-b.index);
   let from_city="",to_city="";
   const route=low.match(/(?:из|from|аз)\s+(.+?)\s+(?:в|to|ба)\s+(.+?)(?:\s+(?:на|on|рӯзи|рузи|дата|date)\b|$)/i);
   if(route){ from_city=route[1].trim(); to_city=route[2].trim(); }
-  if(!from_city && found.length>=2){ from_city=found[0]; to_city=found[1]; }
-  else if(!to_city && found.length>=2){ to_city=found[1]; }
+  const cityNames=Object.keys(IATA_BY_CITY);
+  const normalizeCity=(value)=>{
+    const v=String(value||"").trim().toLowerCase();
+    if(IATA_BY_CITY[v]) return v;
+    const hit=cityNames.find(c=>v===c || v.startsWith(c+" "));
+    return hit||v;
+  };
+  from_city=normalizeCity(from_city);
+  to_city=normalizeCity(to_city);
+  if(!IATA_BY_CITY[from_city] || !IATA_BY_CITY[to_city]){
+    if(found.length>=2){ from_city=found[0].city; to_city=found[1].city; }
+  }
   const months={
-    январ:1,января:1,january:1,
-    феврал:2,февраля:2,february:2,
+    январь:1,января:1,январ:1,january:1,
+    февраль:2,февраля:2,феврал:2,february:2,
     март:3,march:3,
-    апрел:4,апреля:4,april:4,
+    апрель:4,апреля:4,апрел:4,april:4,
     май:5,may:5,
-    июн:6,июня:6,june:6,
-    июл:7,июля:7,july:7,
+    июнь:6,июня:6,июн:6,june:6,
+    июль:7,июля:7,июл:7,july:7,
     август:8,августа:8,august:8,
-    сентябр:9,сентября:9,september:9,
-    октябр:10,октября:10,october:10,
-    ноябр:11,ноября:11,november:11,
-    декабр:12,декабря:12,december:12
+    сентябрь:9,сентября:9,сентябр:9,september:9,
+    октябрь:10,октября:10,октябр:10,october:10,
+    ноябрь:11,ноября:11,ноябр:11,november:11,
+    декабрь:12,декабря:12,декабр:12,december:12
   };
   let departure_date="";
-  const dm=low.match(/\b([0-3]?\d)\s+(январ(?:я)?|феврал(?:я)?|март|апрел(?:я)?|май|июн(?:я)?|июл(?:я)?|август(?:а)?|сентябр(?:я)?|октябр(?:я)?|ноябр(?:я)?|декабр(?:я)?|january|february|march|april|may|june|july|august|september|october|november|december)\b/i);
+  const monthPattern="январ(?:ь|я)?|феврал(?:ь|я)?|март|апрел(?:ь|я)?|май|июн(?:ь|я)?|июл(?:ь|я)?|август(?:а)?|сентябр(?:ь|я)?|октябр(?:ь|я)?|ноябр(?:ь|я)?|декабр(?:ь|я)?|january|february|march|april|may|june|july|august|september|october|november|december";
+  const dm=low.match(new RegExp("(?:^|\\s)([0-3]?\\d)\\s+("+monthPattern+")(?=\\s|$|[,.!?])","i"));
   if(dm){
     const day=String(Number(dm[1])).padStart(2,"0");
     const key=dm[2].toLowerCase();
-    const monthKey=Object.keys(months).find(k=>key.startsWith(k));
-    if(monthKey) departure_date=`${new Date().getFullYear()}-${String(months[monthKey]).padStart(2,"0")}-${day}`;
+    const monthKey=Object.keys(months).find(k=>key===k || key.startsWith(k));
+    if(monthKey){
+      const year=new Date().getFullYear();
+      const candidate=new Date(year,months[monthKey]-1,Number(day));
+      if(candidate.getFullYear()===year && candidate.getMonth()===months[monthKey]-1 && candidate.getDate()===Number(day)) departure_date=`${year}-${String(months[monthKey]).padStart(2,"0")}-${day}`;
+    }
   }
   const numeric=low.match(/\b([0-3]?\d)[.\/-]([01]?\d)(?:[.\/-](20\d\d))?\b/);
   if(!departure_date && numeric){
     const y=numeric[3]||String(new Date().getFullYear());
-    departure_date=`${y}-${String(Number(numeric[2])).padStart(2,"0")}-${String(Number(numeric[1])).padStart(2,"0")}`;
+    const d=Number(numeric[1]),m=Number(numeric[2]);
+    const candidate=new Date(Number(y),m-1,d);
+    if(candidate.getFullYear()===Number(y) && candidate.getMonth()===m-1 && candidate.getDate()===d) departure_date=`${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
   }
   return {from_city,to_city,departure_date};
 }
 async function aiAnalyze(instagramUserId,text){
   const history=(await getRecentAiHistory(instagramUserId)).slice(-8);
+  const existingLead=await getExistingAiLead(instagramUserId);
   const detectedLanguage=detectInstagramLanguage(text);
   const parsed=parseFlightDetails(text);
+  const low=String(text||"").toLowerCase();
+  const asksForFlights=/(рейс|рейсы|парвоз|парвозҳо|билет|билеты|flight|flights|ticket|tickets|фирист|отправ|send|дидани|смотреть)/i.test(low);
+  if(!parsed.from_city && existingLead?.from_city && existingLead?.to_city && existingLead?.departure_date && asksForFlights){
+    parsed.from_city=existingLead.from_city;
+    parsed.to_city=existingLead.to_city;
+    parsed.departure_date=String(existingLead.departure_date).slice(0,10);
+    parsed.return_date=existingLead.return_date?String(existingLead.return_date).slice(0,10):"";
+    parsed.passengers=existingLead.passengers||"";
+  }
   if(!OPENAI_API_KEY){
-    return {language:detectedLanguage,intent:parsed.from_city&&parsed.to_city&&parsed.departure_date?"search":"general",reply:detectedLanguage==="tj"?"Лутфан шаҳрҳои парвоз, сана ва шумораи мусофиронро нависед.":detectedLanguage==="en"?"Please send the route, travel date, and number of passengers.":"Напишите маршрут, дату поездки и количество пассажиров.",name:"",phone:"",from_city:parsed.from_city,to_city:parsed.to_city,departure_date:parsed.departure_date,return_date:"",passengers:"",baggage:"",handoff:false};
+    const hasSearch=parsed.from_city&&parsed.to_city&&parsed.departure_date;
+    const greeting=/^(салом|салом алейкум|привет|здравствуйте|hello|hi|салом алейкум)$/i.test(low);
+    const reply=hasSearch?(detectedLanguage==="tj"?`Фаҳмо ✈️ ${parsed.from_city} → ${parsed.to_city}, ${parsed.departure_date}. Ҳоло ҷустуҷӯи парвозҳои ҷориро омода мекунам.`:detectedLanguage==="en"?`Got it ✈️ ${parsed.from_city} → ${parsed.to_city}, ${parsed.departure_date}. I’ll prepare the current flight search.`:`Понял ✈️ ${parsed.from_city} → ${parsed.to_city}, ${parsed.departure_date}. Сейчас подготовлю поиск актуальных рейсов.`):greeting?(detectedLanguage==="tj"?"Салом! 👋 Ман омодаам ба шумо дар ҷустуҷӯ ва интихоби чиптаи ҳавопаймо кӯмак кунам.\nНависед: аз кадом шаҳр → ба кадом шаҳр ва санаи сафар.":detectedLanguage==="en"?"Hello! 👋 I can help you find a flight.\nSend the route and travel date.":"Здравствуйте! 👋 Я помогу найти авиабилет.\nНапишите маршрут и дату поездки."):(detectedLanguage==="tj"?"Лутфан масир ва санаи парвозро нависед.":detectedLanguage==="en"?"Please send the route and travel date.":"Напишите маршрут и дату поездки.");
+    return {language:detectedLanguage,intent:hasSearch?"search":"general",reply,name:"",phone:"",from_city:parsed.from_city,to_city:parsed.to_city,departure_date:parsed.departure_date,return_date:parsed.return_date||"",passengers:parsed.passengers||"",baggage:"",handoff:false};
   }
   const prompt=`Ты AI-менеджер авиабилетов Aviakassa_havo (Таджикистан).
 ЯЗЫК ОТВЕТА: ${detectedLanguage}. Отвечай именно на языке текущего сообщения, а не на языке истории. Если язык таджикский — используй таджикский кириллицей.
@@ -441,12 +484,17 @@ async function aiAnalyze(instagramUserId,text){
   if(result.from_city && result.to_city && result.departure_date){
     result.intent="search";
     result.handoff=false;
+    const d=result.departure_date;
+    const monthNames={ru:["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"],tj:["январ","феврал","март","апрел","май","июн","июл","август","сентябр","октябр","ноябр","декабр"],en:["January","February","March","April","May","June","July","August","September","October","November","December"]};
+    const parts=d.split("-");
+    const day=parts[2];
+    const month=monthNames[detectedLanguage]?.[Number(parts[1])-1]||monthNames.ru[Number(parts[1])-1];
     const replies={
-      ru:`Понял ✈️ ${result.from_city} → ${result.to_city}, ${result.departure_date.split("-")[2]} сентября. Сейчас подготовлю поиск актуальных рейсов.`,
-      tj:`Фаҳмо ✈️ ${result.from_city} → ${result.to_city}, ${result.departure_date.split("-")[2]} сентябр. Ҳоло ҷустуҷӯи парвозҳои ҷориро омода мекунам.`,
-      en:`Got it ✈️ ${result.from_city} → ${result.to_city}, ${result.departure_date.split("-")[2]} September. I’ll prepare the search for current flights now.`
+      ru:`Понял ✈️ ${result.from_city} → ${result.to_city}, ${day} ${month}. Сейчас подготовлю поиск актуальных рейсов и цен.`,
+      tj:`Фаҳмо ✈️ ${result.from_city} → ${result.to_city}, ${day} ${month}. Ҳоло ҷустуҷӯи парвозҳо ва нархҳои ҷориро омода мекунам.`,
+      en:`Got it ✈️ ${result.from_city} → ${result.to_city}, ${day} ${month}. I’ll prepare the search for current flights and prices.`
     };
-    if(!result.reply || /передам|менеджер|маршрут и дату/i.test(String(result.reply))) result.reply=replies[detectedLanguage]||replies.ru;
+    result.reply=replies[detectedLanguage]||replies.ru;
   }
   if(!result.reply) result.reply=detectedLanguage==="tj"?"Лутфан масир ва санаи парвозро нависед.":detectedLanguage==="en"?"Please send the route and travel date.":"Напишите маршрут и дату поездки.";
   return {...result,reply:String(result.reply||"").trim()};
@@ -473,7 +521,7 @@ async function processInstagramMessage(m){
     console.log("Instagram AI processed",JSON.stringify({sender:m.senderId,intent:ai.intent,handoff:!!ai.handoff}));
   }catch(e){
     console.error("Instagram AI processing error:",e.message);
-    try{const fallback="Спасибо за сообщение! 👋 Я передам запрос менеджеру. Пожалуйста, напишите маршрут, дату поездки и количество пассажиров.";if(AI_AUTO_REPLY) {const sent=await sendInstagramText(m.senderId,fallback);await saveAiMessage(m.senderId,sent?.message_id||`out-${Date.now()}-${Math.random()}`,"out",fallback);}}catch(sendErr){console.error("Instagram fallback reply error:",sendErr.message)}
+    try{const fallback=detectInstagramLanguage(m.text)==="tj"?"Салом! 👋 Лутфан масир ва санаи сафарро нависед, ман кӯмак мекунам.":detectInstagramLanguage(m.text)==="en"?"Hello! 👋 Please send the route and travel date, and I’ll help you.":"Здравствуйте! 👋 Напишите маршрут и дату поездки, и я помогу вам.";if(AI_AUTO_REPLY) {const sent=await sendInstagramText(m.senderId,fallback);await saveAiMessage(m.senderId,sent?.message_id||`out-${Date.now()}-${Math.random()}`,"out",fallback);}}catch(sendErr){console.error("Instagram fallback reply error:",sendErr.message)}
   }
 }
 async function instagramWebhook(req,res,url){
