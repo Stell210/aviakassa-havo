@@ -190,6 +190,24 @@ async function initDb(){
   }
 }
 
+async function instagramAuthCallback(req,res,url){
+  if(req.method !== "GET") return false;
+  if(url.pathname !== "/auth/instagram/callback") return false;
+
+  // Meta redirects the browser here after Instagram Login.
+  // The authorization code is intentionally not rendered or logged.
+  const error = safe(url.searchParams.get("error"),120);
+  const errorReason = safe(url.searchParams.get("error_reason"),300);
+  if(error){
+    const message = errorReason || error || "Instagram authorization was not completed.";
+    return send(res,400,`<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Instagram — Aviakassa_havo</title></head><body style="font-family:Arial,sans-serif;max-width:680px;margin:60px auto;padding:24px"><h1>Instagram авторизация не завершена</h1><p>${message.replace(/[<>]/g,"")}</p></body></html>` ,"text/html; charset=utf-8");
+  }
+
+  const hasCode = Boolean(url.searchParams.get("code"));
+  const hasState = Boolean(url.searchParams.get("state"));
+  return send(res,200,`<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Instagram — Aviakassa_havo</title></head><body style="font-family:Arial,sans-serif;max-width:680px;margin:60px auto;padding:24px"><h1>Instagram авторизация</h1><p>${hasCode ? "Авторизационный ответ Instagram получен." : "Callback-адрес доступен."}</p><p style="color:#666">Aviakassa_havo</p></body></html>`,"text/html; charset=utf-8");
+}
+
 async function api(req,res,url){
   const ip=req.socket.remoteAddress||"unknown";
   if(req.method==="GET" && url.pathname==="/api/health") return send(res,200,{ok:true,database:!!pool});
@@ -382,6 +400,8 @@ const mime={".html":"text/html; charset=utf-8",".css":"text/css; charset=utf-8",
 const server=http.createServer(async(req,res)=>{
   try{
     const u=new URL(req.url,`http://${req.headers.host||"localhost"}`);
+    const instagramHandled = await instagramAuthCallback(req,res,u);
+    if(instagramHandled!==false)return;
     if(u.pathname.startsWith("/api/")){const handled=await api(req,res,u);if(handled!==false)return;}
     // Friendly admin URLs. Keep /admin.html working as well.
     if(u.pathname==="/admin" || u.pathname==="/admin/") u.pathname="/admin.html";

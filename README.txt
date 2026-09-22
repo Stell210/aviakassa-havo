@@ -16,3 +16,9 @@ TRAVELPAYOUTS_API_TOKEN (optional)
 TRAVELPAYOUTS_WHITE_LABEL_ID (optional; default 21705)
 
 Do not put secret credentials into GitHub or frontend code.
+
+
+Instagram Login callback:
+- Redirect URI for Meta Instagram Login configuration: https://aviakassahavo.onrender.com/auth/instagram/callback
+- The callback route is included in server.js and intentionally does not expose or log authorization codes.
+- Instagram/Meta secrets must be configured as Render environment variables and must not be committed to GitHub.
