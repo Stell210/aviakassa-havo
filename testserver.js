@@ -2,8 +2,8 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-const { Pool } = require("pg");
-const XLSX = require("xlsx");
+const Pool=class {};
+const XLSX={};
 
 const PORT = process.env.PORT || 10000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
@@ -21,10 +21,8 @@ const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "";
 const AI_AUTO_REPLY = String(process.env.AI_AUTO_REPLY || "true").toLowerCase() !== "false";
 const DEFAULT_FLIGHT_MARKUP_RUB = Number.isFinite(Number(process.env.FLIGHT_MARKUP_RUB)) ? Math.max(0, Number(process.env.FLIGHT_MARKUP_RUB)) : 500;
 const publicDir = __dirname;
-const pool = DATABASE_URL ? new Pool({
-  connectionString: DATABASE_URL,
-  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false
-}) : null;
+const TEST_STATE={history:[],lead:null};
+const pool={query:async(sql,args)=>{if(/SELECT direction,message_text,created_at FROM ai_messages/.test(sql)) return {rows:TEST_STATE.history};if(/SELECT language,from_city,to_city,departure_date,return_date,trip_type,passengers,baggage,handoff,manager_waiting/.test(sql)) return {rows:TEST_STATE.lead?[TEST_STATE.lead]:[]};return {rows:[]};}};
 
 const sessions = new Map();
 let sessionEpoch = 1;
@@ -396,7 +394,7 @@ async function upsertAiLead(data){
   if(!pool) return null;
   const date = data.departure_date && /^\d{4}-\d{2}-\d{2}$/.test(data.departure_date) ? data.departure_date : null;
   const ret = data.return_date && /^\d{4}-\d{2}-\d{2}$/.test(data.return_date) ? data.return_date : null;
-  const q=await pool.query(`INSERT INTO ai_leads(instagram_user_id,username,language,intent,name,phone,from_city,to_city,departure_date,return_date,trip_type,passengers,baggage,last_message,ai_reply,status,handoff,manager_waiting,manager_last_notified_at,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,NOW()) ON CONFLICT(instagram_user_id) DO UPDATE SET username=EXCLUDED.username,language=EXCLUDED.language,intent=EXCLUDED.intent,name=CASE WHEN EXCLUDED.name<>'' THEN EXCLUDED.name ELSE ai_leads.name END,phone=CASE WHEN EXCLUDED.phone<>'' THEN EXCLUDED.phone ELSE ai_leads.phone END,from_city=CASE WHEN EXCLUDED.from_city<>'' THEN EXCLUDED.from_city ELSE ai_leads.from_city END,to_city=CASE WHEN EXCLUDED.to_city<>'' THEN EXCLUDED.to_city ELSE ai_leads.to_city END,departure_date=COALESCE(EXCLUDED.departure_date,ai_leads.departure_date),return_date=CASE WHEN EXCLUDED.trip_type='oneway' THEN NULL WHEN EXCLUDED.return_date IS NOT NULL THEN EXCLUDED.return_date ELSE ai_leads.return_date END,trip_type=CASE WHEN EXCLUDED.trip_type<>'' THEN EXCLUDED.trip_type ELSE ai_leads.trip_type END,passengers=CASE WHEN EXCLUDED.passengers<>'' THEN EXCLUDED.passengers ELSE ai_leads.passengers END,baggage=CASE WHEN EXCLUDED.baggage<>'' THEN EXCLUDED.baggage ELSE ai_leads.baggage END,last_message=EXCLUDED.last_message,ai_reply=EXCLUDED.ai_reply,status=EXCLUDED.status,handoff=EXCLUDED.handoff,manager_waiting=EXCLUDED.manager_waiting,manager_last_notified_at=CASE WHEN EXCLUDED.manager_waiting THEN COALESCE(EXCLUDED.manager_last_notified_at,ai_leads.manager_last_notified_at) ELSE NULL END,updated_at=NOW() RETURNING *`,[data.instagram_user_id,data.username||"",data.language||"",data.intent||"general",data.name||"",data.phone||"",data.from_city||"",data.to_city||"",date,ret,data.trip_type||"",data.passengers||"",data.baggage||"",data.last_message||"",data.ai_reply||"",data.status||"new",!!data.handoff,!!data.manager_waiting,data.manager_last_notified_at||null]);
+  const q=await pool.query(`INSERT INTO ai_leads(instagram_user_id,username,language,intent,name,phone,from_city,to_city,departure_date,return_date,trip_type,passengers,baggage,last_message,ai_reply,status,handoff,manager_waiting,manager_last_notified_at,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,NOW()) ON CONFLICT(instagram_user_id) DO UPDATE SET username=EXCLUDED.username,language=EXCLUDED.language,intent=EXCLUDED.intent,name=CASE WHEN EXCLUDED.name<>'' THEN EXCLUDED.name ELSE ai_leads.name END,phone=CASE WHEN EXCLUDED.phone<>'' THEN EXCLUDED.phone ELSE ai_leads.phone END,from_city=CASE WHEN EXCLUDED.from_city<>'' THEN EXCLUDED.from_city ELSE ai_leads.from_city END,to_city=CASE WHEN EXCLUDED.to_city<>'' THEN EXCLUDED.to_city ELSE ai_leads.to_city END,departure_date=COALESCE(EXCLUDED.departure_date,ai_leads.departure_date),return_date=CASE WHEN EXCLUDED.return_date IS NOT NULL THEN EXCLUDED.return_date ELSE ai_leads.return_date END,trip_type=CASE WHEN EXCLUDED.trip_type<>'' THEN EXCLUDED.trip_type ELSE ai_leads.trip_type END,passengers=CASE WHEN EXCLUDED.passengers<>'' THEN EXCLUDED.passengers ELSE ai_leads.passengers END,baggage=CASE WHEN EXCLUDED.baggage<>'' THEN EXCLUDED.baggage ELSE ai_leads.baggage END,last_message=EXCLUDED.last_message,ai_reply=EXCLUDED.ai_reply,status=EXCLUDED.status,handoff=EXCLUDED.handoff,manager_waiting=EXCLUDED.manager_waiting,manager_last_notified_at=CASE WHEN EXCLUDED.manager_waiting THEN COALESCE(EXCLUDED.manager_last_notified_at,ai_leads.manager_last_notified_at) ELSE NULL END,updated_at=NOW() RETURNING *`,[data.instagram_user_id,data.username||"",data.language||"",data.intent||"general",data.name||"",data.phone||"",data.from_city||"",data.to_city||"",date,ret,data.trip_type||"",data.passengers||"",data.baggage||"",data.last_message||"",data.ai_reply||"",data.status||"new",!!data.handoff,!!data.manager_waiting,data.manager_last_notified_at||null]);
   return q.rows[0];
 }
 async function saveAiMessage(userId,messageId,direction,text){
@@ -811,7 +809,7 @@ ${currentRoute?`✈️ ${currentRoute}`:""}${currentDate?`
 
 Например: «дату на 28 сентября», «в Москву» или «Душанбе → Казань». Я изменю только нужную часть.`;
   reply=reply.replace(/<\|END\|>/g,"").replace(/\n{3,}/g,"\n\n").trim();
-  await upsertAiLead({instagram_user_id:m.senderId,language,intent:"search",from_city:existing?.from_city||"",to_city:existing?.to_city||"",departure_date:currentDate,return_date:"",trip_type:"oneway",passengers:existing?.passengers||"",baggage:existing?.baggage||"",last_message:"[Клиент выбрал: изменить данные]",ai_reply:reply,status:existing?.status||"new",handoff:false,manager_waiting:false});
+  await upsertAiLead({instagram_user_id:m.senderId,language,intent:"search",from_city:existing?.from_city||"",to_city:existing?.to_city||"",departure_date:currentDate,return_date:existing?.return_date?String(existing.return_date).slice(0,10):"",trip_type:existing?.trip_type||"",passengers:existing?.passengers||"",baggage:existing?.baggage||"",last_message:"[Клиент выбрал: изменить данные]",ai_reply:reply,status:existing?.status||"new",handoff:false,manager_waiting:false});
   if(AI_AUTO_REPLY){const sent=await sendInstagramText(m.senderId,reply);await saveAiMessage(m.senderId,sent?.message_id||`out-${Date.now()}-${Math.random()}`,"out",reply);}
 }
 
@@ -1118,29 +1116,5 @@ async function api(req,res,url){
   return false;
 }
 
-const mime={".html":"text/html; charset=utf-8",".css":"text/css; charset=utf-8",".js":"application/javascript; charset=utf-8",".png":"image/png",".jpg":"image/jpeg",".jpeg":"image/jpeg",".svg":"image/svg+xml",".txt":"text/plain; charset=utf-8",".json":"application/json; charset=utf-8"};
-const server=http.createServer(async(req,res)=>{
-  try{
-    const u=new URL(req.url,`http://${req.headers.host||"localhost"}`);
-    const instagramHandled = await instagramAuthCallback(req,res,u);
-    if(instagramHandled!==false)return;
-    const telegramHandled = await telegramWebhook(req,res,u);
-    if(telegramHandled!==false)return;
-    const webhookHandled = await instagramWebhook(req,res,u);
-    if(webhookHandled!==false)return;
-    if(u.pathname.startsWith("/api/")){const handled=await api(req,res,u);if(handled!==false)return;}
-    // Friendly admin URLs. Keep /admin.html working as well.
-    if(u.pathname==="/admin" || u.pathname==="/admin/") u.pathname="/admin.html";
-    let p=u.pathname==="/"?path.join(publicDir,"index.html"):path.join(publicDir,u.pathname.replace(/^\/+/,""));
-    if(!p.startsWith(publicDir))return send(res,403,{error:"FORBIDDEN"});
-    if(fs.existsSync(p)&&fs.statSync(p).isFile()){const ext=path.extname(p).toLowerCase();res.writeHead(200,{"Content-Type":mime[ext]||"application/octet-stream"});fs.createReadStream(p).pipe(res);return;}
-    send(res,404,{error:"NOT_FOUND"});
-  }catch(e){console.error(e);send(res,500,{error:"SERVER_ERROR"});}
-});
-async function configureTelegramWebhook(){
-  const base=String(process.env.TELEGRAM_WEBHOOK_URL||"").trim();
-  if(!TELEGRAM_BOT_TOKEN || !base) return;
-  try{const data=await telegramApi("setWebhook",{url:base}); console.log("Telegram webhook configured",JSON.stringify({url:base,ok:data.ok}));}
-  catch(e){console.error("Telegram webhook setup failed:",e.message);}
-}
-initDb().then(async()=>{await configureTelegramWebhook();server.listen(PORT,()=>console.log("Aviakassa server on "+PORT))}).catch(async e=>{console.error("Database initialization failed; starting server without DB:",e.message);await configureTelegramWebhook();server.listen(PORT,()=>console.log("Aviakassa server on "+PORT+" (DB unavailable)"))});
+
+module.exports={aiAnalyze,TEST_STATE,parseRouteOverride};
