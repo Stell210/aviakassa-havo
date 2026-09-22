@@ -47,7 +47,7 @@ body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-se
 .social-card,.early-card{border-radius:22px;box-shadow:0 15px 40px rgba(16,35,63,.12)}.social-card{background:linear-gradient(135deg,#0e51cf,#1973ff)}
 .info-card{border-radius:20px}.floating-wa{background:#25d366;box-shadow:0 10px 28px rgba(10,100,70,.22)}
 .contact{padding:70px 5vw}.contact-box{padding:54px 25px}.contact-box h2{font-size:38px}.dark{background:#17243b}
-footer{background:#fff;padding:22px 5vw}
+footer{background:#fff;padding:22px 5vw;display:flex;gap:18px;align-items:center;flex-wrap:wrap}.legal-links{font-size:13px}.legal-links a{color:inherit;text-decoration:none}.legal-links a:hover{text-decoration:underline}
 /* Keep the embedded Travelpayouts search visually inside the new shell without changing its functionality. */
 #tpwl-search{min-height:86px}.white-label-search-wrap iframe{max-width:100%}
 @media(max-width:900px){.nav nav{display:none}.hero{min-height:520px}.hero-content{padding:70px 6vw 140px}.search-results-section{padding:0 12px 55px;margin-top:-78px}.search-results-section .head{padding:23px 20px 4px}.white-label-search-wrap{padding:8px 16px 18px}.routes{grid-template-columns:1fr 1fr}.offer-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -205,7 +205,7 @@ footer{background:#fff;padding:22px 5vw}
 </section>
 <a class="floating-wa" data-i18n-aria="whatsapp" aria-label="WhatsApp" href="https://wa.me/992753582002?text=Здравствуйте!%20Хочу%20подобрать%20авиабилет." target="_blank" aria-label="WhatsApp">💬 <span>WhatsApp</span></a>
 </main>
-<footer><b>✈️ Aviakassa_havo</b><span data-i18n="footerLoc">Душанбе · Таджикистан</span><a class="admin-link" href="/admin" data-i18n="adminPanelLink">🔐 Панель управления</a><span>© <span id="year"></span></span></footer>
+<footer><b>✈️ Aviakassa_havo</b><span data-i18n="footerLoc">Душанбе · Таджикистан</span><span class="legal-links"><a href="/privacy.html">Конфиденциальность</a> · <a href="/terms.html">Соглашение</a> · <a href="/data-deletion.html">Удаление данных</a></span><a class="admin-link" href="/admin" data-i18n="adminPanelLink">🔐 Панель управления</a><span>© <span id="year"></span></span></footer>
 
 <div id="flightDetailModal" class="site-modal" hidden><div class="site-modal-card"><button id="closeFlightDetail" class="site-modal-close">×</button><div id="flightDetailBody"></div></div></div>
 <script>
