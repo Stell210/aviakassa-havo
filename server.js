@@ -10,7 +10,15 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 const DATABASE_URL = process.env.DATABASE_URL || "";
 const TRAVELPAYOUTS_API_TOKEN = process.env.TRAVELPAYOUTS_API_TOKEN || "";
 const TRAVELPAYOUTS_WHITE_LABEL_ID = process.env.TRAVELPAYOUTS_WHITE_LABEL_ID || "21705";
+const TRAVELPAYOUTS_WHITE_LABEL_URL = process.env.TRAVELPAYOUTS_WHITE_LABEL_URL || "https://aviakassahavo.onrender.com/";
 const META_VERIFY_TOKEN = process.env.META_VERIFY_TOKEN || "aviakassa_havo_meta_verify_2026";
+const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN || "";
+const META_GRAPH_VERSION = process.env.META_GRAPH_VERSION || "v26.0";
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
+const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-5.6-luna";
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "";
+const AI_AUTO_REPLY = String(process.env.AI_AUTO_REPLY || "true").toLowerCase() !== "false";
 const DEFAULT_FLIGHT_MARKUP_RUB = Number.isFinite(Number(process.env.FLIGHT_MARKUP_RUB)) ? Math.max(0, Number(process.env.FLIGHT_MARKUP_RUB)) : 500;
 const publicDir = __dirname;
 const pool = DATABASE_URL ? new Pool({
@@ -181,6 +189,37 @@ async function initDb(){
       value TEXT NOT NULL DEFAULT '',
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    CREATE TABLE IF NOT EXISTS ai_leads (
+      id BIGSERIAL PRIMARY KEY,
+      instagram_user_id TEXT NOT NULL,
+      username TEXT DEFAULT '',
+      language VARCHAR(10) DEFAULT '',
+      intent VARCHAR(40) DEFAULT 'general',
+      name TEXT DEFAULT '',
+      phone TEXT DEFAULT '',
+      from_city TEXT DEFAULT '',
+      to_city TEXT DEFAULT '',
+      departure_date DATE,
+      return_date DATE,
+      passengers VARCHAR(30) DEFAULT '',
+      baggage TEXT DEFAULT '',
+      last_message TEXT DEFAULT '',
+      ai_reply TEXT DEFAULT '',
+      status VARCHAR(30) NOT NULL DEFAULT 'new',
+      handoff BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE(instagram_user_id)
+    );
+    CREATE TABLE IF NOT EXISTS ai_messages (
+      id BIGSERIAL PRIMARY KEY,
+      instagram_user_id TEXT NOT NULL,
+      message_id TEXT UNIQUE,
+      direction VARCHAR(10) NOT NULL,
+      message_text TEXT DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS ai_messages_user_idx ON ai_messages(instagram_user_id, created_at DESC);
   `);
   // Price is stored as text so admin can enter symbols, currencies, and phrases.
   await pool.query(`ALTER TABLE flights ALTER COLUMN price TYPE TEXT USING regexp_replace(price::text, '\\.00$', ''), ALTER COLUMN price SET DEFAULT '0'`);
@@ -191,25 +230,190 @@ async function initDb(){
   }
 }
 
+async function instagramGraph(pathname, options={}){
+  if(!META_ACCESS_TOKEN) throw new Error("META_ACCESS_TOKEN_NOT_CONFIGURED");
+  const url=`https://graph.instagram.com/${META_GRAPH_VERSION}${pathname}`;
+  const headers={"Authorization":`Bearer ${META_ACCESS_TOKEN}`,...(options.headers||{})};
+  const r=await fetch(url,{...options,headers});
+  const text=await r.text();
+  let data={}; try{data=JSON.parse(text)}catch{data={raw:text}};
+  if(!r.ok) throw new Error(`META_${r.status}: ${data?.error?.message || text.slice(0,500)}`);
+  return data;
+}
+async function sendInstagramText(recipientId,text){
+  const clean=String(text||"").trim();
+  if(!clean) return null;
+  const bytes=Buffer.byteLength(clean,"utf8");
+  const reply=bytes>950 ? clean.slice(0,900)+"…" : clean;
+  return instagramGraph(`/me/messages`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({recipient:{id:String(recipientId)},message:{text:reply}})});
+}
+
+const IATA_BY_CITY={
+  "москва":"MOW","moscow":"MOW","мск":"MOW",
+  "душанбе":"DYU","dushanbe":"DYU",
+  "ташкент":"TAS","tashkent":"TAS",
+  "самарканд":"SKD","samarkand":"SKD",
+  "алматы":"ALA","almaty":"ALA",
+  "астана":"NQZ","нур-султан":"NQZ","astana":"NQZ","nur-sultan":"NQZ",
+  "бишкек":"FRU","bishkek":"FRU",
+  "стамбул":"IST","istanbul":"IST",
+  "дубай":"DXB","dubai":"DXB",
+  "анталья":"AYT","antalya":"AYT",
+  "екатеринбург":"SVX","yekaterinburg":"SVX",
+  "новосибирск":"OVB","novosibirsk":"OVB",
+  "санкт-петербург":"LED","петербург":"LED","saint petersburg":"LED","st petersburg":"LED",
+  "казань":"KZN","kazan":"KZN",
+  "уфа":"UFA","ufa":"UFA",
+  "красноярск":"KJA","krasnoyarsk":"KJA",
+  "сочи":"AER","sochi":"AER",
+  "пермь":"PEE","perm":"PEE",
+  "оренбург":"REN","orenburg":"REN"
+};
+function cityToIata(value){
+  const v=String(value||"").trim().toLowerCase();
+  if(/^[a-z]{3}$/i.test(v)) return v.toUpperCase();
+  return IATA_BY_CITY[v]||"";
+}
+function normalizePassengers(value){
+  const m=String(value||"").match(/[1-9]/);
+  return m?m[0]:"1";
+}
+function buildWhiteLabelSearchUrl(ai){
+  const origin=cityToIata(ai.from_city), destination=cityToIata(ai.to_city);
+  const dep=String(ai.departure_date||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!origin||!destination||!dep) return "";
+  let code=`${origin}${dep[3]}${dep[2]}${destination}`;
+  const ret=String(ai.return_date||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(ret) code+=`${ret[3]}${ret[2]}`;
+  code+=normalizePassengers(ai.passengers);
+  const base=TRAVELPAYOUTS_WHITE_LABEL_URL.endsWith("/")?TRAVELPAYOUTS_WHITE_LABEL_URL:TRAVELPAYOUTS_WHITE_LABEL_URL+"/";
+  return `${base}?flightSearch=${encodeURIComponent(code)}`;
+}
+async function sendInstagramFlightButton(recipientId,ai){
+  const url=buildWhiteLabelSearchUrl(ai);
+  if(!url) return null;
+  const labels={ru:"✈️ Смотреть билеты",tj:"✈️ Дидани парвозҳо",en:"✈️ View flights"};
+  const title={ru:"Ваш поиск готов ✈️",tj:"Ҷустуҷӯи шумо омода аст ✈️",en:"Your search is ready ✈️"};
+  const subtitle={ru:"Нажмите кнопку — откроются актуальные рейсы и цены.",tj:"Тугмаро пахш кунед — парвозҳо ва нархҳои ҷорӣ кушода мешаванд.",en:"Tap the button to see current flights and prices."};
+  const payload={recipient:{id:String(recipientId)},message:{attachment:{type:"template",payload:{template_type:"generic",elements:[{title:title[ai.language]||title.ru,subtitle:subtitle[ai.language]||subtitle.ru,buttons:[{type:"web_url",url,title:labels[ai.language]||labels.ru}]}]}}}};
+  try{return await instagramGraph(`/me/messages`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})}
+  catch(e){console.error("Instagram flight button error:",e.message);return null;}
+}
+function extractInstagramMessages(body){
+  const out=[];
+  for(const entry of Array.isArray(body?.entry)?body.entry:[]){
+    const changes=Array.isArray(entry?.changes)?entry.changes:[];
+    for(const change of changes){
+      if(change?.field!=="messages") continue;
+      const v=change.value||{};
+      const candidates=Array.isArray(v.messages)?v.messages:[v];
+      for(const item of candidates){
+        const msg=item?.message||{};
+        const sender=item?.sender?.id || msg?.sender?.id;
+        const recipient=item?.recipient?.id || msg?.recipient?.id;
+        const mid=msg?.mid || item?.mid || item?.message_id || "";
+        const text=typeof msg?.text==="string"?msg.text.trim():"";
+        const attachments=Array.isArray(msg?.attachments)?msg.attachments:[];
+        if(sender && recipient && (text || attachments.length)) out.push({senderId:String(sender),recipientId:String(recipient),mid:String(mid||""),text,attachments,timestamp:item?.timestamp||v?.timestamp||Date.now()});
+      }
+    }
+  }
+  return out;
+}
+async function getRecentAiHistory(instagramUserId){
+  if(!pool) return [];
+  const q=await pool.query(`SELECT direction,message_text FROM ai_messages WHERE instagram_user_id=$1 ORDER BY created_at DESC LIMIT 12`,[instagramUserId]);
+  return q.rows.reverse();
+}
+async function upsertAiLead(data){
+  if(!pool) return null;
+  const date = data.departure_date && /^\d{4}-\d{2}-\d{2}$/.test(data.departure_date) ? data.departure_date : null;
+  const ret = data.return_date && /^\d{4}-\d{2}-\d{2}$/.test(data.return_date) ? data.return_date : null;
+  const q=await pool.query(`INSERT INTO ai_leads(instagram_user_id,username,language,intent,name,phone,from_city,to_city,departure_date,return_date,passengers,baggage,last_message,ai_reply,status,handoff,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,NOW()) ON CONFLICT(instagram_user_id) DO UPDATE SET username=EXCLUDED.username,language=EXCLUDED.language,intent=EXCLUDED.intent,name=CASE WHEN EXCLUDED.name<>'' THEN EXCLUDED.name ELSE ai_leads.name END,phone=CASE WHEN EXCLUDED.phone<>'' THEN EXCLUDED.phone ELSE ai_leads.phone END,from_city=CASE WHEN EXCLUDED.from_city<>'' THEN EXCLUDED.from_city ELSE ai_leads.from_city END,to_city=CASE WHEN EXCLUDED.to_city<>'' THEN EXCLUDED.to_city ELSE ai_leads.to_city END,departure_date=COALESCE(EXCLUDED.departure_date,ai_leads.departure_date),return_date=COALESCE(EXCLUDED.return_date,ai_leads.return_date),passengers=CASE WHEN EXCLUDED.passengers<>'' THEN EXCLUDED.passengers ELSE ai_leads.passengers END,baggage=CASE WHEN EXCLUDED.baggage<>'' THEN EXCLUDED.baggage ELSE ai_leads.baggage END,last_message=EXCLUDED.last_message,ai_reply=EXCLUDED.ai_reply,status=EXCLUDED.status,handoff=EXCLUDED.handoff,updated_at=NOW() RETURNING *`,[data.instagram_user_id,data.username||"",data.language||"",data.intent||"general",data.name||"",data.phone||"",data.from_city||"",data.to_city||"",date,ret,data.passengers||"",data.baggage||"",data.last_message||"",data.ai_reply||"",data.status||"new",!!data.handoff]);
+  return q.rows[0];
+}
+async function saveAiMessage(userId,messageId,direction,text){
+  if(!pool) return;
+  try{await pool.query(`INSERT INTO ai_messages(instagram_user_id,message_id,direction,message_text) VALUES($1,$2,$3,$4) ON CONFLICT(message_id) DO NOTHING`,[userId,messageId||null,direction,text||""]);}catch(e){console.error("AI message save error:",e.message)}
+}
+async function telegramNotify(lead){
+  if(!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
+  const lines=["📩 Новый лид Instagram","",`Instagram ID: ${lead.instagram_user_id}`,lead.name?`Имя: ${lead.name}`:null,lead.phone?`Телефон: ${lead.phone}`:null,lead.from_city||lead.to_city?`Маршрут: ${lead.from_city||"?"} → ${lead.to_city||"?"}`:null,lead.departure_date?`Дата: ${lead.departure_date}`:null,lead.return_date?`Обратно: ${lead.return_date}`:null,lead.passengers?`Пассажиры: ${lead.passengers}`:null,lead.baggage?`Багаж: ${lead.baggage}`:null,`Статус: ${lead.status}`].filter(Boolean).join("\n");
+  const r=await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:lines})});
+  if(!r.ok) console.error("Telegram notify failed:",await r.text());
+}
+async function transcribeInstagramAudio(attachment){
+  if(!OPENAI_API_KEY) return "";
+  const mediaUrl=attachment?.payload?.url || attachment?.url;
+  if(!mediaUrl) return "";
+  const mr=await fetch(mediaUrl,{headers:META_ACCESS_TOKEN?{"Authorization":`Bearer ${META_ACCESS_TOKEN}`}:{}});
+  if(!mr.ok) throw new Error(`META_MEDIA_${mr.status}`);
+  const buf=Buffer.from(await mr.arrayBuffer());
+  if(buf.length>25*1024*1024) throw new Error("AUDIO_TOO_LARGE");
+  const form=new FormData();
+  const type=mr.headers.get("content-type")||"audio/ogg";
+  const ext=type.includes("mpeg")?"mp3":type.includes("mp4")?"m4a":type.includes("webm")?"webm":"ogg";
+  form.append("file",new Blob([buf],{type}),`instagram-voice.${ext}`);
+  form.append("model",process.env.OPENAI_TRANSCRIBE_MODEL||"gpt-transcribe");
+  const r=await fetch("https://api.openai.com/v1/audio/transcriptions",{method:"POST",headers:{"Authorization":`Bearer ${OPENAI_API_KEY}`},body:form});
+  const raw=await r.text();let data={};try{data=JSON.parse(raw)}catch{}
+  if(!r.ok) throw new Error(`OPENAI_TRANSCRIBE_${r.status}: ${data?.error?.message||raw.slice(0,400)}`);
+  return String(data.text||"").trim();
+}
+async function aiAnalyze(instagramUserId,text){
+  const history=await getRecentAiHistory(instagramUserId);
+  if(!OPENAI_API_KEY){
+    return {language:"ru",intent:"general",reply:"Здравствуйте! 👋 Напишите, пожалуйста, откуда и куда вы хотите лететь, дату поездки и количество пассажиров. Я помогу оформить запрос.",name:"",phone:"",from_city:"",to_city:"",departure_date:"",return_date:"",passengers:"",baggage:"",handoff:false};
+  }
+  const prompt=`Ты AI-менеджер авиабилетов Aviakassa_havo (Таджикистан). Общайся кратко, вежливо и естественно на языке клиента: русский, таджикский или английский. Никогда не придумывай наличие рейса, цену, расписание или багаж. Если данных не хватает — задай только самый полезный следующий вопрос. Собирай: имя, телефон, откуда, куда, дата вылета, дата возвращения, пассажиры, багаж. Если маршрут и дата уже полностью указаны, intent=search. В reply не вставляй URL и не называй URL «ссылкой»: после ответа система сама добавит клиенту удобную кнопку для просмотра билетов. Если клиент хочет купить/забронировать или просит менеджера — intent=purchase и handoff=true после сбора доступных данных. Если клиент просит менеджера — handoff=true. Если клиент пишет что-то не связанное с билетами, отвечай естественно по смыслу и не проси маршрут без причины. Верни ТОЛЬКО JSON без markdown: {"language":"ru|tj|en","intent":"general|search|purchase|support","reply":"...","name":"","phone":"","from_city":"","to_city":"","departure_date":"YYYY-MM-DD или пусто","return_date":"YYYY-MM-DD или пусто","passengers":"","baggage":"","handoff":false}. Сегодня ${new Date().toISOString().slice(0,10)}. История: ${JSON.stringify(history)}. Новое сообщение: ${JSON.stringify(text)}`;
+  const r=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{"Authorization":`Bearer ${OPENAI_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({model:OPENAI_MODEL,instructions:"Отвечай строго по инструкции и возвращай только JSON.",input:prompt,max_output_tokens:700,temperature:0.2,store:false})});
+  const raw=await r.text(); let data={}; try{data=JSON.parse(raw)}catch{}
+  if(!r.ok) throw new Error(`OPENAI_${r.status}: ${data?.error?.message||raw.slice(0,500)}`);
+  const output=String(data.output_text||"").trim();
+  const cleaned=output.replace(/^```json\s*/i,"").replace(/```$/i,"").trim();
+  let result; try{result=JSON.parse(cleaned)}catch{result={language:"ru",intent:"support",reply:output||"Я передам ваш запрос менеджеру. Пожалуйста, напишите маршрут и дату.",handoff:true};}
+  return {...result,reply:String(result.reply||"").trim()};
+}
+async function processInstagramMessage(m){
+  await saveAiMessage(m.senderId,m.mid,"in",m.text||"[Вложение]");
+  let text=m.text||"";
+  if(!text && m.attachments?.length){
+    const audio=m.attachments.find(a=>String(a?.type||"").toLowerCase().includes("audio"));
+    if(audio){try{text=await transcribeInstagramAudio(audio)}catch(e){console.error("Instagram voice transcription error:",e.message)}}
+    if(!text) text="Клиент отправил голосовое сообщение. Попроси клиента написать текстом, что нужно забронировать.";
+  }
+  try{
+    const ai=await aiAnalyze(m.senderId,text);
+    const status=ai.handoff?"in_progress":"new";
+    const lead=await upsertAiLead({instagram_user_id:m.senderId,username:"",language:ai.language,intent:ai.intent,name:ai.name,phone:ai.phone,from_city:ai.from_city,to_city:ai.to_city,departure_date:ai.departure_date,return_date:ai.return_date,passengers:ai.passengers,baggage:ai.baggage,last_message:m.text||"[Вложение]",ai_reply:ai.reply,status,handoff:ai.handoff});
+    if(AI_AUTO_REPLY && ai.reply){const sent=await sendInstagramText(m.senderId,ai.reply);await saveAiMessage(m.senderId,sent?.message_id||`out-${Date.now()}-${Math.random()}`,"out",ai.reply);}
+    if(AI_AUTO_REPLY && (ai.intent==="search" || (ai.intent==="purchase" && ai.from_city && ai.to_city && ai.departure_date))){
+      const buttonSent=await sendInstagramFlightButton(m.senderId,ai);
+      if(buttonSent?.message_id) await saveAiMessage(m.senderId,buttonSent.message_id,"out","[Кнопка: просмотр актуальных билетов]");
+    }
+    if(lead && ai.handoff) await telegramNotify(lead);
+    console.log("Instagram AI processed",JSON.stringify({sender:m.senderId,intent:ai.intent,handoff:!!ai.handoff}));
+  }catch(e){
+    console.error("Instagram AI processing error:",e.message);
+    try{const fallback="Спасибо за сообщение! 👋 Я передам запрос менеджеру. Пожалуйста, напишите маршрут, дату поездки и количество пассажиров.";if(AI_AUTO_REPLY) {const sent=await sendInstagramText(m.senderId,fallback);await saveAiMessage(m.senderId,sent?.message_id||`out-${Date.now()}-${Math.random()}`,"out",fallback);}}catch(sendErr){console.error("Instagram fallback reply error:",sendErr.message)}
+  }
+}
 async function instagramWebhook(req,res,url){
   if(url.pathname !== "/api/instagram/webhook") return false;
   if(req.method === "GET"){
-    const mode = safe(url.searchParams.get("hub.mode"),50);
-    const token = safe(url.searchParams.get("hub.verify_token"),300);
-    const challenge = safe(url.searchParams.get("hub.challenge"),1000);
-    if(mode === "subscribe" && token === META_VERIFY_TOKEN && challenge){
-      return send(res,200,challenge,"text/plain; charset=utf-8");
-    }
+    const mode=safe(url.searchParams.get("hub.mode"),50),token=safe(url.searchParams.get("hub.verify_token"),300),challenge=safe(url.searchParams.get("hub.challenge"),1000);
+    if(mode==="subscribe" && token===META_VERIFY_TOKEN && challenge) return send(res,200,challenge,"text/plain; charset=utf-8");
     return send(res,403,{ok:false,error:"WEBHOOK_VERIFICATION_FAILED"});
   }
   if(req.method === "POST"){
     try{
-      const body = await parseBody(req);
-      console.log("Instagram webhook event received", JSON.stringify(body).slice(0,5000));
-    }catch(e){
-      console.error("Instagram webhook parse error:", e.message);
-    }
-    return send(res,200,{ok:true});
+      const body=await parseBody(req);
+      console.log("Instagram webhook event received",JSON.stringify(body).slice(0,5000));
+      const messages=extractInstagramMessages(body);
+      res.writeHead(200,{"Content-Type":"application/json","Cache-Control":"no-store"});res.end(JSON.stringify({ok:true,received:messages.length}));
+      for(const m of messages) processInstagramMessage(m).catch(e=>console.error("Instagram async processing error:",e.message));
+      return true;
+    }catch(e){console.error("Instagram webhook parse error:",e.message);return send(res,200,{ok:true});}
   }
   return send(res,405,{ok:false,error:"METHOD_NOT_ALLOWED"});
 }
@@ -268,6 +472,16 @@ async function api(req,res,url){
     if(!pool) return send(res,503,{ok:false,error:"DATABASE_NOT_CONFIGURED"});
 
     if(req.method==="GET" && url.pathname==="/api/admin/me") return send(res,200,{ok:true,user:{id:user.id,name:user.name,username:user.username,role:user.role,permissions:user.permissions||[]}});
+    if(req.method==="GET" && url.pathname==="/api/admin/ai-leads"){
+      if(!hasPermission(user,"bookings_view")) return send(res,403,{ok:false,error:"FORBIDDEN"});
+      const q=await pool.query(`SELECT * FROM ai_leads ORDER BY updated_at DESC LIMIT 500`); return send(res,200,{ok:true,leads:q.rows});
+    }
+    if(req.method==="PATCH" && url.pathname==="/api/admin/ai-leads"){
+      if(!hasPermission(user,"bookings_edit")) return send(res,403,{ok:false,error:"FORBIDDEN"});
+      const b=await parseBody(req),id=Number(b.id),status=safe(b.status,30);
+      if(!Number.isInteger(id)||!['new','in_progress','booked','completed','cancelled'].includes(status)) return send(res,400,{ok:false,error:"INVALID_DATA"});
+      await pool.query(`UPDATE ai_leads SET status=$1,updated_at=NOW() WHERE id=$2`,[status,id]); return send(res,200,{ok:true});
+    }
 
     if(req.method==="GET" && url.pathname==="/api/admin/bookings"){
       if(!hasPermission(user,"bookings_view")) return send(res,403,{ok:false,error:"FORBIDDEN"});
