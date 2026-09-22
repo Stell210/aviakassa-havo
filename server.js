@@ -10,6 +10,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 const DATABASE_URL = process.env.DATABASE_URL || "";
 const TRAVELPAYOUTS_API_TOKEN = process.env.TRAVELPAYOUTS_API_TOKEN || "";
 const TRAVELPAYOUTS_WHITE_LABEL_ID = process.env.TRAVELPAYOUTS_WHITE_LABEL_ID || "21705";
+const META_VERIFY_TOKEN = process.env.META_VERIFY_TOKEN || "aviakassa_havo_meta_verify_2026";
 const DEFAULT_FLIGHT_MARKUP_RUB = Number.isFinite(Number(process.env.FLIGHT_MARKUP_RUB)) ? Math.max(0, Number(process.env.FLIGHT_MARKUP_RUB)) : 500;
 const publicDir = __dirname;
 const pool = DATABASE_URL ? new Pool({
@@ -188,6 +189,29 @@ async function initDb(){
     const existing=await pool.query(`SELECT id FROM managers WHERE username='admin' LIMIT 1`);
     if(!existing.rowCount) await pool.query(`INSERT INTO managers(name,username,password_hash,role) VALUES($1,$2,$3,$4)`,["Главный администратор","admin",hashPassword(ADMIN_PASSWORD),"admin"]);
   }
+}
+
+async function instagramWebhook(req,res,url){
+  if(url.pathname !== "/api/instagram/webhook") return false;
+  if(req.method === "GET"){
+    const mode = safe(url.searchParams.get("hub.mode"),50);
+    const token = safe(url.searchParams.get("hub.verify_token"),300);
+    const challenge = safe(url.searchParams.get("hub.challenge"),1000);
+    if(mode === "subscribe" && token === META_VERIFY_TOKEN && challenge){
+      return send(res,200,challenge,"text/plain; charset=utf-8");
+    }
+    return send(res,403,{ok:false,error:"WEBHOOK_VERIFICATION_FAILED"});
+  }
+  if(req.method === "POST"){
+    try{
+      const body = await parseBody(req);
+      console.log("Instagram webhook event received", JSON.stringify(body).slice(0,5000));
+    }catch(e){
+      console.error("Instagram webhook parse error:", e.message);
+    }
+    return send(res,200,{ok:true});
+  }
+  return send(res,405,{ok:false,error:"METHOD_NOT_ALLOWED"});
 }
 
 async function instagramAuthCallback(req,res,url){
@@ -402,6 +426,8 @@ const server=http.createServer(async(req,res)=>{
     const u=new URL(req.url,`http://${req.headers.host||"localhost"}`);
     const instagramHandled = await instagramAuthCallback(req,res,u);
     if(instagramHandled!==false)return;
+    const webhookHandled = await instagramWebhook(req,res,u);
+    if(webhookHandled!==false)return;
     if(u.pathname.startsWith("/api/")){const handled=await api(req,res,u);if(handled!==false)return;}
     // Friendly admin URLs. Keep /admin.html working as well.
     if(u.pathname==="/admin" || u.pathname==="/admin/") u.pathname="/admin.html";
