@@ -291,10 +291,10 @@ function buildWhiteLabelSearchUrl(ai){
 }
 async function sendInstagramActionButtons(recipientId,ai){
   const lang=ai?.language||"ru";
-  const labels={ru:"✈️ Смотреть билеты",tj:"✈️ Дидани парвозҳо",en:"✈️ View flights"};
+  const labels={ru:"✈️ Смотреть билеты и цены",tj:"✈️ Дидани билетҳо ва нархҳо",en:"✈️ View flights & prices"};
   const managerLabels={ru:"👨‍💼 Связаться с менеджером",tj:"👨‍💼 Пайваст шудан бо менеджер",en:"👨‍💼 Contact manager"};
   const title={ru:"Что хотите сделать?",tj:"Чӣ кор кардан мехоҳед?",en:"What would you like to do?"};
-  const subtitle={ru:"Выберите действие ниже.",tj:"Амали лозимиро интихоб кунед.",en:"Choose an option below."};
+  const subtitle={ru:"После нажатия «Смотреть билеты и цены» поиск может занять 5–10 секунд. Пожалуйста, подождите.",tj:"Пас аз пахши «Дидани билетҳо ва нархҳо» ҷустуҷӯ 5–10 сония мегирад. Лутфан интизор шавед.",en:"After tapping «View flights & prices», the search may take 5–10 seconds. Please wait."};
   const buttons=[];
   const url=buildWhiteLabelSearchUrl(ai);
   if(url) buttons.push({type:"web_url",url,title:labels[lang]||labels.ru});
@@ -335,6 +335,21 @@ function extractInstagramMessages(body){
   }
   return out;
 }
+async function getInstagramUserProfile(instagramUserId){
+  const id=String(instagramUserId||"").trim();
+  if(!id) return null;
+  try{
+    const data=await instagramGraph(`/${encodeURIComponent(id)}?fields=id,username,name`);
+    return {id:String(data?.id||id),username:String(data?.username||""),name:String(data?.name||"")};
+  }catch(e){
+    console.warn("Instagram profile lookup failed:",e.message);
+    return null;
+  }
+}
+function instagramProfileUrl(username){
+  const u=String(username||"").trim().replace(/^@/,"");
+  return /^[A-Za-z0-9._]{1,30}$/.test(u) ? `https://www.instagram.com/${encodeURIComponent(u)}/` : "";
+}
 async function getRecentAiHistory(instagramUserId){
   if(!pool) return [];
   const q=await pool.query(`SELECT direction,message_text FROM ai_messages WHERE instagram_user_id=$1 ORDER BY created_at DESC LIMIT 12`,[instagramUserId]);
@@ -358,11 +373,53 @@ async function saveAiMessage(userId,messageId,direction,text){
   if(!pool) return;
   try{await pool.query(`INSERT INTO ai_messages(instagram_user_id,message_id,direction,message_text) VALUES($1,$2,$3,$4) ON CONFLICT(message_id) DO NOTHING`,[userId,messageId||null,direction,text||""]);}catch(e){console.error("AI message save error:",e.message)}
 }
+async function telegramApi(method, payload){
+  if(!TELEGRAM_BOT_TOKEN) throw new Error("TELEGRAM_BOT_TOKEN_NOT_CONFIGURED");
+  const r=await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/${method}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload||{})});
+  const raw=await r.text(); let data={}; try{data=JSON.parse(raw)}catch{}
+  if(!r.ok || data.ok===false) throw new Error(`TELEGRAM_${r.status}: ${data?.description||raw.slice(0,400)}`);
+  return data;
+}
+function telegramLeadText(lead){
+  const profileUrl=instagramProfileUrl(lead.username);
+  return ["📩 Новый запрос от Instagram","",lead.username?`👤 Instagram: @${lead.username}`:`👤 Instagram ID: ${lead.instagram_user_id}`,profileUrl?`🔗 Профиль: ${profileUrl}`:null,lead.name?`Имя: ${lead.name}`:null,lead.phone?`Телефон: ${lead.phone}`:null,lead.from_city||lead.to_city?`✈️ Маршрут: ${lead.from_city||"?"} → ${lead.to_city||"?"}`:null,lead.departure_date?`📅 Дата: ${lead.departure_date}`:null,lead.return_date?`🔁 Обратно: ${lead.return_date}`:null,lead.passengers?`👥 Пассажиры: ${lead.passengers}`:null,lead.baggage?`🧳 Багаж: ${lead.baggage}`:null,`💬 Сообщение: ${lead.last_message||"—"}`,`🟡 Статус: ${lead.status}`].filter(Boolean).join("\n");
+}
 async function telegramNotify(lead){
   if(!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
-  const lines=["📩 Новый лид Instagram","",`Instagram ID: ${lead.instagram_user_id}`,lead.name?`Имя: ${lead.name}`:null,lead.phone?`Телефон: ${lead.phone}`:null,lead.from_city||lead.to_city?`Маршрут: ${lead.from_city||"?"} → ${lead.to_city||"?"}`:null,lead.departure_date?`Дата: ${lead.departure_date}`:null,lead.return_date?`Обратно: ${lead.return_date}`:null,lead.passengers?`Пассажиры: ${lead.passengers}`:null,lead.baggage?`Багаж: ${lead.baggage}`:null,`Статус: ${lead.status}`].filter(Boolean).join("\n");
-  const r=await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:lines})});
-  if(!r.ok) console.error("Telegram notify failed:",await r.text());
+  try{
+    const profileUrl=instagramProfileUrl(lead.username);
+    const rows=[];
+    if(profileUrl) rows.push([{text:"📷 Открыть Instagram клиента",url:profileUrl}]);
+    rows.push([{text:"✅ Взять заявку",callback_data:`TAKE|${lead.instagram_user_id}`}]);
+    rows.push([{text:"❌ Закрыть заявку",callback_data:`CLOSE|${lead.instagram_user_id}`}]);
+    await telegramApi("sendMessage",{chat_id:TELEGRAM_CHAT_ID,text:telegramLeadText(lead),reply_markup:{inline_keyboard:rows}});
+  }catch(e){ console.error("Telegram notify failed:",e.message); }
+}
+async function handleTelegramCallback(body){
+  const q=body?.callback_query;
+  if(!q?.data) return false;
+  const [action,userId]=String(q.data).split("|",2);
+  if(!userId || !["TAKE","CLOSE"].includes(action)) return false;
+  if(String(q.message?.chat?.id||"")!==String(TELEGRAM_CHAT_ID||"")) return false;
+  if(!pool){ await telegramApi("answerCallbackQuery",{callback_query_id:q.id,text:"База данных недоступна"}); return true; }
+  const status=action==="TAKE"?"in_progress":"completed";
+  const result=await pool.query(`UPDATE ai_leads SET status=$1,handoff=$2,updated_at=NOW() WHERE instagram_user_id=$3 RETURNING *`,[status,action==="TAKE",userId]);
+  if(!result.rowCount){ await telegramApi("answerCallbackQuery",{callback_query_id:q.id,text:"Заявка не найдена"}); return true; }
+  const lead=result.rows[0];
+  const statusText=action==="TAKE"?"🟢 Заявка взята менеджером":"⚪ Заявка закрыта";
+  try{
+    await telegramApi("answerCallbackQuery",{callback_query_id:q.id,text:action==="TAKE"?"Заявка взята":"Заявка закрыта"});
+    if(q.message?.message_id){
+      await telegramApi("editMessageText",{chat_id:q.message.chat.id,message_id:q.message.message_id,text:`${telegramLeadText(lead)}\n\n${statusText}`});
+    }
+  }catch(e){ console.error("Telegram callback update failed:",e.message); }
+  return true;
+}
+async function telegramWebhook(req,res,url){
+  if(url.pathname!=="/api/telegram/webhook") return false;
+  if(req.method!=="POST") return send(res,405,{ok:false,error:"METHOD_NOT_ALLOWED"});
+  try{const body=await parseBody(req); await handleTelegramCallback(body); return send(res,200,{ok:true});}
+  catch(e){console.error("Telegram webhook error:",e.message); return send(res,200,{ok:true});}
 }
 async function transcribeInstagramAudio(attachment){
   if(!OPENAI_API_KEY) return "";
@@ -483,12 +540,23 @@ async function aiAnalyze(instagramUserId,text){
   if(managerRequest){
     return {language:detectedLanguage,intent:"support",reply:managerReply(detectedLanguage),name:"",phone:"",from_city:existingLead?.from_city||"",to_city:existingLead?.to_city||"",departure_date:existingLead?.departure_date?String(existingLead.departure_date).slice(0,10):"",return_date:existingLead?.return_date?String(existingLead.return_date).slice(0,10):"",passengers:existingLead?.passengers||"",baggage:existingLead?.baggage||"",handoff:true};
   }
-  if(!parsed.from_city && existingLead?.from_city && existingLead?.to_city && existingLead?.departure_date && asksForFlights){
+  // Conversation memory: reuse the latest known trip when the client asks a follow-up
+  // such as “а обратно?”, “а рейсы?”, “а на следующий день?” without repeating the route.
+  const asksAboutReturn=/(обратно|туда.?обратно|возврат|баргашт|бозгашт|return|back)/i.test(low);
+  if(!parsed.from_city && existingLead?.from_city && existingLead?.to_city){
     parsed.from_city=existingLead.from_city;
     parsed.to_city=existingLead.to_city;
-    parsed.departure_date=String(existingLead.departure_date).slice(0,10);
-    parsed.return_date=existingLead.return_date?String(existingLead.return_date).slice(0,10):"";
+    if(existingLead.departure_date) parsed.departure_date=String(existingLead.departure_date).slice(0,10);
+    if(existingLead.return_date) parsed.return_date=String(existingLead.return_date).slice(0,10);
     parsed.passengers=existingLead.passengers||"";
+  }
+  if(asksAboutReturn && existingLead?.from_city && existingLead?.to_city){
+    // The client is referring to the same trip. Keep the outbound date and ask only
+    // for the return date unless it was already provided.
+    parsed.from_city=existingLead.from_city;
+    parsed.to_city=existingLead.to_city;
+    parsed.departure_date=existingLead.departure_date?String(existingLead.departure_date).slice(0,10):parsed.departure_date;
+    parsed.return_date=existingLead.return_date?String(existingLead.return_date).slice(0,10):parsed.return_date;
   }
   if(!OPENAI_API_KEY){
     const hasSearch=parsed.from_city&&parsed.to_city&&parsed.departure_date;
@@ -500,7 +568,7 @@ async function aiAnalyze(instagramUserId,text){
 ЯЗЫК ОТВЕТА: ${detectedLanguage}. Отвечай именно на языке текущего сообщения, а не на языке истории. Если язык таджикский — используй таджикский кириллицей.
 Текущий запрос: ${JSON.stringify(text)}
 Детерминированно распознано: from_city=${JSON.stringify(parsed.from_city)}, to_city=${JSON.stringify(parsed.to_city)}, departure_date=${JSON.stringify(parsed.departure_date)}. Форматы даты: 29.09.26 = 29 сентября 2026; 26.09 = 26 сентября 2026 (если год не указан, используй текущий год); 29 сент = 29 сентября 2026. Если в сообщении два города подряд без слов «из/в», например «Москва Душанбе 29.09.26», используй первый город как from_city, второй как to_city.
-Правила: если в текущем сообщении есть полный маршрут и дата, ОБЯЗАТЕЛЬНО intent=search, handoff=false. Не отправляй клиента к менеджеру в этом случае. Не придумывай цену, наличие, расписание или багаж. Скажи, что поиск готовится/открывается, а система добавит кнопку с актуальными рейсами. Если данных не хватает — задай один самый полезный вопрос. Если клиент явно просит менеджера или хочет купить/забронировать, можно handoff=true.
+Правила: используй историю диалога и сохранённые данные клиента как контекст. Если клиент задаёт короткий уточняющий вопрос (“а обратно?”, “а рейсы?”, “а сколько стоит?”, “на следующий день?”), не проси повторять уже известный маршрут и дату. Если не хватает только даты обратного рейса — задай вопрос только о дате обратного рейса. Если в текущем сообщении есть полный маршрут и дата, ОБЯЗАТЕЛЬНО intent=search, handoff=false. Не отправляй клиента к менеджеру в этом случае. Не придумывай цену, наличие, расписание или багаж. Скажи, что поиск готовится/открывается, а система добавит кнопку с актуальными рейсами. Если данных не хватает — задай один самый полезный вопрос. Если клиент явно просит менеджера или хочет купить/забронировать, можно handoff=true.
 Верни ТОЛЬКО JSON без markdown: {"language":"ru|tj|en","intent":"general|search|purchase|support","reply":"...","name":"","phone":"","from_city":"","to_city":"","departure_date":"YYYY-MM-DD или пусто","return_date":"YYYY-MM-DD или пусто","passengers":"","baggage":"","handoff":false}. Сегодня ${new Date().toISOString().slice(0,10)}. История последних сообщений: ${JSON.stringify(history)}`;
   const r=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{"Authorization":`Bearer ${OPENAI_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({model:OPENAI_MODEL,instructions:"Отвечай строго по инструкции и возвращай только JSON.",input:prompt,max_output_tokens:700,store:false})});
   const raw=await r.text(); let data={}; try{data=JSON.parse(raw)}catch{}
@@ -534,7 +602,8 @@ async function processInstagramManagerPostback(m){
   const existing=await getExistingAiLead(m.senderId);
   const language=existing?.language||detectInstagramLanguage(m.postbackTitle||"");
   const reply=managerReply(language);
-  const lead=await upsertAiLead({instagram_user_id:m.senderId,username:"",language,intent:"support",name:"",phone:"",from_city:existing?.from_city||"",to_city:existing?.to_city||"",departure_date:existing?.departure_date?String(existing.departure_date).slice(0,10):"",return_date:existing?.return_date?String(existing.return_date).slice(0,10):"",passengers:existing?.passengers||"",baggage:existing?.baggage||"",last_message:"[Клиент нажал кнопку: менеджер]",ai_reply:reply,status:"in_progress",handoff:true});
+  const profile=await getInstagramUserProfile(m.senderId);
+  const lead=await upsertAiLead({instagram_user_id:m.senderId,username:profile?.username||"",language,intent:"support",name:profile?.name||"",phone:"",from_city:existing?.from_city||"",to_city:existing?.to_city||"",departure_date:existing?.departure_date?String(existing.departure_date).slice(0,10):"",return_date:existing?.return_date?String(existing.return_date).slice(0,10):"",passengers:existing?.passengers||"",baggage:existing?.baggage||"",last_message:"[Клиент нажал кнопку: менеджер]",ai_reply:reply,status:"in_progress",handoff:true});
   if(AI_AUTO_REPLY){const sent=await sendInstagramText(m.senderId,reply);await saveAiMessage(m.senderId,sent?.message_id||`out-${Date.now()}-${Math.random()}`,"out",reply);}
   if(lead) await telegramNotify(lead);
   console.log("Instagram manager postback processed",JSON.stringify({sender:m.senderId,handoff:true}));
@@ -554,7 +623,8 @@ async function processInstagramMessage(m){
   try{
     const ai=await aiAnalyze(m.senderId,text);
     const status=ai.handoff?"in_progress":"new";
-    const lead=await upsertAiLead({instagram_user_id:m.senderId,username:"",language:ai.language,intent:ai.intent,name:ai.name,phone:ai.phone,from_city:ai.from_city,to_city:ai.to_city,departure_date:ai.departure_date,return_date:ai.return_date,passengers:ai.passengers,baggage:ai.baggage,last_message:m.text||"[Вложение]",ai_reply:ai.reply,status,handoff:ai.handoff});
+    const profile=await getInstagramUserProfile(m.senderId);
+    const lead=await upsertAiLead({instagram_user_id:m.senderId,username:profile?.username||"",language:ai.language,intent:ai.intent,name:ai.name||profile?.name||"",phone:ai.phone,from_city:ai.from_city,to_city:ai.to_city,departure_date:ai.departure_date,return_date:ai.return_date,passengers:ai.passengers,baggage:ai.baggage,last_message:m.text||"[Вложение]",ai_reply:ai.reply,status,handoff:ai.handoff});
     if(AI_AUTO_REPLY && ai.reply){const sent=await sendInstagramText(m.senderId,ai.reply);await saveAiMessage(m.senderId,sent?.message_id||`out-${Date.now()}-${Math.random()}`,"out",ai.reply);}
     if(AI_AUTO_REPLY){
       const buttonSent=await sendInstagramActionButtons(m.senderId,ai);
@@ -810,6 +880,8 @@ const server=http.createServer(async(req,res)=>{
     const u=new URL(req.url,`http://${req.headers.host||"localhost"}`);
     const instagramHandled = await instagramAuthCallback(req,res,u);
     if(instagramHandled!==false)return;
+    const telegramHandled = await telegramWebhook(req,res,u);
+    if(telegramHandled!==false)return;
     const webhookHandled = await instagramWebhook(req,res,u);
     if(webhookHandled!==false)return;
     if(u.pathname.startsWith("/api/")){const handled=await api(req,res,u);if(handled!==false)return;}
@@ -821,4 +893,10 @@ const server=http.createServer(async(req,res)=>{
     send(res,404,{error:"NOT_FOUND"});
   }catch(e){console.error(e);send(res,500,{error:"SERVER_ERROR"});}
 });
-initDb().then(()=>server.listen(PORT,()=>console.log("Aviakassa server on "+PORT))).catch(e=>{console.error("Database initialization failed; starting server without DB:",e.message);server.listen(PORT,()=>console.log("Aviakassa server on "+PORT+" (DB unavailable)"))});
+async function configureTelegramWebhook(){
+  const base=String(process.env.TELEGRAM_WEBHOOK_URL||"").trim();
+  if(!TELEGRAM_BOT_TOKEN || !base) return;
+  try{const data=await telegramApi("setWebhook",{url:base}); console.log("Telegram webhook configured",JSON.stringify({url:base,ok:data.ok}));}
+  catch(e){console.error("Telegram webhook setup failed:",e.message);}
+}
+initDb().then(async()=>{await configureTelegramWebhook();server.listen(PORT,()=>console.log("Aviakassa server on "+PORT))}).catch(async e=>{console.error("Database initialization failed; starting server without DB:",e.message);await configureTelegramWebhook();server.listen(PORT,()=>console.log("Aviakassa server on "+PORT+" (DB unavailable)"))});
