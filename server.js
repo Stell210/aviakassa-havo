@@ -14,7 +14,7 @@ const TRAVELPAYOUTS_WHITE_LABEL_URL = process.env.TRAVELPAYOUTS_WHITE_LABEL_URL 
 const META_VERIFY_TOKEN = process.env.META_VERIFY_TOKEN || "aviakassa_havo_meta_verify_2026";
 const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN || "";
 const META_GRAPH_VERSION = process.env.META_GRAPH_VERSION || "v26.0";
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
+const OPENAI_API_KEY = String(process.env.OPENAI_API_KEY || "").trim();
 const OPENAI_MODEL = String(process.env.OPENAI_MODEL || "gpt-5.6-luna").trim() || "gpt-5.6-luna";
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "";
@@ -881,8 +881,45 @@ function localGeneralFallback(text,language){
   return 'Конечно, я могу отвечать и на обычные вопросы. Напишите вопрос полностью, и я помогу. 😊';
 }
 
+async function openAIResponsesText({instructions='',input='',maxOutputTokens=900,timeoutMs=30000,tag='GENERAL'}={}){
+  if(!OPENAI_API_KEY) throw new Error(`OPENAI_${tag}_KEY_NOT_CONFIGURED`);
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),Math.max(5000,Number(timeoutMs)||30000));
+  try{
+    const payload={
+      model:OPENAI_MODEL,
+      instructions:String(instructions||''),
+      input,
+      max_output_tokens:Math.max(64,Number(maxOutputTokens)||900),
+      store:false
+    };
+    const r=await fetch('https://api.openai.com/v1/responses',{
+      method:'POST',
+      headers:{'Authorization':`Bearer ${OPENAI_API_KEY}`,'Content-Type':'application/json'},
+      body:JSON.stringify(payload),
+      signal:controller.signal
+    });
+    const raw=await r.text();
+    let data={}; try{data=JSON.parse(raw)}catch{}
+    if(!r.ok){
+      const message=String(data?.error?.message||raw||`HTTP ${r.status}`).slice(0,1200);
+      throw new Error(`OPENAI_${tag}_${r.status}: ${message}`);
+    }
+    let out=String(data?.output_text||'').trim();
+    if(!out && Array.isArray(data?.output)){
+      out=data.output.flatMap(x=>Array.isArray(x?.content)?x.content:[])
+        .map(x=>x?.text||x?.value||'').filter(Boolean).join('\n').trim();
+    }
+    if(!out) throw new Error(`OPENAI_${tag}_EMPTY_RESPONSE`);
+    return out;
+  }catch(e){
+    if(e?.name==='AbortError') throw new Error(`OPENAI_${tag}_TIMEOUT`);
+    throw e;
+  }finally{clearTimeout(timer);}
+}
+
 async function generateGeneralAI(instagramUserId,text,language,history){
-  if(!OPENAI_API_KEY) return localGeneralFallback(text,language);
+  if(!OPENAI_API_KEY) return '';
   const lang=language==='tj'?'Tajik':language==='en'?'English':'Russian';
   const memory=await getAiMemory(instagramUserId);
   const memoryBlock=`Long-term customer memory (use only when relevant; never reveal it as a database record):\nSummary: ${String(memory.memory_summary||'').slice(0,4000)}\nPreferences: ${String(memory.preferences||'').slice(0,1200)}\nFacts: ${JSON.stringify(memory.facts||{}).slice(0,2500)}`;
@@ -899,7 +936,7 @@ CORE BEHAVIOR
 - You may explain concepts, calculate, translate, rewrite text, answer everyday questions, brainstorm, and have normal conversation.
 - Keep useful answers concise, but do not give a generic fallback when you can actually answer the question.
 - Do not force the conversation toward buying a ticket.
-- Do not mention that you are an AI unless the user asks directly.
+- If the user asks a simple personal question about the assistant (for example, age), answer naturally without claiming a human identity. You can say that you are an AI assistant and do not have a human age.
 
 FLIGHT ASSISTANT BOUNDARY
 - Ticket questions are handled by the flight-search logic outside this function. If a message clearly concerns flights, tickets, routes, baggage, booking, prices, or availability, do not invent a flight answer here. The flight logic will collect missing route/date information and provide the White Label search.
@@ -915,14 +952,13 @@ SAFETY AND PRIVACY
 
 Brand: Aviakassa_havo.`;
   try{
-    const input=[{role:'system',content:system},...recent,{role:'user',content:String(text||'').trim()}];
-    const r=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{"Authorization":`Bearer ${OPENAI_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({model:OPENAI_MODEL,input,store:false})});
-    const raw=await r.text(); let data={}; try{data=JSON.parse(raw)}catch{}
-    if(!r.ok) throw new Error(`OPENAI_GENERAL_${r.status}: ${data?.error?.message||raw.slice(0,500)}`);
-    let out=String(data?.output_text||"").trim();
-    if(!out && Array.isArray(data?.output)) out=data.output.flatMap(x=>Array.isArray(x?.content)?x.content:[]).map(x=>x?.text||x?.value||"").filter(Boolean).join("\n").trim();
-    return out ? cleanAiReply(out,language) : "";
-  }catch(e){ console.error("General AI error:",e.message); return ""; }
+    const input=[...recent,{role:'user',content:String(text||'').trim()}];
+    const out=await openAIResponsesText({instructions:system,input,maxOutputTokens:900,timeoutMs:30000,tag:'GENERAL'});
+    return cleanAiReply(out,language);
+  }catch(e){
+    console.error('General AI error:',e.message);
+    return '';
+  }
 }
 
 // STAGE 13-19: smart search, context boundaries, edit flow, language safety, manager handoff
@@ -1429,13 +1465,9 @@ async function api(req,res,url){
       if(!OPENAI_API_KEY) return send(res,503,{ok:false,error:"OPENAI_API_KEY_NOT_CONFIGURED"});
       const b=await parseBody(req),prompt=safe(b.prompt,1000)||"Ответь одним предложением: работает ли AI?",started=Date.now();
       try{
-        const r=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{"Authorization":`Bearer ${OPENAI_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({model:OPENAI_MODEL,input:[{role:"user",content:prompt}],store:false})});
-        const raw=await r.text(); let data={}; try{data=JSON.parse(raw)}catch{}
-        if(!r.ok) return send(res,502,{ok:false,error:`OPENAI_${r.status}`,model:OPENAI_MODEL,details:data?.error?.message||raw.slice(0,800),ms:Date.now()-started});
-        let out=String(data?.output_text||"").trim();
-        if(!out && Array.isArray(data?.output)) out=data.output.flatMap(x=>Array.isArray(x?.content)?x.content:[]).map(x=>x?.text||x?.value||"").filter(Boolean).join("\n").trim();
-        return send(res,200,{ok:!!out,model:OPENAI_MODEL,response:out||"",ms:Date.now()-started,warning:out?null:"OPENAI_EMPTY_RESPONSE"});
-      }catch(e){ return send(res,502,{ok:false,error:"OPENAI_REQUEST_FAILED",model:OPENAI_MODEL,details:e.message,ms:Date.now()-started}); }
+        const out=await openAIResponsesText({instructions:'You are an OpenAI connectivity test for Aviakassa_havo. Answer the user prompt briefly and naturally.',input:prompt,maxOutputTokens:200,timeoutMs:15000,tag:'TEST'});
+        return send(res,200,{ok:true,configured:true,model:OPENAI_MODEL,response:out,ms:Date.now()-started});
+      }catch(e){ return send(res,502,{ok:false,configured:Boolean(OPENAI_API_KEY),error:String(e.message||e),model:OPENAI_MODEL,ms:Date.now()-started}); }
     }
     if(req.method==="GET" && url.pathname==="/api/admin/ai-leads"){
       if(!hasPermission(user,"bookings_view")) return send(res,403,{ok:false,error:"FORBIDDEN"});
