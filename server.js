@@ -1204,48 +1204,6 @@ async function runManagerReminderSweep(){
   }catch(e){console.error('Reminder sweep error:',e.message)}
 }
 
-async function searchAviakassaFlights(ai){
-  if(!pool || !ai?.from_city || !ai?.to_city || !ai?.departure_date) return [];
-  const from=String(ai.from_city).trim().toLowerCase();
-  const to=String(ai.to_city).trim().toLowerCase();
-  const fromCode=cityToIata(ai.from_city)||'';
-  const toCode=cityToIata(ai.to_city)||'';
-  const date=normalizeIsoDate(ai.departure_date);
-  if(!date) return [];
-  try{
-    const q=await pool.query(`
-      SELECT id,from_city,from_airport,from_airport_code,to_city,to_airport,to_airport_code,
-             flight_date,flight_time,airline,baggage,price,currency
-      FROM flights
-      WHERE active=true AND flight_date=$1
-        AND (LOWER(from_city)=LOWER($2) OR LOWER(from_city) LIKE LOWER($2)||'%' OR from_airport_code=$3)
-        AND (LOWER(to_city)=LOWER($4) OR LOWER(to_city) LIKE LOWER($4)||'%' OR to_airport_code=$5)
-      ORDER BY flight_time, id
-      LIMIT 8`,[date,from,to,fromCode,toCode]);
-    return q.rows;
-  }catch(e){
-    console.error('AI flight search error:',e.message);
-    return [];
-  }
-}
-function formatFlightSearchResults(flights,language,ai){
-  const from=displayCity(ai.from_city),to=displayCity(ai.to_city),date=formatFlightDate(ai.departure_date,language);
-  if(!flights.length){
-    if(language==='tj') return `✈️ ${from} → ${to}, ${date}\n\nДар базаи Aviakassa_havo барои ин сана ҳоло варианти мувофиқ ёфт нашуд. Барои санҷидани вариантҳои бештар, «Дидани билетҳо ва нархҳо»-ро пахш кунед. 📩`;
-    if(language==='en') return `✈️ ${from} → ${to}, ${date}\n\nI couldn't find a matching flight in the Aviakassa_havo database for this date yet. Tap “View flights & prices” to check more options. 📩`;
-    return `✈️ ${from} → ${to}, ${date}\n\nВ базе Aviakassa_havo пока нет подходящего варианта на эту дату. Нажмите «Смотреть билеты и цены», чтобы проверить больше вариантов. 📩`;
-  }
-  const lines=flights.slice(0,5).map((f,i)=>{
-    const price=f.price?`${f.price} ${f.currency||'TJS'}`:'Цена уточняется';
-    const baggage=f.baggage?` · 🧳 ${f.baggage}`:'';
-    const airport=(f.from_airport_code||f.to_airport_code)?` · ${f.from_airport_code||''}→${f.to_airport_code||''}`:'';
-    return `${i+1}. ✈️ ${f.flight_time||'—'} · ${f.airline||'Авиакомпания'} · ${price}${baggage}${airport}`;
-  });
-  if(language==='tj') return `✈️ ${from} → ${to}, ${date}\n\nМан вариантҳои дар базаи ҷории Aviakassa_havo мавҷудбударо ёфтам:\n\n${lines.join('\n')}\n\nБарои дидани вариантҳои бештар ва харид, тугмаи поёнро пахш кунед.`;
-  if(language==='en') return `✈️ ${from} → ${to}, ${date}\n\nI found these current options in the Aviakassa_havo database:\n\n${lines.join('\n')}\n\nUse the button below to view more options and continue.`;
-  return `✈️ ${from} → ${to}, ${date}\n\nНашёл актуальные варианты, которые сейчас есть в базе Aviakassa_havo:\n\n${lines.join('\n')}\n\nНажмите кнопку ниже, чтобы посмотреть больше вариантов и продолжить.`;
-}
-
 async function processInstagramMessage(m){
   console.log("Instagram message processing started",JSON.stringify({sender:m.senderId,mid:m.mid,text:m.text.slice(0,120),postback:m.postbackPayload||""}));
   await saveAiMessage(m.senderId,m.mid,"in",m.text||m.postbackTitle||"[Вложение]");
@@ -1279,16 +1237,8 @@ async function processInstagramMessage(m){
     const profile=await getInstagramUserProfile(m.senderId);
     const previousLead=await getExistingAiLead(m.senderId);
     const lead=await upsertAiLead({instagram_user_id:m.senderId,username:profile?.username||"",language:ai.language,intent:ai.intent,name:ai.name||profile?.name||"",phone:ai.phone,from_city:ai.from_city,to_city:ai.to_city,departure_date:ai.departure_date,return_date:ai.return_date,trip_type:ai.trip_type,passengers:ai.passengers,baggage:ai.baggage,preferences:ai.preferences||"",last_message:m.text||"[Вложение]",ai_reply:ai.reply,status,handoff:ai.handoff,manager_waiting:!!ai.manager_waiting,hot_lead:!!ai.hot_lead,hot_reason:ai.hot_reason||"",last_client_message_at:new Date().toISOString(),ai_paused:!!ai.handoff});
-    let searchResults=[];
-    if(ai.intent==="search" && cityToIata(ai.from_city) && cityToIata(ai.to_city) && normalizeIsoDate(ai.departure_date)){
-      searchResults=await searchAviakassaFlights(ai);
-      // Stage 30: show only data actually returned by the flight database.
-      // Never let the model invent a flight, price, baggage allowance, or schedule.
-      ai.reply=formatFlightSearchResults(searchResults,ai.language||detectInstagramLanguage(text),ai);
-      if(lead){
-        await upsertAiLead({instagram_user_id:m.senderId,language:ai.language,intent:ai.intent,from_city:ai.from_city,to_city:ai.to_city,departure_date:ai.departure_date,return_date:ai.return_date,trip_type:ai.trip_type,passengers:ai.passengers,baggage:ai.baggage,last_message:m.text||"[Вложение]",ai_reply:ai.reply,status,preferences:ai.preferences||"",handoff:ai.handoff,manager_waiting:!!ai.manager_waiting,hot_lead:!!ai.hot_lead,hot_reason:ai.hot_reason||"",last_client_message_at:new Date().toISOString(),ai_paused:!!ai.handoff});
-      }
-    }
+    // Stage 30/31: when the project uses White Label only, AI must NOT read prices or flights from the local `flights` table.
+    // It only understands the request and creates a pre-filled White Label search link below.
     if(AI_AUTO_REPLY && ai.reply){const sent=await sendInstagramText(m.senderId,ai.reply);await saveAiMessage(m.senderId,sent?.message_id||`out-${Date.now()}-${Math.random()}`,"out",ai.reply);}
     try{ const memHistory=await getRecentAiHistory(m.senderId); await updateAiMemoryFromConversation(m.senderId,memHistory,lead); }catch(e){ console.error('AI memory post-processing error:',e.message); }
     if(AI_AUTO_REPLY && ai.intent==="search" && cityToIata(ai.from_city) && cityToIata(ai.to_city) && normalizeIsoDate(ai.departure_date)){

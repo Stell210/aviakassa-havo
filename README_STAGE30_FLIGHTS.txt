@@ -1,31 +1,10 @@
-Aviakassa_havo — Stage 28 Fix
+STAGE 30 — WHITE LABEL ONLY
 
-Исправлено:
-- test_parse.js больше не использует жёсткий путь /mnt/data/workdate/server.js.
-- Тест теперь берёт server.js из текущей папки проекта через __dirname.
-- Исправлен поиск функции parseFlightDetails в тесте под актуальную структуру server.js.
+Important architecture rule:
+- AI does NOT read flight prices, schedules, baggage or availability from the local `flights` table.
+- AI does NOT claim to have live White Label prices.
+- With White Label only, AI collects the route/date/passenger details and creates a pre-filled White Label search link.
+- The customer sees live availability and prices inside the White Label page itself.
+- The local `flights` table may still be used by the site's admin/manual-flight features, but it is NOT an AI source for Instagram pricing or availability.
 
-Проверено после исправления:
-- server.js — node --check: OK
-- script.js — node --check: OK
-- testserver.js — node --check: OK
-- test_parse.js — node --check: OK
-- test_parse.js — 5/5 тестов дат и маршрутов: PASS
-
-Примечание:
-Для Render зависимости из package.json устанавливаются автоматически при npm install.
-
-STAGE 29 — AI MEMORY
-- Added persistent ai_memory table in PostgreSQL.
-- AI keeps a compact long-term memory for each Instagram customer and uses it in general ChatGPT-style replies.
-- Memory is refreshed periodically from the conversation instead of on every message to control API usage.
-- Sensitive secrets are explicitly excluded from the memory prompt.
-- Existing flight lead data remains the source of truth for booking context.
-- Recent chat context increased to 30 messages for better continuity.
-
-STAGE 30 — AI + REAL FLIGHT RESULTS
-
-The Instagram AI flight flow now queries the PostgreSQL flights table before replying with flight options.
-Only active flights matching the requested departure date and route are shown. Price, currency, airline, time, airport codes and baggage come directly from the database; the model is not allowed to invent them.
-If no local flight is found, the user is directed to the existing White Label search button for additional options.
-The White Label remains available for broader/current provider search and purchase flow.
+Do not add a local-flight search to AI unless a real server-side search API is explicitly connected and authorized.
